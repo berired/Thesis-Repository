@@ -9,7 +9,12 @@ other, using different vocabulary for the same underlying checks:
 - Brandeis University Writing Program, ["Features of a Successful Thesis"](https://www.brandeis.edu/writing-program/resources/faculty/handouts/features-successful-thesis.html)
 
 Each dimension below names what "good" looks like, the failure patterns to watch
-for, and what a useful fix sounds like.
+for, and what a useful fix sounds like. This skill is scoped to computer science
+theses specifically, so the Novel and Feasible sections each include a CS-specific
+subsection on weighing related literature *and* related technical work (existing
+systems, libraries, datasets) found via web search — for CS, "has anyone built
+this already" is as load-bearing a question as "has anyone written about this
+already."
 
 ## 1. Specific & arguable
 
@@ -59,6 +64,17 @@ to "be more original." If no gap is evident from the topic as given, name the
 concrete step: skim 3–5 recent papers' "future work" sections, or look for a
 population/setting where a known finding hasn't been re-tested.
 
+**For a CS thesis, "novel" covers working systems, not just papers.** A quick web
+search (arXiv, ACM/IEEE digital libraries, and plain search) can turn up an
+existing open-source project, product, or GitHub repo that already does close to
+what the topic proposes, even when no paper covers it — a thesis committee will
+find it if the student doesn't. If a close match exists, the topic isn't
+automatically dead, but it needs a stated angle that's different from what's
+already out there: a different technique, a performance or scalability
+comparison, an application to a new domain/dataset, or an extension the existing
+work doesn't attempt. Note what was found and what the distinguishing angle is (or
+that none was found, which is itself worth flagging as a risk to verify further).
+
 ## 3. Feasible
 
 **What good looks like:** ThesisAI's FINER framework puts this first for good
@@ -80,6 +96,22 @@ rather than checked.
 come from, and is that access already confirmed (not hoped for)? If the scope
 requires resources the user doesn't have, suggest a narrower version answerable
 with data/time/access they do have.
+
+**For a CS thesis, existing technical work is a direct feasibility input, not just
+a novelty check.** What a web search for related works turns up should change the
+feasibility rating directly:
+- An available public dataset, a maintained library/framework/API the student can
+  build on, or a working baseline to compare against all make a topic *more*
+  feasible — less has to be built or collected from scratch.
+- Needing to build core infrastructure that doesn't exist yet (a dataset that has
+  to be collected/labeled, a system with no comparable open-source starting
+  point, specialized compute like GPU clusters the student won't have access to)
+  makes a topic *less* feasible, even if it's conceptually great — say this
+  plainly rather than letting an interesting idea pass on hope.
+- Check this against what the program actually expects the deliverable to be
+  (a working implementation vs. a study/evaluation) — a topic that requires
+  building a full system from nothing is a different feasibility bar than one that
+  evaluates or extends something that already exists.
 
 ## 4. Relevant & fits your program/advisor
 
