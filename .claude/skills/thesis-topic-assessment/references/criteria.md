@@ -144,13 +144,34 @@ feasibility rating directly:
   results exist to build the proof technique on, which the literature search in
   step 2 should already surface.
 
+**Program requirement: no travel the team can't afford or manage.** This
+program's students can't travel far, so a topic whose data collection or
+deployment depends on reaching a distant site, running an in-person field study,
+or installing hardware somewhere the team can't get to is a real feasibility
+problem — rate it accordingly, don't wave it through because the idea is
+otherwise strong. Prefer, and actively look for, topics answerable through:
+- remote or online data collection (surveys, scraping, an API, a public dataset
+  found in step 2's search);
+- participants or sites already local/reachable to the team, rather than a
+  population that requires travel to reach;
+- a system that can be built and evaluated on infrastructure the team already
+  has (a laptop, a university lab, a cloud free tier) rather than hardware that
+  has to be deployed on-site somewhere distant.
+
+When a topic's natural methodology implies travel (an in-person user study at a
+remote facility, hardware deployed in a location the team can't reach
+repeatedly), say so explicitly and suggest the lower-cost alternative — a remote
+version of the same study, a simulation, a public dataset standing in for
+original data collection — rather than treating travel cost as a minor detail to
+mention in passing.
+
 **Calibrate to degree level, same as Novelty above.** A PhD dissertation can
 justify a longer runway to build infrastructure that doesn't exist yet; a
 capstone with a fixed one-semester timeline generally can't, so the same "would
 need to build a dataset from scratch" fact should weigh more heavily against a
 capstone than against a dissertation.
 
-## 4. Relevant & fits your program/advisor
+## 4. Relevant & fits your program/advisor (incl. UN SDG alignment)
 
 **What good looks like:** The topic should be "meaningful and relevant" to the
 field (Enago), fit the researcher's career trajectory — publishability for academic
@@ -175,6 +196,41 @@ verdict: an unconfirmed advisor connection (Missing) is a question to resolve
 alongside starting research, not proof the topic itself is broken — it only
 weighs down the overall verdict if you can point to an actual mismatch (Weak),
 e.g. no faculty in the department works anywhere near this area.
+
+**Program requirement: the topic must map to at least one UN Sustainable
+Development Goal.** This is a hard requirement for this program, not an optional
+nice-to-have, so check it explicitly every time rather than folding it silently
+into the general relevance judgment. The 17 SDGs, for reference (don't spend a
+web search looking these up):
+
+1. No Poverty
+2. Zero Hunger
+3. Good Health and Well-being
+4. Quality Education
+5. Gender Equality
+6. Clean Water and Sanitation
+7. Affordable and Clean Energy
+8. Decent Work and Economic Growth
+9. Industry, Innovation and Infrastructure
+10. Reduced Inequalities
+11. Sustainable Cities and Communities
+12. Responsible Consumption and Production
+13. Climate Action
+14. Life Below Water
+15. Life on Land
+16. Peace, Justice and Strong Institutions
+17. Partnerships for the Goals
+
+Most CS topics connect to at least one with a little thought — an efficiency
+improvement can serve SDG 9 (infrastructure) or SDG 7/13 (energy/climate) if it
+reduces compute or power draw, an accessibility or ed-tech tool serves SDG 4 or
+10, a health-data or diagnostic system serves SDG 3, and so on. Name the specific
+goal(s) and the actual mechanism connecting the topic to it — "this could relate
+to SDG 9 somehow" is not a real mapping; "this reduces model inference cost,
+which cuts energy use per query, connecting to SDG 7 and SDG 13" is. If, after
+genuinely trying, no plausible connection exists, that's a real Weak finding on
+this dimension, not something to paper over — say so and suggest a reframing
+that would create a real connection rather than bolting on an unconvincing one.
 
 ## 5. Sustains your interest
 
