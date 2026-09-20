@@ -18,23 +18,32 @@ already."
 
 ## 1. Specific & arguable
 
-**What good looks like:** The topic is a precise, bounded claim or research
-question — not a yes/no question, not a bare description of a subject. Brandeis is
-explicit that a thesis should "make a claim, not a question or description," and
-that the claim should be "plausible, but in need of argument and evidence" — not an
-obvious truth or an obvious falsehood. Enago frames the same idea from the question
-side: a great topic is "somewhat broad, very precise, and somewhat open-ended,"
-which rules out yes/no phrasing. Ambiguous or undefined terms should be pinned down.
+**A note on the sources first, because they genuinely disagree here.** Brandeis's
+handout is about essay thesis *statements* — the claim you argue once you already
+know your conclusion — and says a thesis should "make a claim, not a question or
+description." Enago is about choosing a *topic*, at the point where research
+hasn't started yet, and says a great topic is "somewhat broad, very precise, and
+somewhat open-ended" — i.e. a question, not a claim. This skill is scored at the
+topic-selection stage, before the research exists to support a claim, so Enago's
+framing governs the *form* (a precise, open-ended research question, not a claim
+you can't back yet): don't penalize a topic for being phrased as a question. Take
+from Brandeis instead the *quality bar* that still applies to a question: it
+should be specific enough to be arguable once answered, not so obviously
+true/false that answering it proves nothing, and free of undefined terms.
+
+**What good looks like:** The topic is a precise, bounded research question — not
+a yes/no question, not a bare description of a subject. Ambiguous or undefined
+terms should be pinned down.
 
 **Failure patterns:**
 - Stated as a yes/no question ("Does social media affect mental health?") instead
-  of a specific, arguable claim or open-ended question.
-- Stated as a topic area rather than a question or claim ("Social media and mental
-  health among teenagers").
-- So obviously true (or false) that there's nothing to argue.
+  of a specific, open-ended one.
+- Stated as a topic area rather than a question ("Social media and mental health
+  among teenagers").
+- So obviously true (or false) that answering it would prove nothing.
 - Key terms left undefined (what counts as "social media use"? which population?).
 
-**Fixing it:** Convert description into a claim or a precise open-ended question;
+**Fixing it:** Convert a bare description into a precise open-ended question;
 replace yes/no phrasing with "how" or "to what extent"; define the ambiguous terms
 using specifics already in play (a named population, timeframe, platform, or
 measure).
@@ -72,8 +81,16 @@ find it if the student doesn't. If a close match exists, the topic isn't
 automatically dead, but it needs a stated angle that's different from what's
 already out there: a different technique, a performance or scalability
 comparison, an application to a new domain/dataset, or an extension the existing
-work doesn't attempt. Note what was found and what the distinguishing angle is (or
-that none was found, which is itself worth flagging as a risk to verify further).
+work doesn't attempt. Rate it accordingly, not just narratively: a close match
+*with* a stated distinguishing angle is Adequate or Strong; a close match with no
+distinguishing angle found is Weak, not a soft "worth checking" — say plainly that
+the current framing needs one.
+
+**Calibrate to degree level.** A PhD dissertation needs a genuine, defensible
+contribution to the field. A master's thesis needs a real angle but can be a
+solid extension or application of existing work. An undergrad capstone can
+legitimately be "implement and evaluate an existing technique in a new setting" —
+don't hold it to research-contribution novelty it was never meant to clear.
 
 ## 3. Feasible
 
@@ -112,6 +129,26 @@ feasibility rating directly:
   (a working implementation vs. a study/evaluation) — a topic that requires
   building a full system from nothing is a different feasibility bar than one that
   evaluates or extends something that already exists.
+- **Finding a dataset isn't the same as being allowed to use it.** Check what the
+  license or terms of use actually permit (many datasets bar redistribution or
+  commercial/derivative use), whether the data involves human subjects and would
+  need IRB/ethics-board approval, and whether scraped data would violate a site's
+  terms of service. A dataset that exists but can't legally or ethically be used
+  the way the topic needs it is not a feasibility win — flag it as a gap to
+  resolve, not a box already checked.
+- **Not every CS thesis is data-driven.** For a theoretical or algorithmic topic
+  (complexity analysis, a proof, a new algorithm without an empirical evaluation),
+  feasibility is about whether the problem is tractable to analyze or prove within
+  the available time — not about datasets or compute. Don't force a dataset-shaped
+  feasibility question onto a proof-based thesis; ask instead whether related
+  results exist to build the proof technique on, which the literature search in
+  step 2 should already surface.
+
+**Calibrate to degree level, same as Novelty above.** A PhD dissertation can
+justify a longer runway to build infrastructure that doesn't exist yet; a
+capstone with a fixed one-semester timeline generally can't, so the same "would
+need to build a dataset from scratch" fact should weigh more heavily against a
+capstone than against a dissertation.
 
 ## 4. Relevant & fits your program/advisor
 
@@ -133,7 +170,11 @@ supervisor.
 
 **Fixing it:** Name what specifically makes this relevant (a course, a professor's
 known research area, an industry skill), or flag it as an open question to raise
-with an advisor directly if that connection isn't yet established.
+with an advisor directly if that connection isn't yet established. Note for the
+verdict: an unconfirmed advisor connection (Missing) is a question to resolve
+alongside starting research, not proof the topic itself is broken — it only
+weighs down the overall verdict if you can point to an actual mismatch (Weak),
+e.g. no faculty in the department works anywhere near this area.
 
 ## 5. Sustains your interest
 
@@ -152,8 +193,13 @@ research?" — because a thesis is a long project, not a single sprint.
 **Fixing it:** This is the one dimension the assessor can't fix on the user's
 behalf — ask directly what part of the subject actually interests them, and
 consider whether a nearby reframing of the topic could better center that. Don't
-assume disinterest without evidence; only flag this when the topic or conversation
-actually signals it.
+*invent* disinterest without evidence — that's a different error from honestly
+rating the dimension. When the topic or conversation gives no signal either way,
+the honest rating is **Missing** (genuinely unassessed), not an assumed Adequate;
+say plainly that this one needs to be asked rather than guessed. As with Relevant
+above, that routine Missing is an open question for the verdict, not a strike
+against the topic — it only weighs the verdict down if there's actual evidence of
+disinterest (Weak).
 
 ## The "field vs. topic" trap
 
@@ -161,6 +207,6 @@ Both ThesisAI and Enago separately flag the single most common failure: choosing
 field ("climate change," "AI in education") instead of a topic. A field fails
 dimension 1 (not specific/arguable) and usually dimension 3 (not feasible — far too
 much ground to cover) at once. When a submitted "topic" is really a field, say so
-plainly and push for a one-sentence claim or question before scoring the rest, per
+plainly and push for a one-sentence research question before scoring the rest, per
 Step 1 of the workflow in SKILL.md — scoring a field against the other four
 criteria produces noise, not signal.
