@@ -12,6 +12,15 @@ criteria drawn from thesis-advising guidance (see `references/criteria.md` for t
 full rubric, the reasoning behind each one, and its sources), and turning every
 weakness into a specific next step rather than a vague "make it better."
 
+Two of those five criteria carry a program-specific requirement layered on top of
+the general advice, both folded into existing dimensions rather than treated as
+separate checks — see `references/criteria.md` for the full reasoning:
+- **Relevant** requires the topic to map to at least one UN Sustainable
+  Development Goal, not just fit the advisor and field generally.
+- **Feasible** requires that data collection and deployment be achievable without
+  travel the team can't afford or manage — remote, online, or locally reachable
+  methods, not field trips to distant sites.
+
 Read `references/criteria.md` before scoring — it has the full explanation of what
 "good" looks like on each dimension, common failure patterns to watch for, and the
 gap-closing moves to suggest. This file covers the workflow and output shape.
@@ -97,11 +106,12 @@ dimensions you can actually assess from the topic and step 2's research:
   rated Weak. Most commonly this is because the "topic" is really a field, or
   feasibility hasn't been checked at all.
 
-Then adjust down (never up) for Relevant or Interest only when either is rated
-**Weak** — an actual identified problem (clearly outside every advisor's
-expertise, clear signs of disinterest), not a routine Missing. A routine Missing
-on those two doesn't change the verdict; it becomes an open question in the gaps
-below.
+Then adjust down (never up) **one tier** — Ready to proceed → Promising, needs
+refinement; Promising, needs refinement → Not yet researchable — for Relevant or
+Interest only when either is rated **Weak**: an actual identified problem (no
+plausible SDG connection, clearly outside every advisor's expertise, clear signs
+of disinterest), not a routine Missing. A routine Missing on those two doesn't
+change the verdict; it becomes an open question in the gaps below.
 
 Don't rubber-stamp. A topic that sounds impressive but is actually a broad field
 ("the effects of social media on society") or an already-settled question deserves
@@ -148,8 +158,8 @@ search couldn't run at all, say that instead and don't draw either conclusion]
 ## Scorecard
 - Specific & arguable: [Strong/Adequate/Weak/Missing] — [reasoning]
 - Novel / fills a gap: [rating] — [reasoning]
-- Feasible: [rating] — [reasoning]
-- Relevant & fits your program/advisor: [rating] — [reasoning]
+- Feasible (incl. travel/deployment cost): [rating] — [reasoning]
+- Relevant, incl. UN SDG fit: [rating] — [reasoning; name the SDG(s), if any]
 - Sustains your interest: [rating] — [reasoning]
 
 ## Verdict
