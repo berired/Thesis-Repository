@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/app/lib/auth-client";
+import { safeNext } from "@/app/lib/safe-next";
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -25,7 +26,7 @@ export default function SignUpPage() {
             setError(error.message ?? "Unable to sign up");
             return;
         }
-        router.push("/");
+        router.push(safeNext(new URLSearchParams(window.location.search).get("next")));
         router.refresh();
     }
 
