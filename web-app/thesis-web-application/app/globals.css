@@ -8,8 +8,31 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-poppins), system-ui, sans-serif;
+  --font-display: var(--font-darumadrop), var(--font-poppins), sans-serif;
+
+  --color-forest: #004629;
+  --color-cream: #f7f1e6;
+  --color-butter: #ffe995;
+  --color-butter-soft: #fff6d1;
+  --color-butter-ink: #7a5a00;
+  --color-ink: #20252b;
+  --color-muted: #5b6470;
+  --color-line: #d9dee5;
+  --color-sky: #356ac3;
+  --color-blush: #f7b8c8;
+  --color-blush-soft: #fce4ea;
+  --color-blush-ink: #9a3550;
+  --color-lime-soft: #eef3cc;
+  --color-lime-ink: #4f5c00;
+  --color-powder: #9ccff0;
+
+  --animate-marquee: marquee 30s linear infinite;
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +45,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }

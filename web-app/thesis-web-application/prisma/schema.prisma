@@ -16,6 +16,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   emailVerified Boolean   @default(false)
   image         String?
+  animalTypes   String?
   banned        Boolean?  @default(false)
   banReason     String?
   banExpires    DateTime?
