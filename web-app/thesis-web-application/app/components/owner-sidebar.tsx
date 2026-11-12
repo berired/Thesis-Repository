@@ -2,19 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import SignOutButton from "@/app/components/sign-out-button";
 
 type NavItem = {
   label: string;
   icon: string;
   href?: string;
+  /** Path prefix that highlights this item, for sections without their own page yet. */
+  section?: string;
   badge?: number;
 };
 
-// Only Home has a page so far; the rest render as inert items until built.
+// Only Home has a page of its own so far; the rest are inert until built.
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", icon: "/icons/home.svg", href: "/dashboard" },
-  { label: "My animals", icon: "/icons/paw-nav.svg" },
+  { label: "My animals", icon: "/icons/paw-nav.svg", section: "/pets" },
   { label: "Health records", icon: "/icons/records.svg" },
   { label: "Reminders", icon: "/icons/bell-nav.svg" },
   { label: "Find a vet", icon: "/icons/map-pin-nav.svg" },
@@ -31,7 +32,13 @@ function initials(name: string) {
     .join("");
 }
 
-export default function OwnerSidebar({ userName }: { userName: string }) {
+export default function OwnerSidebar({
+  userName,
+  reminderCount = 0,
+}: {
+  userName: string;
+  reminderCount?: number;
+}) {
   const pathname = usePathname();
 
   return (
@@ -50,7 +57,10 @@ export default function OwnerSidebar({ userName }: { userName: string }) {
 
       <ul className="flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => {
-          const active = item.href !== undefined && pathname === item.href;
+          const active = item.href
+            ? pathname === item.href
+            : item.section !== undefined && pathname.startsWith(item.section);
+          const badge = item.label === "Reminders" ? reminderCount : item.badge;
           const base =
             "flex h-11 items-center gap-3 rounded-[10px] px-3 text-sm";
           const state = active
@@ -73,9 +83,9 @@ export default function OwnerSidebar({ userName }: { userName: string }) {
                 }
               />
               <span className="flex-1 pb-px">{item.label}</span>
-              {item.badge ? (
+              {badge ? (
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-sky px-1.5 text-[11px] font-semibold text-white">
-                  {item.badge}
+                  {badge}
                 </span>
               ) : null}
             </>
@@ -116,7 +126,6 @@ export default function OwnerSidebar({ userName }: { userName: string }) {
             {userName}
           </span>
         </div>
-        <SignOutButton className="mx-3 rounded-lg border border-white/30 px-3 py-1.5 text-left text-[13px] font-medium text-white hover:bg-white/10" />
       </div>
     </nav>
   );

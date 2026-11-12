@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import PasswordInput from "@/app/components/password-input";
 import { authClient } from "@/app/lib/auth-client";
 import { safeNext } from "@/app/lib/safe-next";
 import {
@@ -119,13 +120,11 @@ export default function SignInForm({
             />
           </Field>
           <Field label="Password">
-            <input
-              type="password"
+            <PasswordInput
               required
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={INPUT_CLASS}
             />
           </Field>
 

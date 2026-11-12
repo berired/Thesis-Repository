@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import PasswordInput from "@/app/components/password-input";
 import { authClient } from "@/app/lib/auth-client";
 import {
   AuthCard,
   Field,
   FormError,
-  INPUT_CLASS,
   LayerIcon,
   PRIMARY_BUTTON_CLASS,
 } from "@/app/components/ui";
@@ -77,23 +77,19 @@ export default function ResetPasswordForm({ token }: { token: string }) {
     <AuthCard>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Field label="New password">
-          <input
-            type="password"
+          <PasswordInput
             required
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={INPUT_CLASS}
           />
         </Field>
         <Field label="Confirm new password">
-          <input
-            type="password"
+          <PasswordInput
             required
             autoComplete="new-password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className={INPUT_CLASS}
           />
         </Field>
 

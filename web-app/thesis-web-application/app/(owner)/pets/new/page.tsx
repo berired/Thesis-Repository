@@ -1,4 +1,5 @@
 import { extractCode } from "@/app/lib/claim-pet";
+import OwnerPage from "@/app/components/owner-page";
 import PetForm from "./pet-form";
 
 export default async function NewPetPage({
@@ -9,9 +10,9 @@ export default async function NewPetPage({
   const { code } = await searchParams;
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Register a pet</h1>
+    <OwnerPage crumbs={[{ label: "My animals", href: "/dashboard" }, { label: "Add animal" }]}>
+      <h1 className="font-display text-[30px] leading-[33px] text-forest">Register an animal</h1>
       <PetForm initialCode={code ? extractCode(code) : ""} />
-    </div>
+    </OwnerPage>
   );
 }

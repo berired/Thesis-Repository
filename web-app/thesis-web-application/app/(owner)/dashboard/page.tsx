@@ -2,48 +2,23 @@ import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
 import { formatAge } from "@/app/lib/pets";
-
-type SpeciesStyle = {
-  avatar: string;
-  badge: string;
-  text: string;
-  avatarIcon: string | null;
-  badgeIcon: string | null;
-};
-
-const SPECIES_STYLE: Record<string, SpeciesStyle> = {
-  Dog: {
-    avatar: "bg-butter-soft",
-    badge: "bg-butter-soft",
-    text: "text-butter-ink",
-    avatarIcon: "/icons/dog-avatar.svg",
-    badgeIcon: "/icons/dog-badge.svg",
-  },
-  Cat: {
-    avatar: "bg-blush-soft",
-    badge: "bg-blush-soft",
-    text: "text-blush-ink",
-    avatarIcon: "/icons/cat-avatar.svg",
-    badgeIcon: "/icons/cat-badge.svg",
-  },
-  Reptile: {
-    avatar: "bg-lime-soft",
-    badge: "bg-lime-soft",
-    text: "text-lime-ink",
-    avatarIcon: "/icons/reptile-avatar.svg",
-    badgeIcon: "/icons/reptile-badge.svg",
-  },
-};
-
-// Design only ships icons for dog, cat and reptile; other species fall back
-// to an initial in the avatar and a text-only badge.
-const FALLBACK_STYLE: SpeciesStyle = {
-  avatar: "bg-butter-soft",
-  badge: "bg-butter-soft",
-  text: "text-butter-ink",
-  avatarIcon: null,
-  badgeIcon: null,
-};
+import OwnerPage from "@/app/components/owner-page";
+import Icon from "@/app/components/icon";
+import ReminderCard from "@/app/components/reminder-card";
+import { PetAvatar, SpeciesBadge } from "@/app/components/pet-avatar";
+import {
+  APPOINTMENT_CHIP,
+  APPOINTMENT_ICON,
+  APPOINTMENT_LABEL,
+  CATEGORY_ICON,
+  endOfToday,
+  fmtDay,
+  fmtTime,
+  reminderState,
+  startOfToday,
+  whenPhrase,
+} from "@/app/lib/care";
+import { restorePet } from "@/app/(owner)/actions";
 
 function greeting(hour: number) {
   if (hour < 12) return "Good morning";
@@ -89,14 +64,52 @@ export default async function DashboardPage() {
   const session = await requireUser();
   const firstName = session.user.name.split(/\s+/)[0];
 
-  const pets = await prisma.pet.findMany({
-    where: { ownerId: session.user.id },
-    orderBy: { createdAt: "desc" },
-  });
+  const now = new Date();
+  const openStatuses = ["AWAITING_CLINIC", "CONFIRMED"] as const;
+  const activePets = { ownerId: session.user.id, archivedAt: null };
 
-  if (pets.length === 0) {
+  const [pets, archived, care, careCount, visits] = await Promise.all([
+    prisma.pet.findMany({
+      where: activePets,
+      orderBy: { createdAt: "desc" },
+      include: {
+        reminders: { where: { completedAt: null }, orderBy: { dueAt: "asc" }, take: 1 },
+        appointments: {
+          where: { status: { in: [...openStatuses] }, scheduledAt: { gte: now } },
+          orderBy: { scheduledAt: "asc" },
+          take: 1,
+        },
+      },
+    }),
+    prisma.pet.findMany({
+      where: { ownerId: session.user.id, archivedAt: { not: null } },
+      orderBy: { archivedAt: "desc" },
+      select: { id: true, name: true, species: true },
+    }),
+    prisma.reminder.findMany({
+      where: { completedAt: null, dueAt: { lt: endOfToday(now) }, pet: activePets },
+      orderBy: { dueAt: "asc" },
+      take: 5,
+      include: { pet: { select: { name: true } } },
+    }),
+    prisma.reminder.count({
+      where: { completedAt: null, dueAt: { lt: endOfToday(now) }, pet: activePets },
+    }),
+    prisma.appointment.findMany({
+      where: {
+        status: { in: [...openStatuses] },
+        scheduledAt: { gte: now },
+        pet: activePets,
+      },
+      orderBy: { scheduledAt: "asc" },
+      take: 2,
+      include: { pet: { select: { name: true } } },
+    }),
+  ]);
+
+  if (pets.length === 0 && archived.length === 0) {
     return (
-      <>
+      <OwnerPage>
         <section className="flex items-center gap-12 rounded-3xl bg-forest px-12 py-12 text-white">
           <div className="flex min-w-0 max-w-[560px] flex-1 flex-col items-start">
             <p className="text-[15px] font-medium leading-[22.5px]">
@@ -159,35 +172,48 @@ export default async function DashboardPage() {
             </li>
           ))}
         </ol>
-      </>
+      </OwnerPage>
     );
   }
 
-  const now = new Date();
   const dateLabel = now.toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
   });
 
+  const overdueTotal = await prisma.reminder.count({
+    where: { completedAt: null, dueAt: { lt: startOfToday(now) }, pet: activePets },
+  });
+
+  // The banner's last clause: the soonest visit, if there is one.
+  const soonest = visits[0];
+  const summary = [
+    careCount > 0
+      ? `${careCount} ${careCount === 1 ? "thing" : "things"} to do today`
+      : "Nothing to do today",
+    overdueTotal > 0 ? `${overdueTotal} overdue` : null,
+    soonest
+      ? `${soonest.pet.name}'s ${soonest.title.toLowerCase()} is ${whenPhrase(soonest.scheduledAt, now)}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <>
+    <OwnerPage>
       <section className="flex items-center gap-6 rounded-3xl bg-forest px-8 py-7">
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <p className="text-sm font-medium leading-[21px] text-white">
-            {dateLabel}
-          </p>
+          <p className="text-sm font-medium leading-[21px] text-white">{dateLabel}</p>
           <h1 className="font-display text-5xl leading-none text-butter md:text-[56px]">
             {greeting(now.getHours())}, {firstName}
           </h1>
-          <p className="text-base leading-6 text-white">
-            You have {pets.length} {pets.length === 1 ? "animal" : "animals"} on
-            Pawket Book.
-          </p>
+          <p className="text-base leading-6 text-white">{summary}</p>
         </div>
         <div className="flex shrink-0 items-center gap-[9px]">
           <span
             aria-disabled="true"
+            title="Coming soon"
             className="flex h-10 cursor-default items-center gap-2 rounded-xl border border-[#c3c9d1] bg-white px-[18px] text-[15px] font-semibold text-ink"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -198,53 +224,175 @@ export default async function DashboardPage() {
         </div>
       </section>
 
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <section className="flex flex-col gap-3">
+          <div className="flex items-end justify-between">
+            <h2 className="font-display text-[30px] leading-[33px] text-forest">
+              Today&apos;s care
+            </h2>
+            <span className="pb-1 text-[13px] text-muted">{careCount} to do</span>
+          </div>
+          {care.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-[#c3c9d1] p-5 text-sm text-muted">
+              All caught up. Add reminders from an animal&apos;s page.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {care.map((r) => (
+                <ReminderCard key={r.id} reminder={r} petName={r.pet.name} />
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="font-display text-[30px] leading-[33px] text-forest">Vet visits</h2>
+          {visits.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-[#c3c9d1] p-5 text-sm text-muted">
+              No visits booked. Book one from an animal&apos;s Appointments tab.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {visits.map((v) => (
+                <li key={v.id} className="flex gap-4 rounded-xl border border-line bg-white p-4">
+                  <div className="flex w-[58px] shrink-0 flex-col self-start overflow-clip rounded-lg border border-line bg-white text-center">
+                    <span className="bg-sky py-0.5 text-xs font-semibold text-white">
+                      {v.scheduledAt.toLocaleDateString("en-GB", { month: "short" })}
+                    </span>
+                    <span className="text-[26px] font-semibold leading-8 text-ink">
+                      {v.scheduledAt.getDate()}
+                    </span>
+                    <span className="pb-1 text-[11px] text-muted">
+                      {v.scheduledAt.toLocaleDateString("en-GB", { weekday: "short" })}
+                    </span>
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-base font-semibold leading-6">{v.title}</p>
+                      <span
+                        className={`flex h-6 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-semibold ${APPOINTMENT_CHIP[v.status]}`}
+                      >
+                        <Icon name={APPOINTMENT_ICON[v.status]} size={12} />
+                        {APPOINTMENT_LABEL[v.status]}
+                      </span>
+                    </div>
+                    <p className="flex items-center gap-1.5 text-[13px] text-muted">
+                      <Icon name="clock" size={14} />
+                      {fmtTime(v.scheduledAt)}
+                    </p>
+                    <p className="flex items-center gap-1.5 text-[13px] text-muted">
+                      <Icon name="map-pin" size={14} />
+                      {v.clinicName}
+                    </p>
+                    <p className="flex items-center gap-1.5 text-[13px] text-muted">
+                      <Icon name="paw-print" size={14} />
+                      {v.pet.name}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-[30px] leading-[33px] text-forest">
-          Your animals
-        </h2>
-        <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {pets.map((pet) => {
-            const style = SPECIES_STYLE[pet.species] ?? FALLBACK_STYLE;
-            return (
-              <li key={pet.id}>
-                <Link
-                  href={`/pets/${pet.id}`}
-                  className="flex h-full items-center gap-3.5 rounded-xl border border-line bg-white p-5 hover:border-forest"
-                >
-                  <span
-                    className={`flex size-14 shrink-0 items-center justify-center overflow-clip rounded-full text-lg font-semibold ${style.avatar} ${style.text}`}
+        <h2 className="font-display text-[30px] leading-[33px] text-forest">Your animals</h2>
+        {pets.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-[#c3c9d1] p-5 text-sm text-muted">
+            All your animals are archived. Restore one below, or add a new animal.
+          </p>
+        ) : (
+          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {pets.map((pet) => {
+              const reminder = pet.reminders[0];
+              const appt = pet.appointments[0];
+              const isToday = (d: Date) => d.toDateString() === now.toDateString();
+              // The soonest of the next reminder and the next visit.
+              const next =
+                reminder && (!appt || reminder.dueAt <= appt.scheduledAt)
+                  ? {
+                      icon: CATEGORY_ICON[reminder.category],
+                      title: reminder.title,
+                      urgent: reminderState(reminder.dueAt, now) === "overdue",
+                      when:
+                        reminderState(reminder.dueAt, now) === "overdue"
+                          ? "Overdue"
+                          : isToday(reminder.dueAt)
+                            ? "Today"
+                            : fmtDay(reminder.dueAt),
+                    }
+                  : appt
+                    ? {
+                        icon: "stethoscope" as const,
+                        title: appt.title,
+                        urgent: false,
+                        when: isToday(appt.scheduledAt) ? "Today" : fmtDay(appt.scheduledAt),
+                      }
+                    : null;
+              return (
+                <li key={pet.id}>
+                  <Link
+                    href={`/pets/${pet.id}`}
+                    className="flex h-full flex-col gap-4 rounded-xl border border-line bg-white p-5 hover:border-forest"
                   >
-                    {style.avatarIcon ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={style.avatarIcon} alt="" width={28} height={28} />
-                    ) : (
-                      pet.name[0]?.toUpperCase()
-                    )}
-                  </span>
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-lg font-semibold leading-[23.4px]">
-                      {pet.name}
+                    <span className="flex items-center gap-3.5">
+                      <PetAvatar name={pet.name} species={pet.species} size={56} />
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="truncate text-lg font-semibold leading-[23.4px]">
+                          {pet.name}
+                        </span>
+                        <span className="truncate text-[13px] leading-[19.5px] text-muted">
+                          {pet.breed ? `${pet.breed} · ` : ""}
+                          {formatAge(pet.birthDate, pet.birthDateApproximate)}
+                        </span>
+                      </span>
+                      <SpeciesBadge species={pet.species} />
                     </span>
-                    <span className="truncate text-[13px] leading-[19.5px] text-muted">
-                      {pet.breed ? `${pet.breed} · ` : ""}
-                      {formatAge(pet.birthDate, pet.birthDateApproximate)}
+                    <span className="flex items-center gap-2 rounded-lg bg-[#f6f8fa] px-3 py-2.5 text-[13px]">
+                      {next ? (
+                        <>
+                          <Icon name={next.icon} size={14} className="shrink-0 text-sky" />
+                          <span className="flex-1 truncate">{next.title}</span>
+                          <span className={next.urgent ? "text-[#b42318]" : "text-muted"}>
+                            {next.when}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-muted">Nothing scheduled</span>
+                      )}
                     </span>
-                  </span>
-                  <span
-                    className={`flex h-[26px] shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-medium ${style.badge} ${style.text}`}
-                  >
-                    {style.badgeIcon ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={style.badgeIcon} alt="" width={13} height={13} />
-                    ) : null}
-                    {pet.species}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
-    </>
+
+      {archived.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold leading-6">Archived</h2>
+          <ul className="flex flex-col gap-2">
+            {archived.map((pet) => (
+              <li
+                key={pet.id}
+                className="flex items-center gap-3 rounded-xl border border-line bg-white px-4 py-3"
+              >
+                <PetAvatar name={pet.name} species={pet.species} size={36} />
+                <Link href={`/pets/${pet.id}`} className="flex-1 font-medium hover:underline">
+                  {pet.name}
+                </Link>
+                <form action={restorePet.bind(null, pet.id)}>
+                  <button type="submit" className="text-sm font-semibold text-sky underline">
+                    Restore
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </OwnerPage>
   );
 }

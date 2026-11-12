@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import PasswordInput from "@/app/components/password-input";
 import { authClient } from "@/app/lib/auth-client";
 import {
   AuthCard,
@@ -33,6 +34,8 @@ export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [emailTaken, setEmailTaken] = useState(false);
   const [animals, setAnimals] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +49,30 @@ export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }
     );
   }
 
+  // Asks the server whether this email already has an account. Returns true
+  // when it does, so submit can wait on the answer too.
+  async function checkEmailTaken(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed || !/^\S+@\S+\.\S+$/.test(trimmed)) {
+      setEmailTaken(false);
+      return false;
+    }
+    try {
+      const res = await fetch("/api/email-exists", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      if (!res.ok) return false;
+      const { exists } = (await res.json()) as { exists: boolean };
+      setEmailTaken(exists);
+      return exists;
+    } catch {
+      // If the check fails, sign-up itself still rejects duplicates.
+      return false;
+    }
+  }
+
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -54,12 +81,20 @@ export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }
       setError("Use at least 8 characters, with a number.");
       return;
     }
+    if (password !== confirmPassword) {
+      setError("Passwords don't match.");
+      return;
+    }
     if (!agreed) {
       setError("Please agree to the Terms and Privacy Policy.");
       return;
     }
 
     setLoading(true);
+    if (await checkEmailTaken(email)) {
+      setLoading(false);
+      return;
+    }
     const { data, error } = await authClient.signUp.email({
       name: `${firstName.trim()} ${lastName.trim()}`.trim(),
       email,
@@ -158,20 +193,51 @@ export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }
               required
               autoComplete="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={INPUT_CLASS}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailTaken(false);
+              }}
+              onBlur={(e) => void checkEmailTaken(e.target.value)}
+              aria-invalid={emailTaken}
+              aria-describedby={emailTaken ? "email-taken" : undefined}
+              className={`${INPUT_CLASS} ${emailTaken ? "border-[#c2372e]" : ""}`}
             />
+            {emailTaken ? (
+              <span id="email-taken" role="alert" className="text-xs text-[#c2372e]">
+                An account with this email already exists.{" "}
+                <Link href="/sign-in" className="font-medium underline">
+                  Sign in instead
+                </Link>
+              </span>
+            ) : null}
           </Field>
           <Field label="Password" hint="At least 8 characters, with a number">
-            <input
-              type="password"
+            <PasswordInput
               required
               minLength={8}
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={INPUT_CLASS}
             />
+          </Field>
+          <Field label="Confirm password">
+            <PasswordInput
+              required
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              aria-invalid={confirmPassword !== "" && confirmPassword !== password}
+              className={
+                confirmPassword !== "" && confirmPassword !== password
+                  ? "border-[#c2372e]"
+                  : ""
+              }
+            />
+            {confirmPassword !== "" && confirmPassword !== password ? (
+              <span role="alert" className="text-xs text-[#c2372e]">
+                Passwords don&apos;t match.
+              </span>
+            ) : null}
           </Field>
 
           <fieldset className="flex flex-col gap-2">
@@ -219,7 +285,13 @@ export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }
 
           <FormError message={error} />
 
-          <button type="submit" disabled={loading} className={PRIMARY_BUTTON_CLASS}>
+          <button
+            type="submit"
+            disabled={loading || !agreed}
+            className={`${PRIMARY_BUTTON_CLASS} ${
+              agreed ? "" : "!bg-[#c3c9d1] !opacity-100"
+            }`}
+          >
             {loading ? "Creating account..." : "Create account"}
           </button>
         </form>

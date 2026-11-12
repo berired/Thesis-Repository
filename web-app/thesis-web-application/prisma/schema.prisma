@@ -113,44 +113,129 @@ enum DocumentType {
 }
 
 model Pet {
-  id                   String        @id @default(cuid())
+  id                   String         @id @default(cuid())
   name                 String
   species              String
   breed                String?
   color                String
   sex                  PetSex
   birthDate            DateTime
-  birthDateApproximate Boolean       @default(false)
+  birthDateApproximate Boolean        @default(false)
   neutered             Boolean?
   weightKg             Float?
   microchip            String?
   markings             String?
   medicalNotes         String?
+  allergies            String?
+  archivedAt           DateTime?
   ownerId              String
-  owner                User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  qrCodeId             String?       @unique
-  qrCode               QrCode?       @relation(fields: [qrCodeId], references: [id])
+  owner                User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  qrCodeId             String?        @unique
+  qrCode               QrCode?        @relation(fields: [qrCodeId], references: [id])
   documents            PetDocument[]
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  records              HealthRecord[]
+  reminders            Reminder[]
+  appointments         Appointment[]
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
 
   @@index([ownerId])
   @@map("pet")
 }
 
 model PetDocument {
-  id           String       @id @default(cuid())
+  id           String        @id @default(cuid())
   petId        String
-  pet          Pet          @relation(fields: [petId], references: [id], onDelete: Cascade)
+  pet          Pet           @relation(fields: [petId], references: [id], onDelete: Cascade)
+  recordId     String?
+  record       HealthRecord? @relation(fields: [recordId], references: [id], onDelete: SetNull)
   title        String
-  type         DocumentType @default(OTHER)
+  type         DocumentType  @default(OTHER)
   documentDate DateTime?
   fileKey      String
   fileName     String
   contentType  String
   sizeBytes    Int
-  uploadedAt   DateTime     @default(now())
+  uploadedAt   DateTime      @default(now())
 
   @@index([petId])
   @@map("pet_document")
+}
+
+enum RecordType {
+  VACCINE
+  WEIGHT
+  CHECKUP
+  MEDICATION
+  LAB
+}
+
+model HealthRecord {
+  id         String        @id @default(cuid())
+  petId      String
+  pet        Pet           @relation(fields: [petId], references: [id], onDelete: Cascade)
+  type       RecordType
+  title      String
+  recordDate DateTime
+  clinic     String?
+  vetName    String?
+  notes      String?
+  weightKg   Float?
+  files      PetDocument[]
+  createdAt  DateTime      @default(now())
+
+  @@index([petId, recordDate])
+  @@map("health_record")
+}
+
+enum ReminderCategory {
+  MEDICATION
+  VACCINE
+  CHECKUP
+  CARE
+  WALK
+}
+
+enum ReminderRepeat {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+model Reminder {
+  id          String           @id @default(cuid())
+  petId       String
+  pet         Pet              @relation(fields: [petId], references: [id], onDelete: Cascade)
+  title       String
+  category    ReminderCategory @default(CARE)
+  dueAt       DateTime
+  repeat      ReminderRepeat   @default(NONE)
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+
+  @@index([petId, completedAt, dueAt])
+  @@map("reminder")
+}
+
+enum AppointmentStatus {
+  AWAITING_CLINIC
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  petId       String
+  pet         Pet               @relation(fields: [petId], references: [id], onDelete: Cascade)
+  title       String
+  scheduledAt DateTime
+  clinicName  String
+  status      AppointmentStatus @default(AWAITING_CLINIC)
+  createdAt   DateTime          @default(now())
+
+  @@index([petId, scheduledAt])
+  @@map("appointment")
 }
