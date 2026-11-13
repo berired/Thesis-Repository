@@ -16,7 +16,7 @@ export default async function NewRecordPage({
   return (
     <OwnerPage
       crumbs={[
-        { label: "My animals", href: "/dashboard" },
+        { label: "My animals", href: "/pets" },
         { label: pet.name, href: `/pets/${pet.id}` },
         { label: "Health records", href: `/pets/${pet.id}/records` },
         { label: "Add record" },

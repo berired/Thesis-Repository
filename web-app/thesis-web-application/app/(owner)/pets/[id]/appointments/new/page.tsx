@@ -15,7 +15,7 @@ export default async function NewAppointmentPage({
   return (
     <OwnerPage
       crumbs={[
-        { label: "My animals", href: "/dashboard" },
+        { label: "My animals", href: "/pets" },
         { label: pet.name, href: `/pets/${pet.id}` },
         { label: "Appointments", href: `/pets/${pet.id}/appointments` },
         { label: "Book appointment" },

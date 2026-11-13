@@ -38,3 +38,20 @@ export function getQrImageUrl(key: string, expiresInSeconds = 300) {
     expiresIn: expiresInSeconds,
   });
 }
+
+// Pet profile photos live in the same private bucket under their own prefix.
+export async function uploadPetPhoto(key: string, body: Buffer, contentType: string) {
+  await s3.send(
+    new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }),
+  );
+}
+
+export async function deletePetPhoto(key: string) {
+  await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+}
+
+export function getPetPhotoUrl(key: string, expiresInSeconds = 300) {
+  return getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: key }), {
+    expiresIn: expiresInSeconds,
+  });
+}

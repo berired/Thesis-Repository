@@ -16,7 +16,7 @@ export default async function NewReminderPage({
   return (
     <OwnerPage
       crumbs={[
-        { label: "My animals", href: "/dashboard" },
+        { label: "My animals", href: "/pets" },
         { label: pet.name, href: `/pets/${pet.id}` },
         { label: "Add reminder" },
       ]}

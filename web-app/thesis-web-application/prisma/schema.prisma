@@ -127,6 +127,7 @@ model Pet {
   markings             String?
   medicalNotes         String?
   allergies            String?
+  photoKey             String?
   archivedAt           DateTime?
   ownerId              String
   owner                User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)

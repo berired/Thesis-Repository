@@ -15,7 +15,7 @@ type NavItem = {
 // Only Home has a page of its own so far; the rest are inert until built.
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", icon: "/icons/home.svg", href: "/dashboard" },
-  { label: "My animals", icon: "/icons/paw-nav.svg", section: "/pets" },
+  { label: "My animals", icon: "/icons/paw-nav.svg", href: "/pets", section: "/pets" },
   { label: "Health records", icon: "/icons/records.svg" },
   { label: "Reminders", icon: "/icons/bell-nav.svg" },
   { label: "Find a vet", icon: "/icons/map-pin-nav.svg" },
@@ -57,9 +57,10 @@ export default function OwnerSidebar({
 
       <ul className="flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => {
-          const active = item.href
-            ? pathname === item.href
-            : item.section !== undefined && pathname.startsWith(item.section);
+          const active =
+            item.section !== undefined
+              ? pathname.startsWith(item.section)
+              : item.href !== undefined && pathname === item.href;
           const badge = item.label === "Reminders" ? reminderCount : item.badge;
           const base =
             "flex h-11 items-center gap-3 rounded-[10px] px-3 text-sm";
@@ -68,19 +69,15 @@ export default function OwnerSidebar({
             : "font-medium text-white";
           const content = (
             <>
-              {/* The Figma icons are single-colour; Home is exported dark, so
-                  flip it to white when it isn't the active item. */}
+              {/* The Figma icons are single-colour but exported in different
+                  colours, so force black when active and white otherwise. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.icon}
                 alt=""
                 width={20}
                 height={20}
-                className={
-                  !active && item.href === "/dashboard"
-                    ? "brightness-0 invert"
-                    : undefined
-                }
+                className={active ? "brightness-0" : "brightness-0 invert"}
               />
               <span className="flex-1 pb-px">{item.label}</span>
               {badge ? (

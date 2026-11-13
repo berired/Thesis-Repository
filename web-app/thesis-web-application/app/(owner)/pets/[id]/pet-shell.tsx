@@ -53,7 +53,7 @@ export default function PetShell({
   const style = styleFor(pet.species);
   const base = `/pets/${pet.id}`;
   const crumbs = [
-    { label: "My animals", href: "/dashboard" },
+    { label: "My animals", href: "/pets" },
     crumb ? { label: pet.name, href: base } : { label: pet.name },
     ...(crumb ? [{ label: crumb }] : []),
   ];

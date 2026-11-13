@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Icon from "@/app/components/icon";
+import { INPUT_CLASS, SECONDARY_BUTTON_CLASS } from "@/app/components/ui";
 
 // Camera scanning needs HTTPS (or localhost); typing the code always works.
 export default function QrStep({
@@ -48,11 +50,11 @@ export default function QrStep({
     <div className="flex flex-col gap-4">
       {scanning ? (
         <>
-          <video ref={videoRef} className="w-full max-w-sm rounded border" />
+          <video ref={videoRef} className="w-full max-w-sm rounded-xl border border-line" />
           <button
             type="button"
             onClick={() => setScanning(false)}
-            className="self-start rounded border px-3 py-2 text-sm"
+            className={`${SECONDARY_BUTTON_CLASS} !w-auto self-start`}
           >
             Cancel scan
           </button>
@@ -64,15 +66,16 @@ export default function QrStep({
             setError(null);
             setScanning(true);
           }}
-          className="self-start rounded border px-3 py-2 text-sm"
+          className={`${SECONDARY_BUTTON_CLASS} !w-auto self-start`}
         >
+          <Icon name="qr-code" size={16} />
           Scan QR with camera
         </button>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-[#c2372e]">{error}</p>}
 
-      <label className="flex flex-col gap-1 text-sm">
+      <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
         Or type the code
         <input
           value={value}
@@ -80,7 +83,7 @@ export default function QrStep({
           placeholder="e.g. 7k3m9xq2wd4h"
           autoCapitalize="none"
           autoComplete="off"
-          className="rounded border px-3 py-2 font-mono"
+          className={`${INPUT_CLASS} !h-10 !rounded-lg !text-sm font-mono`}
         />
       </label>
     </div>

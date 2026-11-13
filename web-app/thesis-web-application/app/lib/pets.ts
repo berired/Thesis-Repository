@@ -1,4 +1,4 @@
-export const SPECIES = ["Dog", "Cat", "Bird", "Rabbit", "Hamster", "Reptile", "Other"];
+export const SPECIES = ["Dog", "Cat", "Bird", "Poultry", "Reptile", "Fish", "Rabbit", "Other"];
 
 export function formatAge(birthDate: Date, approximate: boolean) {
   const now = new Date();

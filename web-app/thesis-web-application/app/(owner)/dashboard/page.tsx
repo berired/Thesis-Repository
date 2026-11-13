@@ -1,20 +1,17 @@
 import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
-import { formatAge } from "@/app/lib/pets";
 import OwnerPage from "@/app/components/owner-page";
 import Icon from "@/app/components/icon";
 import ReminderCard from "@/app/components/reminder-card";
-import { PetAvatar, SpeciesBadge } from "@/app/components/pet-avatar";
+import { PetAvatar } from "@/app/components/pet-avatar";
+import PetCard from "@/app/components/pet-card";
 import {
   APPOINTMENT_CHIP,
   APPOINTMENT_ICON,
   APPOINTMENT_LABEL,
-  CATEGORY_ICON,
   endOfToday,
-  fmtDay,
   fmtTime,
-  reminderState,
   startOfToday,
   whenPhrase,
 } from "@/app/lib/care";
@@ -304,68 +301,11 @@ export default async function DashboardPage() {
           </p>
         ) : (
           <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {pets.map((pet) => {
-              const reminder = pet.reminders[0];
-              const appt = pet.appointments[0];
-              const isToday = (d: Date) => d.toDateString() === now.toDateString();
-              // The soonest of the next reminder and the next visit.
-              const next =
-                reminder && (!appt || reminder.dueAt <= appt.scheduledAt)
-                  ? {
-                      icon: CATEGORY_ICON[reminder.category],
-                      title: reminder.title,
-                      urgent: reminderState(reminder.dueAt, now) === "overdue",
-                      when:
-                        reminderState(reminder.dueAt, now) === "overdue"
-                          ? "Overdue"
-                          : isToday(reminder.dueAt)
-                            ? "Today"
-                            : fmtDay(reminder.dueAt),
-                    }
-                  : appt
-                    ? {
-                        icon: "stethoscope" as const,
-                        title: appt.title,
-                        urgent: false,
-                        when: isToday(appt.scheduledAt) ? "Today" : fmtDay(appt.scheduledAt),
-                      }
-                    : null;
-              return (
-                <li key={pet.id}>
-                  <Link
-                    href={`/pets/${pet.id}`}
-                    className="flex h-full flex-col gap-4 rounded-xl border border-line bg-white p-5 hover:border-forest"
-                  >
-                    <span className="flex items-center gap-3.5">
-                      <PetAvatar name={pet.name} species={pet.species} size={56} />
-                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="truncate text-lg font-semibold leading-[23.4px]">
-                          {pet.name}
-                        </span>
-                        <span className="truncate text-[13px] leading-[19.5px] text-muted">
-                          {pet.breed ? `${pet.breed} · ` : ""}
-                          {formatAge(pet.birthDate, pet.birthDateApproximate)}
-                        </span>
-                      </span>
-                      <SpeciesBadge species={pet.species} />
-                    </span>
-                    <span className="flex items-center gap-2 rounded-lg bg-[#f6f8fa] px-3 py-2.5 text-[13px]">
-                      {next ? (
-                        <>
-                          <Icon name={next.icon} size={14} className="shrink-0 text-sky" />
-                          <span className="flex-1 truncate">{next.title}</span>
-                          <span className={next.urgent ? "text-[#b42318]" : "text-muted"}>
-                            {next.when}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-muted">Nothing scheduled</span>
-                      )}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
+            {pets.map((pet) => (
+              <li key={pet.id}>
+                <PetCard pet={pet} now={now} />
+              </li>
+            ))}
           </ul>
         )}
       </section>

@@ -13,6 +13,7 @@ export type PetInput = {
   weightKg: number | null;
   microchip: string | null;
   markings: string | null;
+  allergies: string | null;
   medicalNotes: string | null;
 };
 

@@ -6,7 +6,7 @@ const tunnelHosts = ["*.trycloudflare.com"];
 const nextConfig: NextConfig = {
   allowedDevOrigins: tunnelHosts,
   experimental: {
-    serverActions: { allowedOrigins: tunnelHosts },
+    serverActions: { allowedOrigins: tunnelHosts, bodySizeLimit: "6mb" },
   },
 };
 
