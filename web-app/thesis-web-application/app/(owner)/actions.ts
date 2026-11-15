@@ -202,6 +202,15 @@ export async function removePet(
   redirect("/dashboard");
 }
 
+export async function setLostMode(petId: string, fd: FormData) {
+  const pet = await ownedPet(petId);
+  await prisma.pet.update({
+    where: { id: pet.id },
+    data: { lostMode: fd.get("lost") === "on" },
+  });
+  revalidatePath("/", "layout");
+}
+
 export async function restorePet(petId: string) {
   const pet = await ownedPet(petId);
   await prisma.pet.update({ where: { id: pet.id }, data: { archivedAt: null } });

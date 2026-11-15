@@ -39,12 +39,12 @@ export default function ReminderCard({
 }) {
   const state = reminderState(reminder.dueAt);
   return (
-    <li className="flex items-center gap-3 rounded-xl border border-line bg-white p-3.5">
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-line bg-white p-3.5">
       <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-[#eef3fb] text-sky">
         <Icon name={CATEGORY_ICON[reminder.category]} size={18} />
       </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p className="truncate text-[15px] font-semibold leading-[22.5px] text-ink">
+      <div className="flex min-w-0 flex-1 basis-40 flex-col gap-0.5">
+        <p className="break-words text-[15px] font-semibold leading-[22.5px] text-ink">
           {reminder.title}
         </p>
         <p className="flex flex-wrap items-center gap-x-1.5 text-[13px] leading-[19.5px] text-muted">

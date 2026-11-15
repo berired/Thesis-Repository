@@ -58,6 +58,8 @@ export const auth = betterAuth({
     additionalFields: {
       // Comma-separated list from the sign-up form, e.g. "Dogs,Cats".
       animalTypes: { type: "string", required: false, input: true },
+      // Contact number from the sign-up form; the form enforces it, so Google sign-ups still work.
+      phone: { type: "string", required: false, input: true },
     },
   },
   trustedOrigins: [

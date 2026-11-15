@@ -37,13 +37,30 @@ export default function RemoveDialog({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => ref.current?.showModal()}
-        className="self-start text-sm font-medium text-[#b42318] underline"
-      >
-        Remove {petName}
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setMode("archive");
+            ref.current?.showModal();
+          }}
+          className="flex h-9 items-center gap-1.5 rounded-lg border border-[#c3c9d1] bg-white px-3 text-[13px] font-semibold text-ink hover:bg-[#f6f8fa]"
+        >
+          <Icon name="archive" size={14} />
+          Archive
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMode("delete");
+            ref.current?.showModal();
+          }}
+          className="flex h-9 items-center gap-1.5 rounded-lg bg-[#b42318] px-3 text-[13px] font-semibold text-white hover:bg-[#9a1e14]"
+        >
+          <Icon name="trash-2" size={14} />
+          Delete
+        </button>
+      </div>
 
       <dialog
         ref={ref}

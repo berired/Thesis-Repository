@@ -14,12 +14,15 @@ export default function OwnerPage({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col">
-      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-8">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-line px-4 sm:gap-3 sm:px-8">
         {crumbs ? (
-          <nav aria-label="Breadcrumb" className="text-sm text-muted">
+          <nav aria-label="Breadcrumb" className="min-w-0 truncate text-sm text-muted">
             {crumbs.map((crumb, i) => (
-              <span key={crumb.label}>
-                {i > 0 ? " / " : null}
+              <span
+                key={crumb.label}
+                className={i < crumbs.length - 1 ? "hidden sm:inline" : undefined}
+              >
+                {i > 0 ? <span className="hidden sm:inline"> / </span> : null}
                 {crumb.href ? (
                   <Link href={crumb.href} className="hover:text-ink">
                     {crumb.label}
@@ -31,7 +34,7 @@ export default function OwnerPage({
             ))}
           </nav>
         ) : (
-          <div className="relative w-[360px] max-w-full">
+          <div className="relative w-full max-w-[360px] min-w-0 flex-1 sm:flex-none">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/icons/search.svg"
@@ -48,7 +51,7 @@ export default function OwnerPage({
             />
           </div>
         )}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
             href="/pets/new"
             aria-label="Scan a QR tag"
@@ -64,10 +67,10 @@ export default function OwnerPage({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icons/bell.svg" alt="" width={20} height={20} />
           </button>
-          <SignOutButton className="h-10 rounded-xl border border-line bg-white px-4 text-sm font-medium text-ink hover:bg-[#f6f8fa]" />
+          <SignOutButton className="hidden h-10 rounded-xl sm:block border border-line bg-white px-4 text-sm font-medium text-ink hover:bg-[#f6f8fa]" />
         </div>
       </header>
-      <main className="flex flex-1 flex-col gap-6 px-8 py-7">{children}</main>
+      <main className="flex flex-1 flex-col gap-6 px-4 py-5 sm:px-8 sm:py-7">{children}</main>
     </div>
   );
 }

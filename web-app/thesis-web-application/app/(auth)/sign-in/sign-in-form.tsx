@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PasswordInput from "@/app/components/password-input";
 import { authClient } from "@/app/lib/auth-client";
-import { safeNext } from "@/app/lib/safe-next";
 import {
   AuthCard,
   Field,
@@ -18,16 +17,15 @@ import {
   Wordmark,
 } from "@/app/components/ui";
 
-function nextPath() {
-  return safeNext(new URLSearchParams(window.location.search).get("next"));
-}
-
 export default function SignInForm({
   googleEnabled,
   emailEnabled,
+  next,
 }: {
   googleEnabled: boolean;
   emailEnabled: boolean;
+  /** Where to go after signing in; null means the default for the account's role. */
+  next: string | null;
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -45,7 +43,7 @@ export default function SignInForm({
       email,
       password,
       rememberMe,
-      callbackURL: nextPath(),
+      callbackURL: (next ?? "/"),
     });
 
     setLoading(false);
@@ -57,7 +55,7 @@ export default function SignInForm({
       setError(error.message ?? "Unable to sign in");
       return;
     }
-    router.push(nextPath());
+    router.push((next ?? "/"));
     router.refresh();
   }
 
@@ -65,7 +63,7 @@ export default function SignInForm({
     setError(null);
     const { error } = await authClient.signIn.social({
       provider: "google",
-      callbackURL: nextPath(),
+      callbackURL: (next ?? "/"),
     });
     if (error) setError(error.message ?? "Google sign-in failed");
   }
@@ -172,7 +170,10 @@ export default function SignInForm({
 
         <p className="text-center text-[13px] text-muted">
           New to Pawket Book?{" "}
-          <Link href="/sign-up" className="text-sky underline">
+          <Link
+            href={next ? `/sign-up?next=${encodeURIComponent(next)}` : "/sign-up"}
+            className="text-sky underline"
+          >
             Create an account
           </Link>
         </p>

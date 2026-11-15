@@ -1,11 +1,13 @@
 import Link from "next/link";
 import OwnerPage from "@/app/components/owner-page";
 import Icon from "@/app/components/icon";
-import { PetAvatar, styleFor } from "@/app/components/pet-avatar";
+import { PetAvatar, petPhotoSrc, styleFor } from "@/app/components/pet-avatar";
 import { StickerLink } from "@/app/components/ui";
 import { shortAge } from "@/app/lib/care";
 import { restorePet } from "@/app/(owner)/actions";
 import type { getOwnedPet } from "@/app/lib/pet-data";
+import QrTag from "./qr-tag";
+import LostModeToggle from "./lost-mode-toggle";
 
 type Pet = Awaited<ReturnType<typeof getOwnedPet>>;
 export type PetTab = "overview" | "records" | "appointments";
@@ -24,18 +26,6 @@ function Chip({ children, className }: { children: React.ReactNode; className: s
 
 const GHOST_BUTTON =
   "flex h-10 items-center gap-2 rounded-xl border border-[#c3c9d1] bg-white px-[18px] text-[15px] font-semibold text-ink";
-
-function Locked({ children }: { children: React.ReactNode }) {
-  return (
-    <span
-      aria-disabled="true"
-      title={LOCKED_TITLE}
-      className={`${GHOST_BUTTON} cursor-not-allowed select-none !text-[#a0a7b0]`}
-    >
-      {children}
-    </span>
-  );
-}
 
 /** Everything the pet pages share: breadcrumb, banner and tab bar. */
 export default function PetShell({
@@ -84,18 +74,19 @@ export default function PetShell({
         </div>
       ) : null}
 
-      <section className="flex items-center gap-6 rounded-3xl bg-forest px-8 py-7">
+      <section className="flex flex-col gap-4 rounded-3xl bg-forest px-5 py-5 sm:px-8 sm:py-7 xl:flex-row xl:items-center xl:gap-6">
         {big ? (
           <span
             className={`flex size-[116px] shrink-0 items-center justify-center rounded-full border-[3px] border-white bg-white shadow-[6px_6px_0_var(--color-butter)]`}
           >
-            <PetAvatar name={pet.name} species={pet.species} size={104} />
+            <PetAvatar name={pet.name} species={pet.species} size={104} photoSrc={petPhotoSrc(pet)} />
           </span>
         ) : (
           <PetAvatar
             name={pet.name}
             species={pet.species}
             size={64}
+            photoSrc={petPhotoSrc(pet)}
             className="border-[3px] border-white shadow-[4px_4px_0_var(--color-blush)]"
           />
         )}
@@ -103,7 +94,7 @@ export default function PetShell({
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <h1
             className={`truncate font-display text-butter ${
-              big ? "text-[56px] leading-[56px]" : "text-[40px] leading-10"
+              big ? "text-[40px] leading-[44px] sm:text-[56px] sm:leading-[56px]" : "text-[32px] leading-9 sm:text-[40px] sm:leading-10"
             }`}
           >
             {pet.name}
@@ -118,19 +109,25 @@ export default function PetShell({
               </Chip>
             </div>
           ) : null}
+          {big ? (
+            <div className="mt-1">
+              <LostModeToggle petId={pet.id} petName={pet.name} lost={pet.lostMode} />
+            </div>
+          ) : null}
         </div>
 
-        <div className="flex shrink-0 items-center gap-[9px]">
+        <div className="flex shrink-0 flex-wrap items-center gap-[9px]">
           {big ? (
             <>
-              <Locked>
+              <Link href={`${base}/edit`} className={GHOST_BUTTON}>
                 <Icon name="pencil" size={16} />
                 Edit
-              </Locked>
-              <Locked>
-                <Icon name="qr-code" size={16} />
-                QR tag
-              </Locked>
+              </Link>
+              <QrTag
+                code = {pet.qrCode?.code ?? null}
+                petName = {pet.name}
+                className = {GHOST_BUTTON}
+              />
             </>
           ) : null}
           {active === "appointments" ? (
@@ -148,7 +145,7 @@ export default function PetShell({
         </div>
       </section>
 
-      <nav aria-label="Pet sections" className="flex gap-1 border-b border-line">
+      <nav aria-label="Pet sections" className="-mx-4 flex gap-1 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0">
         {tabs.map((tab) => {
           const isActive = tab.key === active;
           const inner = (
@@ -161,7 +158,7 @@ export default function PetShell({
               ) : null}
             </>
           );
-          const cls = "-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm";
+          const cls = "-mb-px flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm";
           return tab.href ? (
             <Link
               key={tab.key}

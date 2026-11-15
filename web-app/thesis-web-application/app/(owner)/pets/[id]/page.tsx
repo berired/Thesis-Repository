@@ -5,7 +5,6 @@ import ReminderCard from "@/app/components/reminder-card";
 import { getOwnedPet } from "@/app/lib/pet-data";
 import { RECORD_ICON, fmtFull } from "@/app/lib/care";
 import PetShell from "./pet-shell";
-import RemoveDialog from "./remove-dialog";
 
 export default async function PetOverviewPage({
   params,
@@ -42,7 +41,7 @@ export default async function PetOverviewPage({
 
   return (
     <PetShell pet={pet} active="overview">
-      <div className="grid items-start gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
         <section className="flex flex-col gap-4 rounded-xl border border-line bg-white p-5">
           <h2 className="text-lg font-semibold leading-6">Details</h2>
           <dl className="flex flex-col gap-3">
@@ -58,11 +57,6 @@ export default async function PetOverviewPage({
               {pet.medicalNotes}
             </p>
           ) : null}
-          <RemoveDialog
-            petId={pet.id}
-            petName={pet.name}
-            recordCount={pet._count.records}
-          />
         </section>
 
         <section className="flex flex-col gap-3">

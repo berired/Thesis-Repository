@@ -42,16 +42,25 @@ export const FALLBACK_STYLE: SpeciesStyle = {
 
 export const styleFor = (species: string) => SPECIES_STYLE[species] ?? FALLBACK_STYLE;
 
+/** Owner-only URL for a pet's profile photo, or null when it has none. */
+export function petPhotoSrc(pet: { id: string; photoKey: string | null; updatedAt: Date }) {
+  // The version changes on every save, so a replaced photo isn't served from cache.
+  return pet.photoKey ? `/api/pets/${pet.id}/photo?v=${pet.updatedAt.getTime()}` : null;
+}
+
 export function PetAvatar({
   name,
   species,
   size = 56,
   className = "",
+  photoSrc = null,
 }: {
   name: string;
   species: string;
   size?: number;
   className?: string;
+  /** From petPhotoSrc; shown instead of the species icon when present. */
+  photoSrc?: string | null;
 }) {
   const style = styleFor(species);
   return (
@@ -59,7 +68,10 @@ export function PetAvatar({
       style={{ width: size, height: size }}
       className={`flex shrink-0 items-center justify-center overflow-clip rounded-full font-semibold ${style.avatar} ${style.text} ${className}`}
     >
-      {style.avatarIcon ? (
+      {photoSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={photoSrc} alt={`${name}'s photo`} className="size-full object-cover" />
+      ) : style.avatarIcon ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={style.avatarIcon} alt="" width={size / 2} height={size / 2} />
       ) : (

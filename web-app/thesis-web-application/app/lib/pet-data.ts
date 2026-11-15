@@ -9,6 +9,7 @@ export const getOwnedPet = cache(async (id: string) => {
   const pet = await prisma.pet.findFirst({
     where: { id, ownerId: session.user.id },
     include: {
+      qrCode: { select: { code: true }},
       _count: {
         select: {
           records: true,

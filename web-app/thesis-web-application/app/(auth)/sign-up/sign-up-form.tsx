@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PasswordInput from "@/app/components/password-input";
 import { authClient } from "@/app/lib/auth-client";
+import { PHONE_ERROR, cleanPhone } from "@/app/lib/phone";
 import {
   AuthCard,
   Field,
@@ -28,11 +29,21 @@ const ANIMALS = [
   { label: "Rabbits", icon: "/icons/chip-rabbit.svg" },
 ];
 
-export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
+export default function SignUpForm({
+  googleEnabled,
+  next,
+}: {
+  googleEnabled: boolean;
+  /** Where to go once the account exists, e.g. a scanned tag's registration page. */
+  next: string | null;
+}) {
+  const destination = next ?? "/dashboard";
+  const signInHref = next ? `/sign-in?next=${encodeURIComponent(next)}` : "/sign-in";
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailTaken, setEmailTaken] = useState(false);
@@ -77,6 +88,11 @@ export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }
     e.preventDefault();
     setError(null);
 
+    const cleanedPhone = cleanPhone(phone);
+    if (!cleanedPhone) {
+      setError(PHONE_ERROR);
+      return;
+    }
     if (password.length < 8 || !/\d/.test(password)) {
       setError("Use at least 8 characters, with a number.");
       return;
@@ -100,7 +116,8 @@ export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }
       email,
       password,
       animalTypes: animals.join(","),
-      callbackURL: "/dashboard",
+      phone: cleanedPhone,
+      callbackURL: destination,
     });
     setLoading(false);
 
@@ -110,7 +127,7 @@ export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }
     }
     // A session token comes back only when no email confirmation is required.
     if (data?.token) {
-      router.push("/dashboard");
+      router.push(destination);
       router.refresh();
       return;
     }
@@ -121,7 +138,7 @@ export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }
     setError(null);
     const { error } = await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/dashboard",
+      callbackURL: destination,
     });
     if (error) setError(error.message ?? "Google sign-in failed");
   }
@@ -205,11 +222,23 @@ export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }
             {emailTaken ? (
               <span id="email-taken" role="alert" className="text-xs text-[#c2372e]">
                 An account with this email already exists.{" "}
-                <Link href="/sign-in" className="font-medium underline">
+                <Link href={signInHref} className="font-medium underline">
                   Sign in instead
                 </Link>
               </span>
             ) : null}
+          </Field>
+          <Field label="Contact number">
+            <input
+              type="tel"
+              required
+              autoComplete="tel"
+              inputMode="tel"
+              placeholder="e.g. 0917 555 0123"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className={INPUT_CLASS}
+            />
           </Field>
           <Field label="Password" hint="At least 8 characters, with a number">
             <PasswordInput
@@ -298,7 +327,7 @@ export default function SignUpForm({ googleEnabled }: { googleEnabled: boolean }
 
         <p className="text-center text-[13px] text-muted">
           Already have an account?{" "}
-          <Link href="/sign-in" className="text-sky underline">
+          <Link href={signInHref} className="text-sky underline">
             Sign in
           </Link>
         </p>

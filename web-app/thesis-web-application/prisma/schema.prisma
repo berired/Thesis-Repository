@@ -17,6 +17,10 @@ model User {
   emailVerified Boolean   @default(false)
   image         String?
   animalTypes   String?
+  phone         String?
+  address       String?
+  showPhone     Boolean   @default(false)
+  showAddress   Boolean   @default(false)
   banned        Boolean?  @default(false)
   banReason     String?
   banExpires    DateTime?
@@ -128,6 +132,7 @@ model Pet {
   medicalNotes         String?
   allergies            String?
   photoKey             String?
+  lostMode             Boolean        @default(false)
   archivedAt           DateTime?
   ownerId              String
   owner                User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)

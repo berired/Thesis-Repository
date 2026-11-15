@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import { requireAdmin } from "@/app/lib/session";
 import { getQrImageUrl } from "@/app/lib/storage";
 import { qrUrlForCode } from "@/app/lib/qr";
 import CreateQrForm from "./create-form";
 import DeleteButton from "./delete-button";
+import EditLabel from "./edit-label";
 
 export default async function QrCodesPage() {
   await requireAdmin();
@@ -23,7 +25,12 @@ export default async function QrCodesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">QR codes</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">QR codes</h1>
+        <Link href="/admin/qr-codes/print" className="rounded border px-3 py-1.5 text-sm">
+          Print layout
+        </Link>
+      </div>
 
       <CreateQrForm />
 
@@ -32,7 +39,7 @@ export default async function QrCodesPage() {
           <tr>
             <th className="py-2">Code</th>
             <th>Link</th>
-            <th>Batch</th>
+            <th>Label</th>
             <th>Status</th>
             <th>Created</th>
             <th>Image</th>
@@ -44,7 +51,9 @@ export default async function QrCodesPage() {
             <tr key={qr.id} className="border-b">
               <td className="py-2 font-mono">{qr.code}</td>
               <td className="font-mono">{qrUrlForCode(qr.code)}</td>
-              <td>{qr.batch ?? "-"}</td>
+              <td>
+                <EditLabel id={qr.id} label={qr.batch} />
+              </td>
               <td>{qr.status}</td>
               <td>{qr.createdAt.toLocaleDateString()}</td>
               <td>

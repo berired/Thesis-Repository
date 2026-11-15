@@ -53,6 +53,18 @@ export async function createQrCodes(
   return { created: count };
 }
 
+/** Sets or clears one code's label (stored in the `batch` column). */
+export async function updateQrLabel(formData: FormData) {
+  await requireAdmin();
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing QR code.");
+  const label = String(formData.get("label") ?? "").trim().slice(0, 80) || null;
+
+  await prisma.qrCode.update({ where: { id }, data: { batch: label } });
+  revalidatePath("/admin/qr-codes");
+}
+
 export async function deleteQrCode(formData: FormData) {
   await requireAdmin();
 

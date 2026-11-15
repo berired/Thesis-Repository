@@ -60,7 +60,7 @@ export default function PetForm({ initialCode }: { initialCode: string }) {
     <form action={formAction} className="flex min-w-0 flex-1 flex-col">
       <input type="hidden" name="code" value={code} />
 
-      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-8">
+      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-4 sm:px-8">
         <Link
           href="/pets"
           className="flex items-center gap-1.5 text-[13px] font-semibold text-sky hover:underline"
@@ -86,10 +86,10 @@ export default function PetForm({ initialCode }: { initialCode: string }) {
         </div>
       </header>
 
-      <main className="flex flex-col gap-5 px-8 py-7">
-        <h1 className="font-display text-[44px] leading-[48px] text-forest">Add an animal</h1>
+      <main className="flex flex-col gap-5 px-4 py-5 sm:px-8 sm:py-7">
+        <h1 className="font-display text-[36px] leading-[40px] text-forest sm:text-[44px] sm:leading-[48px]">Add an animal</h1>
 
-        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="flex flex-col gap-4">
             <fieldset className={CARD}>
               <legend className="sr-only">What kind of animal?</legend>
@@ -123,7 +123,7 @@ export default function PetForm({ initialCode }: { initialCode: string }) {
             <section className={`${CARD} flex flex-col gap-4`}>
               <h2 className={CARD_TITLE}>About them</h2>
 
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <label className="flex flex-col gap-1.5">
                   <Label required>Name</Label>
                   <input name="name" required placeholder="e.g. Pepper" className={FIELD} />

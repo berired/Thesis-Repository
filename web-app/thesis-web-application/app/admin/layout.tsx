@@ -11,7 +11,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-between border-b px-6 py-3">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 sm:px-6 print:hidden">
         <nav className="flex items-center gap-4 text-sm">
           <Link href="/admin" className="font-semibold">
             Admin
@@ -25,7 +25,7 @@ export default async function AdminLayout({
           <SignOutButton />
         </div>
       </header>
-      <main className="p-6">{children}</main>
+      <main className="overflow-x-auto p-4 sm:p-6 print:p-0">{children}</main>
     </div>
   );
 }

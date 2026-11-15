@@ -85,14 +85,14 @@ export default async function MyAnimalsPage({
     <OwnerPage>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-[44px] leading-[48px] text-forest">My animals</h1>
+          <h1 className="font-display text-[36px] leading-[40px] text-forest sm:text-[44px] sm:leading-[48px]">My animals</h1>
           <p className="mt-1 text-xs text-muted">
             {pets.length} {pets.length === 1 ? "animal" : "animals"}
           </p>
         </div>
         <Link
           href="/pets/new"
-          className="inline-flex -rotate-3 items-center gap-1.5 rounded-full border-2 border-ink bg-butter px-3.5 pb-[9px] pt-[7px] font-display text-xl leading-5 text-ink shadow-[3px_3px_0_var(--color-ink)]"
+          className="inline-flex shrink-0 -rotate-3 items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-ink bg-butter px-3.5 pb-[9px] pt-[7px] font-display text-xl leading-5 text-ink shadow-[3px_3px_0_var(--color-ink)]"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/plus.svg" alt="" width={18} height={18} />
@@ -163,7 +163,7 @@ export default async function MyAnimalsPage({
 
       <ul
         className={
-          view === "list" ? "flex flex-col gap-4" : "grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+          view === "list" ? "flex flex-col gap-4" : "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
         }
       >
         {shown.map((pet) => (
@@ -182,7 +182,7 @@ export default async function MyAnimalsPage({
         </li>
       </ul>
 
-      <section className="mt-auto flex items-center gap-6 rounded-2xl bg-forest px-8 py-6">
+      <section className="mt-auto flex flex-col gap-4 rounded-2xl bg-forest px-5 py-5 sm:flex-row sm:items-center sm:gap-6 sm:px-8 sm:py-6">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h2 className="font-display text-[28px] leading-[30px] text-butter">Share the care</h2>
           <p className="text-[13px] leading-5 text-white">

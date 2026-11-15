@@ -116,7 +116,7 @@ export default async function AppointmentsPage({
 
   return (
     <PetShell pet={pet} active="appointments" crumb="Appointments">
-      <div className="grid items-start gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <section className="flex flex-col gap-3">
           <h2 className="font-display text-[26px] leading-7 text-forest">Upcoming</h2>
           {upcoming.length === 0 ? (

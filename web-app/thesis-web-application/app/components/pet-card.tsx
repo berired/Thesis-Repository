@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Icon from "@/app/components/icon";
-import { PetAvatar, SpeciesBadge } from "@/app/components/pet-avatar";
+import { PetAvatar, SpeciesBadge, petPhotoSrc } from "@/app/components/pet-avatar";
 import { formatAge } from "@/app/lib/pets";
 import { CATEGORY_ICON, fmtDay, reminderState } from "@/app/lib/care";
 import type { IconName } from "@/app/components/icon";
@@ -13,6 +13,8 @@ export type PetCardData = {
   breed: string | null;
   birthDate: Date;
   birthDateApproximate: boolean;
+  photoKey: string | null;
+  updatedAt: Date;
   reminders: { title: string; dueAt: Date; category: ReminderCategory }[];
   appointments: { title: string; scheduledAt: Date }[];
 };
@@ -55,7 +57,7 @@ export default function PetCard({ pet, now = new Date() }: { pet: PetCardData; n
       className="flex h-full flex-col gap-4 rounded-xl border border-line bg-white p-5 hover:border-forest"
     >
       <span className="flex items-center gap-3.5">
-        <PetAvatar name={pet.name} species={pet.species} size={56} />
+        <PetAvatar name={pet.name} species={pet.species} size={56} photoSrc={petPhotoSrc(pet)} />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-lg font-semibold leading-[23.4px]">{pet.name}</span>
           <span className="truncate text-[13px] leading-[19.5px] text-muted">

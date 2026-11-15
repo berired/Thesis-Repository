@@ -20,7 +20,7 @@ export default async function OwnerLayout({
   });
 
   return (
-    <div className="flex min-h-screen bg-cream text-ink">
+    <div className="flex min-h-screen bg-cream pb-[72px] text-ink lg:pb-0">
       <OwnerSidebar userName={session.user.name} reminderCount={reminderCount} />
       {children}
     </div>

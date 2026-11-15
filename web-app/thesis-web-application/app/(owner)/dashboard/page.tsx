@@ -4,7 +4,7 @@ import { requireUser } from "@/app/lib/session";
 import OwnerPage from "@/app/components/owner-page";
 import Icon from "@/app/components/icon";
 import ReminderCard from "@/app/components/reminder-card";
-import { PetAvatar } from "@/app/components/pet-avatar";
+import { PetAvatar, petPhotoSrc } from "@/app/components/pet-avatar";
 import PetCard from "@/app/components/pet-card";
 import {
   APPOINTMENT_CHIP,
@@ -81,7 +81,7 @@ export default async function DashboardPage() {
     prisma.pet.findMany({
       where: { ownerId: session.user.id, archivedAt: { not: null } },
       orderBy: { archivedAt: "desc" },
-      select: { id: true, name: true, species: true },
+      select: { id: true, name: true, species: true, photoKey: true, updatedAt: true },
     }),
     prisma.reminder.findMany({
       where: { completedAt: null, dueAt: { lt: endOfToday(now) }, pet: activePets },
@@ -107,12 +107,12 @@ export default async function DashboardPage() {
   if (pets.length === 0 && archived.length === 0) {
     return (
       <OwnerPage>
-        <section className="flex items-center gap-12 rounded-3xl bg-forest px-12 py-12 text-white">
+        <section className="flex items-center gap-12 rounded-3xl bg-forest px-6 py-8 text-white sm:px-12 sm:py-12">
           <div className="flex min-w-0 max-w-[560px] flex-1 flex-col items-start">
             <p className="text-[15px] font-medium leading-[22.5px]">
               Hi {firstName}, your account is ready.
             </p>
-            <h1 className="mt-4 font-display text-6xl leading-[0.805] text-butter md:text-[96px]">
+            <h1 className="mt-4 font-display text-[52px] leading-[0.805] text-butter sm:text-6xl md:text-[96px]">
               <span className="block">Let&apos;s add</span>
               <span className="block">your first</span>
               <span className="block">animal</span>
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <ol className="grid gap-5 md:grid-cols-3">
+        <ol className="grid grid-cols-1 gap-5 md:grid-cols-3">
           {STEPS.map((step) => (
             <li
               key={step.n}
@@ -199,15 +199,15 @@ export default async function DashboardPage() {
 
   return (
     <OwnerPage>
-      <section className="flex items-center gap-6 rounded-3xl bg-forest px-8 py-7">
+      <section className="flex flex-col gap-4 rounded-3xl bg-forest px-5 py-5 sm:px-8 sm:py-7 xl:flex-row xl:items-center xl:gap-6">
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <p className="text-sm font-medium leading-[21px] text-white">{dateLabel}</p>
-          <h1 className="font-display text-5xl leading-none text-butter md:text-[56px]">
+          <h1 className="font-display text-[40px] leading-none text-butter sm:text-5xl md:text-[56px]">
             {greeting(now.getHours())}, {firstName}
           </h1>
           <p className="text-base leading-6 text-white">{summary}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-[9px]">
+        <div className="flex shrink-0 flex-wrap items-center gap-[9px]">
           <span
             aria-disabled="true"
             title="Coming soon"
@@ -221,7 +221,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <div className="grid items-start gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <section className="flex flex-col gap-3">
           <div className="flex items-end justify-between">
             <h2 className="font-display text-[30px] leading-[33px] text-forest">
@@ -300,7 +300,7 @@ export default async function DashboardPage() {
             All your animals are archived. Restore one below, or add a new animal.
           </p>
         ) : (
-          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {pets.map((pet) => (
               <li key={pet.id}>
                 <PetCard pet={pet} now={now} />
@@ -319,7 +319,7 @@ export default async function DashboardPage() {
                 key={pet.id}
                 className="flex items-center gap-3 rounded-xl border border-line bg-white px-4 py-3"
               >
-                <PetAvatar name={pet.name} species={pet.species} size={36} />
+                <PetAvatar name={pet.name} species={pet.species} size={36} photoSrc={petPhotoSrc(pet)} />
                 <Link href={`/pets/${pet.id}`} className="flex-1 font-medium hover:underline">
                   {pet.name}
                 </Link>
