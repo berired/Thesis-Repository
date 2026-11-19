@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
 import OwnerPage from "@/app/components/owner-page";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 import ReminderCard from "@/app/components/reminder-card";
 import { PetAvatar, petPhotoSrc } from "@/app/components/pet-avatar";
 import PetCard from "@/app/components/pet-card";

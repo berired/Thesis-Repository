@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 import ReminderCard from "@/app/components/reminder-card";
 import { getOwnedPet } from "@/app/lib/pet-data";
 import { RECORD_ICON, fmtFull } from "@/app/lib/care";

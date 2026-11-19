@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
-import Icon, { type IconName } from "@/app/components/icon";
+import Icon, { type IconName } from "@/app/components/app-icon";
 import { getOwnedPet } from "@/app/lib/pet-data";
 import { RECORD_LABEL, fmtFull } from "@/app/lib/care";
 import type { RecordType } from "@/app/generated/prisma/client";

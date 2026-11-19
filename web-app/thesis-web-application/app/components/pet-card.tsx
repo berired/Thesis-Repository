@@ -1,9 +1,9 @@
 import Link from "next/link";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 import { PetAvatar, SpeciesBadge, petPhotoSrc } from "@/app/components/pet-avatar";
 import { formatAge } from "@/app/lib/pets";
 import { CATEGORY_ICON, fmtDay, reminderState } from "@/app/lib/care";
-import type { IconName } from "@/app/components/icon";
+import type { IconName } from "@/app/components/app-icon";
 import type { ReminderCategory } from "@/app/generated/prisma/client";
 
 export type PetCardData = {

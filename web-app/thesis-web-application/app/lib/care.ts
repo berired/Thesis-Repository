@@ -4,7 +4,7 @@ import type {
   ReminderCategory,
   ReminderRepeat,
 } from "../generated/prisma/client";
-import type { IconName } from "@/app/components/icon";
+import type { IconName } from "@/app/components/app-icon";
 
 /* Dates are read and written in the server's local time zone. */
 

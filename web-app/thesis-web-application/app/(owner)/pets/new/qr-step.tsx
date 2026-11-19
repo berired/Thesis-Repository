@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 import { INPUT_CLASS, SECONDARY_BUTTON_CLASS } from "@/app/components/ui";
 
 // Camera scanning needs HTTPS (or localhost); typing the code always works.

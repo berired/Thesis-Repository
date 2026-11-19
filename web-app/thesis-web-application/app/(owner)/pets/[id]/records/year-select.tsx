@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 
 export default function YearSelect({
   years,

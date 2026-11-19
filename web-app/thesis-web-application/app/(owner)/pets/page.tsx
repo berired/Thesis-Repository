@@ -3,7 +3,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
 import { SPECIES } from "@/app/lib/pets";
 import OwnerPage from "@/app/components/owner-page";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 import PetCard, { nextThing } from "@/app/components/pet-card";
 import SortSelect from "./sort-select";
 

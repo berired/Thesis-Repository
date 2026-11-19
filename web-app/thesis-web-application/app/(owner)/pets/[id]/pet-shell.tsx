@@ -1,6 +1,6 @@
 import Link from "next/link";
 import OwnerPage from "@/app/components/owner-page";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 import { PetAvatar, petPhotoSrc, styleFor } from "@/app/components/pet-avatar";
 import { StickerLink } from "@/app/components/ui";
 import { shortAge } from "@/app/lib/care";

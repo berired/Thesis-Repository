@@ -1,5 +1,5 @@
 import { prisma } from "@/app/lib/prisma";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 import { getOwnedPet } from "@/app/lib/pet-data";
 import {
   APPOINTMENT_CHIP,

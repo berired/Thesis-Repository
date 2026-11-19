@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 
 type NavItem = {
   label: string;

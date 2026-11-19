@@ -1,4 +1,4 @@
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 import {
   CATEGORY_ICON,
   REPEAT_LABEL,

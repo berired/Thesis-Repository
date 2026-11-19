@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 import { FormError } from "@/app/components/ui";
 import { removePet, type FormState } from "@/app/(owner)/actions";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 
 export default function QrTagDialog({
     svg,

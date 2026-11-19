@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 
 export const SORTS = [
   { value: "due", label: "Next due first" },

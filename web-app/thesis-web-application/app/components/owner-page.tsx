@@ -1,6 +1,6 @@
 import Link from "next/link";
 import SignOutButton from "@/app/components/sign-out-button";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 
 export type Crumb = { label: string; href?: string };
 

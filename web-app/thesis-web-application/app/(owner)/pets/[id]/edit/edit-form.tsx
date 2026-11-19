@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
-import Icon from "@/app/components/icon";
+import Icon from "@/app/components/app-icon";
 import { FormError, INPUT_CLASS } from "@/app/components/ui";
 import { SPECIES } from "@/app/lib/pets";
 import RemoveDialog from "../remove-dialog";
