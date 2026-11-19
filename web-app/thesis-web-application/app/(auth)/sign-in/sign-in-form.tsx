@@ -19,11 +19,9 @@ import {
 
 export default function SignInForm({
   googleEnabled,
-  emailEnabled,
   next,
 }: {
   googleEnabled: boolean;
-  emailEnabled: boolean;
   /** Where to go after signing in; null means the default for the account's role. */
   next: string | null;
 }) {
@@ -48,10 +46,6 @@ export default function SignInForm({
 
     setLoading(false);
     if (error) {
-      if (error.status === 403) {
-        router.push(`/check-email?email=${encodeURIComponent(email)}`);
-        return;
-      }
       setError(error.message ?? "Unable to sign in");
       return;
     }
@@ -126,33 +120,15 @@ export default function SignInForm({
             />
           </Field>
 
-          <div className="flex items-center justify-between gap-3">
-            <label className="flex items-center gap-2.5 text-[15px] text-ink">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="size-5 rounded-md accent-sky"
-              />
-              Keep me signed in
-            </label>
-            {emailEnabled ? (
-              <Link
-                href="/forgot-password"
-                className="text-sm font-medium text-sky underline"
-              >
-                Forgot password?
-              </Link>
-            ) : (
-              <span
-                aria-disabled="true"
-                title="Password reset by email is coming soon"
-                className="cursor-not-allowed select-none text-sm font-medium text-[#a0a7b0]"
-              >
-                Forgot password?
-              </span>
-            )}
-          </div>
+          <label className="flex items-center gap-2.5 text-[15px] text-ink">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="size-5 rounded-md accent-sky"
+            />
+            Keep me signed in
+          </label>
 
           <FormError message={error} />
 

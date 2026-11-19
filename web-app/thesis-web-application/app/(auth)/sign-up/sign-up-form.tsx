@@ -111,7 +111,7 @@ export default function SignUpForm({
       setLoading(false);
       return;
     }
-    const { data, error } = await authClient.signUp.email({
+    const { error } = await authClient.signUp.email({
       name: `${firstName.trim()} ${lastName.trim()}`.trim(),
       email,
       password,
@@ -125,13 +125,8 @@ export default function SignUpForm({
       setError(error.message ?? "Unable to sign up");
       return;
     }
-    // A session token comes back only when no email confirmation is required.
-    if (data?.token) {
-      router.push(destination);
-      router.refresh();
-      return;
-    }
-    router.push(`/check-email?email=${encodeURIComponent(email)}`);
+    router.push(destination);
+    router.refresh();
   }
 
   async function handleGoogle() {
