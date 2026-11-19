@@ -32,6 +32,12 @@ export const auth = betterAuth({
   trustedOrigins: [
     "http://localhost:3000",
     "https://*.trycloudflare.com",
+    "https://pawketbook.vercel.app",
+    // Vercel preview deployments, plus any custom domain set via the env vars.
+    "https://*.vercel.app",
+    ...[process.env.BETTER_AUTH_URL, process.env.APP_URL].filter(
+      (url): url is string => !!url,
+    ),
   ],
   plugins: [admin(), nextCookies()],
 });
