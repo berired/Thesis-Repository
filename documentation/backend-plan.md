@@ -84,6 +84,16 @@ Before writing code in any phase, read the relevant guide in `node_modules/next/
 - Edit animal page (owner only) with an allergies field, photo slot, and the existing archive and delete. Add allergies to the registration form too.
 **Exit checks:** owners fully manage their own records and files; vet-submitted records cannot be deleted or edited beyond the visit date; ownership enforced through the Phase 0 helper.
 
+**Design decisions (2026-11-23, after checking Figma nodes 131:355, 131:1018, 131:1283, 131:1628, 39:1024):**
+- **Type-specific fields as nullable columns** on `HealthRecord` (not a JSON blob, so they can be filtered and feed Phase 3 reminders): `dose`, `batchNumber`, `startDate`, `endDate`, `nextDueDate`. Per type: Vaccination = title (vaccine name), `recordDate` (date given), clinic, `batchNumber`, `nextDueDate`; Medication = title (medication name), `dose`, clinic (Figma's "Prescribed by"), `startDate`, `endDate`; Weight = `weightKg`; Check-up, Lab result and Other = title, date, clinic, notes. The provenance migration and these columns ship together in one Phase 2 migration.
+- **Clinic and vet fields are free text**, not dropdowns (no partner clinics yet). `vetName` stays reserved for vet-submitted records (Phase 4); owner-created records only use `clinic`.
+- **Keep `PetDocument`** as the file table. A file's `DocumentType` defaults from its record's type (Vaccination, Vet visit and Lab result map across; the rest become Other).
+- **One shared record form** (fields per type, attachments panel) used for add and edit now and reused unchanged by the Phase 4 vet form.
+- **Attachment flow:** files are chosen in the form and uploaded on Save, after the record exists, so no orphan files pile up if someone abandons the form. Each file shows progress and a clear rejection (for example "Can't attach video files"); if some fail, the owner lands on the edit page with the failures shown. A separate "Add attachments" dialog (Figma 131:1628) attaches files to an existing record, with a "Take a photo" camera option and the 5-file cap. Individual files can be removed on owner-made records only.
+- **Edit record on vet-submitted records:** ignore Figma's copy-on-edit box and "Delete record" button (already decided); show a read-only view with the visit date editable.
+- **Health records page:** animal chips (All animals plus one per animal), type chips (Vaccines, Medication, Check-ups, Lab, Weight, plus Other), year filter, search, Animal column, Add record button, record count line. Export PDF stays disabled until Phase 8.
+- **Build order:** (1) migration, (2) shared form with create, edit and delete actions and the provenance guards, (3) attachments uploader and dialog, (4) all-pets Health records page and record detail, (5) Edit animal and allergies on registration, (6) smoke test with two users, then mark done.
+
 ### Phase 3: Appointments, reminders and notifications
 **Prerequisites:** Phase 2 done.
 **Deliverables:**
@@ -103,7 +113,7 @@ Before writing code in any phase, read the relevant guide in `node_modules/next/
 - Abuse protection (decided 2026-11-23): tokens are long and random (at least 128 bits, stored hashed); per-IP rate limits on the public routes (page load, upload, submit); at most 5 active (unused, unexpired) QRs per pet; one submission per QR. No CAPTCHA.
 - One-time use means one burned token and one record per QR: the first real load burns the token and starts the ~45 minute session, the vet submits one record inside it, and the QR is then spent. A further record needs a new QR.
 - Public no-login page: burns the token on the first real load (not on bots or link previews), starts a cookie-bound session of about 45 minutes.
-- Vet form: reuse the add-record form built in Phase 2 (same component, fields and attachment uploader) in a public, no-login layout. Differences: Vet Name and Clinic Name are required, the animal is fixed to the QR's pet, and all six record types are offered (vaccination, check-up or vet visit, lab result, medication, weight, other; decided 2026-11-23). Plus a read-only view of the allowed sections. Server-side checks and per-session upload cap. Build the Phase 2 form as a shared component so Phase 4 does not fork it.
+- Vet form: reuse the add-record form built in Phase 2 (same component, per-type fields and attachment uploader) in a public, no-login layout. Differences: Vet Name and Clinic Name are required, the animal is fixed to the QR's pet, and all six record types are offered (vaccination, check-up or vet visit, lab result, medication, weight, other; decided 2026-11-23). Plus a read-only view of the allowed sections. Server-side checks and per-session upload cap. Build the Phase 2 form as a shared component so Phase 4 does not fork it.
 - Bell trigger: vet record submitted.
 **Exit checks:** expired, revoked, burned and unknown tokens are rejected; a bot request does not burn the token; the session cannot see sections the owner did not allow; the submitted record shows with the badge; the owner can edit only its visit date and cannot delete it.
 
