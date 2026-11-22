@@ -90,39 +90,38 @@ export function nextDue(dueAt: Date, repeat: ReminderRepeat, now = new Date()) {
 }
 
 export const RECORD_LABEL: Record<RecordType, string> = {
-  VACCINE: "Vaccine",
-  WEIGHT: "Weight",
-  CHECKUP: "Check-up",
+  VACCINATION: "Vaccination",
+  VET_VISIT: "Check-up",
+  LAB_RESULT: "Lab result",
   MEDICATION: "Medication",
-  LAB: "Lab",
+  WEIGHT: "Weight",
+  OTHER: "Other",
 };
 
 export const RECORD_ICON: Record<RecordType, IconName> = {
-  VACCINE: "syringe",
-  WEIGHT: "weight",
-  CHECKUP: "stethoscope",
+  VACCINATION: "syringe",
+  VET_VISIT: "stethoscope",
+  LAB_RESULT: "flask-conical",
   MEDICATION: "pill",
-  LAB: "flask-conical",
+  WEIGHT: "weight",
+  OTHER: "file-text",
 };
 
 export const APPOINTMENT_LABEL: Record<AppointmentStatus, string> = {
-  AWAITING_CLINIC: "Awaiting clinic",
-  CONFIRMED: "Confirmed",
-  COMPLETED: "Completed",
+  UPCOMING: "Upcoming",
+  DONE: "Done",
   CANCELLED: "Cancelled",
 };
 
 export const APPOINTMENT_CHIP: Record<AppointmentStatus, string> = {
-  AWAITING_CLINIC: "bg-[#fff0cc] text-[#8a5a00]",
-  CONFIRMED: "bg-[#ddf1e8] text-[#0f6b47]",
-  COMPLETED: "bg-[#e6eefb] text-[#2a559e]",
+  UPCOMING: "bg-[#fff0cc] text-[#8a5a00]",
+  DONE: "bg-[#e6eefb] text-[#2a559e]",
   CANCELLED: "bg-[#eef0f3] text-muted",
 };
 
 export const APPOINTMENT_ICON: Record<AppointmentStatus, IconName> = {
-  AWAITING_CLINIC: "clock",
-  CONFIRMED: "circle-check",
-  COMPLETED: "check",
+  UPCOMING: "clock",
+  DONE: "check",
   CANCELLED: "circle-x",
 };
 

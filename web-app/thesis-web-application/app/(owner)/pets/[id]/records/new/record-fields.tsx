@@ -4,15 +4,16 @@ import { useState } from "react";
 import { Field, INPUT_CLASS } from "@/app/components/ui";
 
 const TYPES = [
-  ["VACCINE", "Vaccine"],
-  ["WEIGHT", "Weight"],
-  ["CHECKUP", "Check-up"],
+  ["VACCINATION", "Vaccination"],
+  ["VET_VISIT", "Check-up or vet visit"],
+  ["LAB_RESULT", "Lab result"],
   ["MEDICATION", "Medication"],
-  ["LAB", "Lab result"],
+  ["WEIGHT", "Weight"],
+  ["OTHER", "Other"],
 ] as const;
 
 export default function RecordFields({ today }: { today: string }) {
-  const [type, setType] = useState("VACCINE");
+  const [type, setType] = useState("VACCINATION");
   const weight = type === "WEIGHT";
 
   return (

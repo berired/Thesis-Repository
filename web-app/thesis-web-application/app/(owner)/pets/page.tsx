@@ -6,6 +6,7 @@ import OwnerPage from "@/app/components/owner-page";
 import Icon from "@/app/components/app-icon";
 import PetCard, { nextThing } from "@/app/components/pet-card";
 import SortSelect from "./sort-select";
+import { accessiblePets } from "@/app/lib/pet-access";
 
 const CHIP_ICON: Record<string, string | null> = {
   Dog: "/icons/chip-dog.svg",
@@ -43,12 +44,12 @@ export default async function MyAnimalsPage({
   const now = new Date();
 
   const pets = await prisma.pet.findMany({
-    where: { ownerId: session.user.id, archivedAt: null },
+    where: { ...accessiblePets(session.user.id), archivedAt: null },
     orderBy: { createdAt: "desc" },
     include: {
       reminders: { where: { completedAt: null }, orderBy: { dueAt: "asc" }, take: 1 },
       appointments: {
-        where: { status: { in: ["AWAITING_CLINIC", "CONFIRMED"] }, scheduledAt: { gte: now } },
+        where: { status: "UPCOMING", scheduledAt: { gte: now } },
         orderBy: { scheduledAt: "asc" },
         take: 1,
       },

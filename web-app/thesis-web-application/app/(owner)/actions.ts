@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/app/lib/prisma";
+import { getPetAccess, ownedPets } from "@/app/lib/pet-access";
 import { requireUser } from "@/app/lib/session";
 import { nextDue } from "@/app/lib/care";
 import type {
@@ -13,7 +14,14 @@ import type {
 
 export type FormState = { error?: string } | undefined;
 
-const RECORD_TYPES: RecordType[] = ["VACCINE", "WEIGHT", "CHECKUP", "MEDICATION", "LAB"];
+const RECORD_TYPES: RecordType[] = [
+  "VACCINATION",
+  "VET_VISIT",
+  "LAB_RESULT",
+  "MEDICATION",
+  "WEIGHT",
+  "OTHER",
+];
 const CATEGORIES: ReminderCategory[] = ["MEDICATION", "VACCINE", "CHECKUP", "CARE", "WALK"];
 const REPEATS: ReminderRepeat[] = ["NONE", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
 
@@ -35,8 +43,11 @@ function parseDate(value: string) {
 /** The signed-in user's pet (archived or not), or throws. */
 async function ownedPet(petId: string) {
   const session = await requireUser();
-  const pet = await prisma.pet.findFirst({
-    where: { id: petId, ownerId: session.user.id },
+  if ((await getPetAccess(session.user.id, petId)) !== "owner") {
+    throw new Error("Pet not found");
+  }
+  const pet = await prisma.pet.findUnique({
+    where: { id: petId },
     select: { id: true, name: true, qrCodeId: true },
   });
   if (!pet) throw new Error("Pet not found");
@@ -103,10 +114,9 @@ export async function createAppointment(
 ): Promise<FormState> {
   await ownedPet(petId);
   const title = text(fd, "title");
-  const clinicName = text(fd, "clinicName");
+  const clinicName = optional(fd, "clinicName");
   const scheduledAt = parseDate(text(fd, "scheduledAt"));
   if (!title) return { error: "Give the appointment a title." };
-  if (!clinicName) return { error: "Enter the clinic's name." };
   if (!scheduledAt) return { error: "Choose a date and time." };
   if (scheduledAt <= new Date()) return { error: "Choose a time in the future." };
 
@@ -146,7 +156,7 @@ export async function completeReminder(reminderId: string) {
     where: {
       id: reminderId,
       completedAt: null,
-      pet: { ownerId: session.user.id },
+      pet: ownedPets(session.user.id),
     },
   });
   if (!reminder) return;
@@ -164,8 +174,8 @@ export async function cancelAppointment(appointmentId: string) {
   await prisma.appointment.updateMany({
     where: {
       id: appointmentId,
-      status: { in: ["AWAITING_CLINIC", "CONFIRMED"] },
-      pet: { ownerId: session.user.id },
+      status: "UPCOMING",
+      pet: ownedPets(session.user.id),
     },
     data: { status: "CANCELLED" },
   });

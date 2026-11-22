@@ -42,7 +42,7 @@ Do not start phase N+1 until phase N meets all of these:
 
 Before writing code in any phase, read the relevant guide in `node_modules/next/dist/docs/` (this Next.js version has breaking changes, see `AGENTS.md`).
 
-### Phase 0: Foundations
+### Phase 0: Foundations (DONE 2026-11-23)
 **Prerequisites:** none.
 **Deliverables:**
 - Pull the latest `stage`. Create the backend branch from `stage` (the current branch is `frontend-updates`).
@@ -51,6 +51,13 @@ Before writing code in any phase, read the relevant guide in `node_modules/next/
 - One shared pet-access helper (`getPetAccess(userId, petId)` returning `owner`, `viewer` or none). All pet queries and server actions go through it, so shared access (Phase 7) needs no rewrite.
 - Schema cleanup migration: replace `AppointmentStatus` with `UPCOMING / DONE / CANCELLED` and make the clinic name optional free text; align `RecordType` with the vet types plus the owner types (vaccination, vet visit or check-up, lab result, medication, weight, other) and map or migrate existing rows; align the species list with Figma (Dog, Cat, Bird, Poultry, Reptile, Fish, Rabbit, Other).
 **Exit checks:** helper is used by every existing owner query; migration applied; existing pages still work.
+
+**Done notes (2026-11-23):**
+- Helper: `app/lib/pet-access.ts` (`getPetAccess`, `accessiblePets`, `ownedPets`). Used by `getOwnedPet`, the server actions in `(owner)/actions.ts` and `edit/actions.ts`, the photo route, and the dashboard, My animals and owner layout queries. `/r/[code]` and `claim-pet.ts` are the public scan and claim paths and are deliberately not owner-gated.
+- Migration `20261123120000_phase0_enum_cleanup`: `RecordType` is now `VACCINATION / VET_VISIT / LAB_RESULT / MEDICATION / WEIGHT / OTHER`; `AppointmentStatus` is `UPCOMING / DONE / CANCELLED`; `appointment.clinicName` is optional. Species already matched Figma, no change. Applied to the Neon `stage` branch only. **Not yet applied to production `main`.**
+- Audit findings carried forward: the one bucket is `qr-codes` (env `STORAGE_BUCKET_QR`) holding `qr/` and `pet-photos/`; Phase 1 creates `pet-files` and Phase 8 reconciles `pet-photos/` with the `photos/` prefix. `PetDocument` is schema only (nothing creates documents) and its `DocumentType` enum overlaps the new `RecordType`; Phase 2 decides whether to keep it. The sidebar Appointments link and the greyed Health records, Reminders, Messages and Find a vet items are placeholders (Phase 3 removes the Appointments link). The add-record form sets `clinic` but never `vetName` (Phase 2/4).
+- A past-dated `UPCOMING` appointment shows as Done on the pet's Appointments tab, and the "Waiting for clinic" panel is removed. Phase 3 adds a proper mark-done control.
+- Smoke test (browser, local dev against the stage DB): sign-up, register a pet by QR, all six record types, weight record updates pet weight, appointment without a clinic, cancel appointment, reminder create and complete, edit pet, lost-mode scan page (shows last vaccine), archive, restore, delete (cascade, QR freed), another user's pet returns 404. Type-check, lint and build pass.
 
 ### Phase 1: Private storage and uploads
 **Prerequisites:** Phase 0 done.
@@ -178,4 +185,4 @@ End-to-end walkthrough of owner, vet, admin, finder and invitee flows, with no o
 - No Figma screens yet for: vet QR generate/list/revoke, the public vet form, admin void and audit, caretaker invite flow. Decided 2026-11-23: build these directly in the existing style (existing components and the Figma style guide); they do not block their phases. Add Figma frames afterward if wanted.
 
 ## Still open
-Nothing. Next step is step 1 of the build order (private bucket and presigned uploads).
+Nothing. Phase 0 is done; the next step is Phase 1 (private bucket and presigned uploads).

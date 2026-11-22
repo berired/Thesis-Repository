@@ -169,11 +169,12 @@ model PetDocument {
 }
 
 enum RecordType {
-  VACCINE
-  WEIGHT
-  CHECKUP
+  VACCINATION
+  VET_VISIT
+  LAB_RESULT
   MEDICATION
-  LAB
+  WEIGHT
+  OTHER
 }
 
 model HealthRecord {
@@ -226,9 +227,8 @@ model Reminder {
 }
 
 enum AppointmentStatus {
-  AWAITING_CLINIC
-  CONFIRMED
-  COMPLETED
+  UPCOMING
+  DONE
   CANCELLED
 }
 
@@ -238,8 +238,8 @@ model Appointment {
   pet         Pet               @relation(fields: [petId], references: [id], onDelete: Cascade)
   title       String
   scheduledAt DateTime
-  clinicName  String
-  status      AppointmentStatus @default(AWAITING_CLINIC)
+  clinicName  String?
+  status      AppointmentStatus @default(UPCOMING)
   createdAt   DateTime          @default(now())
 
   @@index([petId, scheduledAt])

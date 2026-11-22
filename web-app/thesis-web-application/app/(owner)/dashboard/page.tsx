@@ -16,6 +16,7 @@ import {
   whenPhrase,
 } from "@/app/lib/care";
 import { restorePet } from "@/app/(owner)/actions";
+import { accessiblePets } from "@/app/lib/pet-access";
 
 function greeting(hour: number) {
   if (hour < 12) return "Good morning";
@@ -62,8 +63,7 @@ export default async function DashboardPage() {
   const firstName = session.user.name.split(/\s+/)[0];
 
   const now = new Date();
-  const openStatuses = ["AWAITING_CLINIC", "CONFIRMED"] as const;
-  const activePets = { ownerId: session.user.id, archivedAt: null };
+    const activePets = { ...accessiblePets(session.user.id), archivedAt: null };
 
   const [pets, archived, care, careCount, visits] = await Promise.all([
     prisma.pet.findMany({
@@ -72,14 +72,14 @@ export default async function DashboardPage() {
       include: {
         reminders: { where: { completedAt: null }, orderBy: { dueAt: "asc" }, take: 1 },
         appointments: {
-          where: { status: { in: [...openStatuses] }, scheduledAt: { gte: now } },
+          where: { status: "UPCOMING", scheduledAt: { gte: now } },
           orderBy: { scheduledAt: "asc" },
           take: 1,
         },
       },
     }),
     prisma.pet.findMany({
-      where: { ownerId: session.user.id, archivedAt: { not: null } },
+      where: { ...accessiblePets(session.user.id), archivedAt: { not: null } },
       orderBy: { archivedAt: "desc" },
       select: { id: true, name: true, species: true, photoKey: true, updatedAt: true },
     }),
@@ -94,7 +94,7 @@ export default async function DashboardPage() {
     }),
     prisma.appointment.findMany({
       where: {
-        status: { in: [...openStatuses] },
+        status: "UPCOMING",
         scheduledAt: { gte: now },
         pet: activePets,
       },
@@ -277,10 +277,12 @@ export default async function DashboardPage() {
                       <Icon name="clock" size={14} />
                       {fmtTime(v.scheduledAt)}
                     </p>
-                    <p className="flex items-center gap-1.5 text-[13px] text-muted">
-                      <Icon name="map-pin" size={14} />
-                      {v.clinicName}
-                    </p>
+                    {v.clinicName ? (
+                      <p className="flex items-center gap-1.5 text-[13px] text-muted">
+                        <Icon name="map-pin" size={14} />
+                        {v.clinicName}
+                      </p>
+                    ) : null}
                     <p className="flex items-center gap-1.5 text-[13px] text-muted">
                       <Icon name="paw-print" size={14} />
                       {v.pet.name}

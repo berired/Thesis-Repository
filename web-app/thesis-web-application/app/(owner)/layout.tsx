@@ -2,6 +2,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
 import { endOfToday } from "@/app/lib/care";
 import OwnerSidebar from "@/app/components/owner-sidebar";
+import { accessiblePets } from "@/app/lib/pet-access";
 
 export default async function OwnerLayout({
   children,
@@ -15,7 +16,7 @@ export default async function OwnerLayout({
     where: {
       completedAt: null,
       dueAt: { lt: endOfToday() },
-      pet: { ownerId: session.user.id, archivedAt: null },
+      pet: { ...accessiblePets(session.user.id), archivedAt: null },
     },
   });
 

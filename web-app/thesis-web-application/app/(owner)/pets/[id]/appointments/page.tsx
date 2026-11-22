@@ -15,7 +15,7 @@ type Appt = {
   id: string;
   title: string;
   scheduledAt: Date;
-  clinicName: string;
+  clinicName: string | null;
   status: AppointmentStatus;
 };
 
@@ -72,10 +72,12 @@ function ApptCard({
           <Icon name="clock" size={14} />
           {fmtTime(appt.scheduledAt)}
         </p>
-        <p className="flex items-center gap-1.5 text-[13px] text-muted">
-          <Icon name="map-pin" size={14} />
-          {appt.clinicName}
-        </p>
+        {appt.clinicName ? (
+          <p className="flex items-center gap-1.5 text-[13px] text-muted">
+            <Icon name="map-pin" size={14} />
+            {appt.clinicName}
+          </p>
+        ) : null}
         {cancellable ? (
           <form action={cancelAppointment.bind(null, appt.id)} className="mt-1">
             <button type="submit" className="text-[13px] font-medium text-[#b42318] underline">
@@ -102,17 +104,14 @@ export default async function AppointmentsPage({
     orderBy: { scheduledAt: "asc" },
   });
 
-  const isOpen = (a: Appt) => a.status === "AWAITING_CLINIC" || a.status === "CONFIRMED";
+  const isOpen = (a: Appt) => a.status === "UPCOMING";
   const upcoming = all.filter((a) => isOpen(a) && a.scheduledAt >= now);
   const past = all
     .filter((a) => !(isOpen(a) && a.scheduledAt >= now))
     .sort((a, b) => b.scheduledAt.getTime() - a.scheduledAt.getTime());
 
-  // A visit whose date has passed counts as completed only if the clinic confirmed it.
-  const pastStatus = (a: Appt): AppointmentStatus =>
-    a.status === "CONFIRMED" ? "COMPLETED" : a.status === "AWAITING_CLINIC" ? "CANCELLED" : a.status;
-
-  const awaiting = upcoming.find((a) => a.status === "AWAITING_CLINIC");
+  // The owner keeps this calendar, so an upcoming visit whose date has passed counts as done.
+  const pastStatus = (a: Appt): AppointmentStatus => (a.status === "UPCOMING" ? "DONE" : a.status);
 
   return (
     <PetShell pet={pet} active="appointments" crumb="Appointments">
@@ -130,18 +129,6 @@ export default async function AppointmentsPage({
               ))}
             </ul>
           )}
-          {awaiting ? (
-            <div className="flex gap-3 rounded-xl border border-[#b9cdee] bg-[#e6eefb] p-4">
-              <Icon name="info" size={16} className="mt-0.5 shrink-0 text-sky" />
-              <div className="text-[13px] leading-[19.5px]">
-                <p className="font-semibold text-ink">Waiting for {awaiting.clinicName}</p>
-                <p className="text-ink">
-                  Clinics usually reply within a day. We&apos;ll let you know when
-                  it&apos;s confirmed.
-                </p>
-              </div>
-            </div>
-          ) : null}
         </section>
 
         <section className="flex flex-col gap-3">

@@ -9,10 +9,12 @@ import YearSelect from "./year-select";
 
 const FILTERS: { label: string; type?: RecordType; icon?: IconName }[] = [
   { label: "All" },
-  { label: "Vaccines", type: "VACCINE", icon: "syringe" },
+  { label: "Vaccines", type: "VACCINATION", icon: "syringe" },
   { label: "Medication", type: "MEDICATION", icon: "pill" },
-  { label: "Check-ups", type: "CHECKUP", icon: "stethoscope" },
-  { label: "Lab", type: "LAB", icon: "flask-conical" },
+  { label: "Check-ups", type: "VET_VISIT", icon: "stethoscope" },
+  { label: "Lab", type: "LAB_RESULT", icon: "flask-conical" },
+  { label: "Weight", type: "WEIGHT", icon: "weight" },
+  { label: "Other", type: "OTHER" },
 ];
 
 export default async function RecordsPage({

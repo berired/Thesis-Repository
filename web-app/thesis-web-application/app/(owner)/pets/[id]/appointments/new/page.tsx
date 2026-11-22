@@ -34,11 +34,10 @@ export default async function NewAppointmentPage({
           <Field label="Reason for visit" hint="e.g. Annual check-up, Vaccination">
             <input name="title" type="text" required maxLength={120} className={INPUT_CLASS} />
           </Field>
-          <Field label="Clinic">
+          <Field label="Clinic (optional)">
             <input
               name="clinicName"
               type="text"
-              required
               maxLength={120}
               className={INPUT_CLASS}
             />

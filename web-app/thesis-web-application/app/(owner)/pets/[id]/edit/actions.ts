@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { SPECIES } from "@/app/lib/pets";
 import { prisma } from "@/app/lib/prisma";
+import { getPetAccess } from "@/app/lib/pet-access";
 import { requireUser } from "@/app/lib/session";
 import { deletePetPhoto, uploadPetPhoto } from "@/app/lib/storage";
 
@@ -25,10 +26,13 @@ export async function updatePet(
   formData: FormData,
 ): Promise<EditPetState> {
   const session = await requireUser();
-  const pet = await prisma.pet.findFirst({
-    where: { id: petId, ownerId: session.user.id },
-    select: { id: true, photoKey: true },
-  });
+  const pet =
+    (await getPetAccess(session.user.id, petId)) === "owner"
+      ? await prisma.pet.findUnique({
+          where: { id: petId },
+          select: { id: true, photoKey: true },
+        })
+      : null;
   if (!pet) return { error: "We couldn't find this animal." };
 
   const name = text(formData, "name");
