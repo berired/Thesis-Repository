@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/app/lib/prisma";
 import { getPetAccess, ownedPets } from "@/app/lib/pet-access";
 import { requireUser } from "@/app/lib/session";
+import { deleteFile } from "@/app/lib/storage";
 import { nextDue } from "@/app/lib/care";
 import type {
   RecordType,
@@ -193,6 +194,10 @@ export async function removePet(
   if (mode === "archive") {
     await prisma.pet.update({ where: { id: pet.id }, data: { archivedAt: new Date() } });
   } else if (mode === "delete") {
+    const files = await prisma.petDocument.findMany({
+      where: { petId: pet.id },
+      select: { fileKey: true },
+    });
     await prisma.$transaction(async (tx) => {
       // Records, reminders, appointments and documents go with the pet (cascade).
       await tx.pet.delete({ where: { id: pet.id } });
@@ -204,6 +209,8 @@ export async function removePet(
         });
       }
     });
+    // The rows cascaded away; remove the stored files too (best effort).
+    await Promise.allSettled(files.map((f) => deleteFile(f.fileKey)));
   } else {
     return { error: "Choose archive or delete." };
   }

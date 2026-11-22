@@ -59,13 +59,20 @@ Before writing code in any phase, read the relevant guide in `node_modules/next/
 - A past-dated `UPCOMING` appointment shows as Done on the pet's Appointments tab, and the "Waiting for clinic" panel is removed. Phase 3 adds a proper mark-done control.
 - Smoke test (browser, local dev against the stage DB): sign-up, register a pet by QR, all six record types, weight record updates pet weight, appointment without a clinic, cancel appointment, reminder create and complete, edit pet, lost-mode scan page (shows last vaccine), archive, restore, delete (cascade, QR freed), another user's pet returns 404. Type-check, lint and build pass.
 
-### Phase 1: Private storage and uploads
+### Phase 1: Private storage and uploads (DONE 2026-11-23)
 **Prerequisites:** Phase 0 done.
 **Deliverables:**
 - Private `pet-files` bucket with `documents/`, `vet-uploads/`, `photos/` prefixes; CORS set for presigned uploads.
 - Server helpers: presigned upload (type check, size limit, key naming), short-lived signed download URLs, delete.
 - Limits: PDF/JPG/PNG 10 MB, max 5 files per record; photos JPG/PNG/WebP 5 MB.
 **Exit checks:** an owner can upload and open a file; wrong type or oversize is rejected on the server; another user cannot read it; no public URL works.
+
+**Done notes (2026-11-23):**
+- Bucket `pet-files` (private) was created on the Neon `main` branch. `STORAGE_BUCKET_FILES=pet-files` is set locally and on Vercel (production and preview, plain); redeploy to pick it up. The storage credential is shared, so stage reaches it too even though the stage branch does not list it.
+- CORS on `pet-files` allows only `https://pawketbook.vercel.app`, `https://pawketbook-stage.vercel.app` and `http://localhost:3000` (GET, PUT, HEAD). Uploads from other branches' preview URLs are blocked by CORS; add that origin if a preview needs to upload.
+- Code: `app/lib/storage.ts` (presign upload/download, head, delete), `app/lib/pet-files.ts` (type and size rules, server-made keys `documents|vet-uploads|photos/<petId>/<uuid>.<ext>`, post-upload verification that deletes a file that breaks the rules), routes under `/api/pets/[id]/documents` (`upload-url`, confirm `POST`, `GET` and `DELETE` on `[docId]`). Deleting a pet also deletes its stored files.
+- Upload flow for Phase 2 and 4: presign, browser PUT, confirm. The confirm step checks the real stored type and size. The `vet-upload` kind is defined in the rules but has no route yet (Phase 4 adds the public, session-bound one). Photos still go through the server actions into `qr-codes/pet-photos/` until Phase 8.
+- Exit checks run live with two test users: owner upload and open; wrong type, SVG, empty and oversize rejected; signed size or type mismatch rejected by the bucket (403); forged, foreign, `..` and wrong-prefix keys rejected; sixth file on a record rejected; another user gets 404 on read, presign, confirm and delete; signed-out gets 401; unsigned bucket URL and listing return 403; owner delete and pet delete both remove the objects.
 
 ### Phase 2: Owner records and documents
 **Prerequisites:** Phase 1 done.
@@ -185,4 +192,4 @@ End-to-end walkthrough of owner, vet, admin, finder and invitee flows, with no o
 - No Figma screens yet for: vet QR generate/list/revoke, the public vet form, admin void and audit, caretaker invite flow. Decided 2026-11-23: build these directly in the existing style (existing components and the Figma style guide); they do not block their phases. Add Figma frames afterward if wanted.
 
 ## Still open
-Nothing. Phase 0 is done; the next step is Phase 1 (private bucket and presigned uploads).
+Nothing. Phases 0 and 1 are done; the next step is Phase 2 (owner records and documents).
