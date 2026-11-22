@@ -11,7 +11,7 @@ async function load(id: string, docId: string) {
   if (!role) return { status: 404 as const };
   const doc = await prisma.petDocument.findFirst({
     where: { id: docId, petId: id },
-    select: { id: true, fileKey: true, fileName: true },
+    select: { id: true, fileKey: true, fileName: true, record: { select: { source: true } } },
   });
   if (!doc) return { status: 404 as const };
   return { role, doc };
@@ -41,6 +41,8 @@ export async function DELETE(
   const found = await load(id, docId);
   if ("status" in found) return new NextResponse(null, { status: found.status });
   if (found.role !== "owner") return new NextResponse(null, { status: 403 });
+  // Files on a vet-submitted record are part of what the vet submitted.
+  if (found.doc.record?.source === "VET") return new NextResponse(null, { status: 403 });
 
   await prisma.petDocument.delete({ where: { id: found.doc.id } });
   await deleteFile(found.doc.fileKey).catch((e) => console.error("File delete failed", e));

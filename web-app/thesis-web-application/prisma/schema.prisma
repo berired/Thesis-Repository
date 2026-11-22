@@ -177,19 +177,37 @@ enum RecordType {
   OTHER
 }
 
+enum RecordSource {
+  OWNER
+  VET
+}
+
 model HealthRecord {
-  id         String        @id @default(cuid())
-  petId      String
-  pet        Pet           @relation(fields: [petId], references: [id], onDelete: Cascade)
-  type       RecordType
-  title      String
-  recordDate DateTime
-  clinic     String?
-  vetName    String?
-  notes      String?
-  weightKg   Float?
-  files      PetDocument[]
-  createdAt  DateTime      @default(now())
+  id           String         @id @default(cuid())
+  petId        String
+  pet          Pet            @relation(fields: [petId], references: [id], onDelete: Cascade)
+  type         RecordType
+  title        String
+  recordDate   DateTime
+  clinic       String?
+  vetName      String?
+  notes        String?
+  weightKg     Float?
+  // Type-specific fields: vaccination (batchNumber, nextDueDate) and medication (dose, endDate;
+  // the start date is recordDate).
+  dose         String?
+  batchNumber  String?
+  endDate      DateTime?
+  nextDueDate  DateTime?
+  // Provenance: OWNER records are fully editable by the owner; VET records come from the
+  // one-time QR form (Phase 4), keep the vet's name and clinic, and are read-only to owners.
+  source       RecordSource   @default(OWNER)
+  voidedAt     DateTime?
+  voidedById   String?
+  voidReason   String?
+  files        PetDocument[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now()) @updatedAt
 
   @@index([petId, recordDate])
   @@map("health_record")

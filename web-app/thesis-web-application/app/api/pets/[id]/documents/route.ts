@@ -41,8 +41,9 @@ export async function POST(
   // A file attached to a record must attach to one of this pet's records, within the cap.
   let recordId: string | null = null;
   if (typeof body?.recordId === "string" && body.recordId) {
+    // Owners can only attach files to their own records, never to vet-submitted or voided ones.
     const record = await prisma.healthRecord.findFirst({
-      where: { id: body.recordId, petId: id },
+      where: { id: body.recordId, petId: id, source: "OWNER", voidedAt: null },
       select: { id: true, _count: { select: { files: true } } },
     });
     if (!record) return NextResponse.json({ error: "Record not found." }, { status: 404 });

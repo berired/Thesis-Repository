@@ -1,62 +1,21 @@
 import { randomUUID } from "node:crypto";
+import { checkUpload, type FileKind } from "./file-rules";
 import { deleteFile, headFile, presignFileUpload } from "./storage";
 
+export { MAX_FILES_PER_RECORD } from "./file-rules";
+export type { FileKind } from "./file-rules";
+
 /**
- * Upload rules for the private `pet-files` bucket. Nothing here knows who the
- * user is: callers check access with getPetAccess first, then use these.
+ * Upload rules for the private `pet-files` bucket (the rules themselves live in
+ * file-rules.ts so the browser can share them). Nothing here knows who the user
+ * is: callers check access with getPetAccess first, then use these.
  */
-
-export type FileKind = "document" | "vet-upload" | "photo";
-
-const MB = 1024 * 1024;
 
 const PREFIX: Record<FileKind, string> = {
   document: "documents",
   "vet-upload": "vet-uploads",
   photo: "photos",
 };
-
-const RULES: Record<FileKind, { types: Record<string, string>; maxBytes: number }> = {
-  document: {
-    types: { "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png" },
-    maxBytes: 10 * MB,
-  },
-  "vet-upload": {
-    types: { "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png" },
-    maxBytes: 10 * MB,
-  },
-  photo: {
-    types: { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" },
-    maxBytes: 5 * MB,
-  },
-};
-
-/** At most this many files hang off one health record. */
-export const MAX_FILES_PER_RECORD = 5;
-
-export type UploadCheck = { ok: true; ext: string } | { ok: false; error: string };
-
-/** The type and size rules, enforced on the server before a URL is issued. */
-export function checkUpload(kind: FileKind, contentType: string, sizeBytes: number): UploadCheck {
-  const rule = RULES[kind];
-  const ext = rule.types[contentType];
-  if (!ext) {
-    return {
-      ok: false,
-      error:
-        kind === "photo"
-          ? "Photos must be JPG, PNG or WebP."
-          : "Files must be PDF, JPG or PNG.",
-    };
-  }
-  if (!Number.isInteger(sizeBytes) || sizeBytes <= 0) {
-    return { ok: false, error: "That file is empty." };
-  }
-  if (sizeBytes > rule.maxBytes) {
-    return { ok: false, error: `Files must be ${rule.maxBytes / MB} MB or smaller.` };
-  }
-  return { ok: true, ext };
-}
 
 /** Keys are server-made (`documents/<petId>/<uuid>.pdf`); the client never picks one. */
 export function newFileKey(kind: FileKind, petId: string, ext: string) {
