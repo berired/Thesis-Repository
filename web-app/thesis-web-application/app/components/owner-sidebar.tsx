@@ -17,7 +17,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", icon: "/icons/home.svg", href: "/dashboard" },
   { label: "My animals", icon: "/icons/paw-nav.svg", href: "/pets", section: "/pets" },
-  { label: "Health records", icon: "/icons/records.svg" },
+  { label: "Health records", icon: "/icons/records.svg", href: "/records", section: "/records" },
   { label: "Reminders", icon: "/icons/bell-nav.svg" },
   { label: "Find a vet", icon: "/icons/map-pin-nav.svg" },
   { label: "Appointments", icon: "/icons/calendar.svg" },

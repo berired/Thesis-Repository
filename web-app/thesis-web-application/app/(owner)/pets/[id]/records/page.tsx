@@ -5,7 +5,7 @@ import { getOwnedPet } from "@/app/lib/pet-data";
 import { RECORD_LABEL, fmtFull } from "@/app/lib/care";
 import type { RecordType } from "@/app/generated/prisma/client";
 import PetShell from "../pet-shell";
-import YearSelect from "./year-select";
+import YearSelect from "@/app/components/year-select";
 
 const FILTERS: { label: string; type?: RecordType; icon?: IconName }[] = [
   { label: "All" },
@@ -35,6 +35,7 @@ export default async function RecordsPage({
     prisma.healthRecord.findMany({
       where: {
         petId: pet.id,
+        voidedAt: null,
         ...(activeType ? { type: activeType } : {}),
         ...(yearNumber
           ? {
@@ -49,7 +50,7 @@ export default async function RecordsPage({
       include: { _count: { select: { files: true } } },
     }),
     prisma.healthRecord.findMany({
-      where: { petId: pet.id },
+      where: { petId: pet.id, voidedAt: null },
       select: { recordDate: true },
     }),
   ]);
@@ -137,7 +138,19 @@ export default async function RecordsPage({
                     {fmtFull(record.recordDate)}
                   </td>
                   <td className="px-4 py-3.5">{RECORD_LABEL[record.type]}</td>
-                  <td className="px-4 py-3.5">{record.title}</td>
+                  <td className="px-4 py-3.5">
+                    <Link
+                      href={`/pets/${pet.id}/records/${record.id}`}
+                      className="font-medium text-ink hover:underline"
+                    >
+                      {record.title}
+                    </Link>
+                    {record.source === "VET" ? (
+                      <span className="ml-2 rounded-md bg-[#e6eefb] px-1.5 py-0.5 text-[11px] font-semibold text-[#2a559e]">
+                        Vet-submitted
+                      </span>
+                    ) : null}
+                  </td>
                   <td className="px-4 py-3.5">{record.clinic ?? "—"}</td>
                   <td className="px-4 py-3.5 text-right">
                     {record._count.files > 0 ? record._count.files : "—"}

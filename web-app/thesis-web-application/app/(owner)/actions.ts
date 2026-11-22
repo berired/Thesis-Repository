@@ -8,21 +8,12 @@ import { requireUser } from "@/app/lib/session";
 import { deleteFile } from "@/app/lib/storage";
 import { nextDue } from "@/app/lib/care";
 import type {
-  RecordType,
   ReminderCategory,
   ReminderRepeat,
 } from "@/app/generated/prisma/client";
 
 export type FormState = { error?: string } | undefined;
 
-const RECORD_TYPES: RecordType[] = [
-  "VACCINATION",
-  "VET_VISIT",
-  "LAB_RESULT",
-  "MEDICATION",
-  "WEIGHT",
-  "OTHER",
-];
 const CATEGORIES: ReminderCategory[] = ["MEDICATION", "VACCINE", "CHECKUP", "CARE", "WALK"];
 const REPEATS: ReminderRepeat[] = ["NONE", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
 
@@ -53,59 +44,6 @@ async function ownedPet(petId: string) {
   });
   if (!pet) throw new Error("Pet not found");
   return pet;
-}
-
-export async function createRecord(
-  petId: string,
-  _prev: FormState,
-  fd: FormData,
-): Promise<FormState> {
-  await ownedPet(petId);
-
-  const type = text(fd, "type") as RecordType;
-  if (!RECORD_TYPES.includes(type)) return { error: "Choose a record type." };
-  const recordDate = parseDate(text(fd, "recordDate"));
-  if (!recordDate) return { error: "Enter a valid date." };
-  if (recordDate > new Date(Date.now() + 86_400_000)) {
-    return { error: "Records can't be dated in the future." };
-  }
-
-  let title = text(fd, "title");
-  let weightKg: number | null = null;
-  if (type === "WEIGHT") {
-    weightKg = Number(text(fd, "weightKg"));
-    if (!Number.isFinite(weightKg) || weightKg <= 0 || weightKg > 2000) {
-      return { error: "Enter a weight in kg." };
-    }
-    title = `${weightKg} kg`;
-  } else if (!title) {
-    return { error: "Give the record a title." };
-  }
-
-  await prisma.$transaction(async (tx) => {
-    await tx.healthRecord.create({
-      data: {
-        petId,
-        type,
-        title,
-        recordDate,
-        weightKg,
-        clinic: optional(fd, "clinic"),
-        notes: optional(fd, "notes"),
-      },
-    });
-    // Keep the pet's current weight in step with its newest weight record.
-    if (weightKg !== null) {
-      const newer = await tx.healthRecord.findFirst({
-        where: { petId, type: "WEIGHT", recordDate: { gt: recordDate } },
-        select: { id: true },
-      });
-      if (!newer) await tx.pet.update({ where: { id: petId }, data: { weightKg } });
-    }
-  });
-
-  revalidatePath(`/pets/${petId}`, "layout");
-  redirect(`/pets/${petId}/records`);
 }
 
 export async function createAppointment(

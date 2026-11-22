@@ -74,7 +74,7 @@ Before writing code in any phase, read the relevant guide in `node_modules/next/
 - Upload flow for Phase 2 and 4: presign, browser PUT, confirm. The confirm step checks the real stored type and size. The `vet-upload` kind is defined in the rules but has no route yet (Phase 4 adds the public, session-bound one). Photos still go through the server actions into `qr-codes/pet-photos/` until Phase 8.
 - Exit checks run live with two test users: owner upload and open; wrong type, SVG, empty and oversize rejected; signed size or type mismatch rejected by the bucket (403); forged, foreign, `..` and wrong-prefix keys rejected; sixth file on a record rejected; another user gets 404 on read, presign, confirm and delete; signed-out gets 401; unsigned bucket URL and listing return 403; owner delete and pet delete both remove the objects.
 
-### Phase 2: Owner records and documents
+### Phase 2: Owner records and documents (DONE 2026-11-23)
 **Prerequisites:** Phase 1 done.
 **Deliverables:**
 - Owner create, edit and delete for their own records, with attached files.
@@ -93,6 +93,15 @@ Before writing code in any phase, read the relevant guide in `node_modules/next/
 - **Edit record on vet-submitted records:** ignore Figma's copy-on-edit box and "Delete record" button (already decided); show a read-only view with the visit date editable.
 - **Health records page:** animal chips (All animals plus one per animal), type chips (Vaccines, Medication, Check-ups, Lab, Weight, plus Other), year filter, search, Animal column, Add record button, record count line. Export PDF stays disabled until Phase 8.
 - **Build order:** (1) migration, (2) shared form with create, edit and delete actions and the provenance guards, (3) attachments uploader and dialog, (4) all-pets Health records page and record detail, (5) Edit animal and allergies on registration, (6) smoke test with two users, then mark done.
+
+**Done notes (2026-11-23):**
+- Migrations `20261123140000_health_record_fields_and_provenance` and `20261123141000_drop_record_start_date` (applied to Neon `stage` only, **not yet to production**): `dose`, `batchNumber`, `endDate`, `nextDueDate`, `RecordSource` (`OWNER` / `VET`), `voidedAt`, `voidedById`, `voidReason`, `updatedAt` on `HealthRecord`. A medication's start date is `recordDate`, so the planned `startDate` column was dropped.
+- Code: `app/lib/records.ts` (shared parsing and rules, weight sync), `app/lib/file-rules.ts` (shared by server and browser), `app/(owner)/records/actions.ts` (create, update, delete), `app/components/record-form.tsx` (the shared form with the attachments panel; Phase 4 reuses it), `record-date-form.tsx` (vet records: date only), `app/lib/upload-client.ts`, pages `/records`, `/records/new`, `/pets/[id]/records/new`, `/pets/[id]/records/[recordId]` and `.../edit`. The sidebar Health records link is live. Every record query hides voided records.
+- Attachments: no separate dialog was built. The form's attachments panel handles drag and drop, browse, "Take a photo", per-file progress and rejection, the 5-file cap, and removing saved files; the same form covers existing records via Edit. Figma's standalone "Add attachments" modal (131:1628) is therefore not a separate screen.
+- Vet-record rules enforced on the server: owners can change only `recordDate` (any other submitted field is ignored), cannot delete the record, cannot attach files to it or remove its files, and voided records are invisible to owners.
+- Edit animal (allergies, photo, archive, delete) and allergies on registration already existed and were left as they are.
+- Smoke test (browser, two users, live bucket): add vaccination with batch, next due date and two files; rejected text file; rejected sixth file; medication with dose and end date; two weight records (pet weight follows the newest and falls back after the newest is deleted); edit with a changed field, a removed file and added files; delete removed all the record's files from the bucket; vet-submitted record shows the badge, edits date only (injected title, clinic, type, notes and vet name were ignored), file delete returned 403 and attach returned 404; voided record hidden from lists and 404 on detail; another user got 404 on every record page and API; all-animals page filters (animal, type, year) and search (title, clinic) work. Type-check, lint and build pass.
+- Not exercised live: the server-side refusal in `deleteRecord` for vet records. There is no UI path to it; it is a direct code check. Phase 4 should add a test when the first real vet record exists.
 
 ### Phase 3: Appointments, reminders and notifications
 **Prerequisites:** Phase 2 done.
@@ -202,4 +211,4 @@ End-to-end walkthrough of owner, vet, admin, finder and invitee flows, with no o
 - No Figma screens yet for: vet QR generate/list/revoke, the public vet form, admin void and audit, caretaker invite flow. Decided 2026-11-23: build these directly in the existing style (existing components and the Figma style guide); they do not block their phases. Add Figma frames afterward if wanted.
 
 ## Still open
-Nothing. Phases 0 and 1 are done; the next step is Phase 2 (owner records and documents).
+Nothing. Phases 0, 1 and 2 are done; the next step is Phase 3 (appointments, reminders and notifications).

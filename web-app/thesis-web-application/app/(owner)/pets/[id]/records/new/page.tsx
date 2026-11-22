@@ -1,8 +1,6 @@
 import OwnerPage from "@/app/components/owner-page";
-import FormWithError from "@/app/components/form-with-error";
+import RecordForm from "@/app/components/record-form";
 import { getOwnedPet } from "@/app/lib/pet-data";
-import { createRecord } from "@/app/(owner)/actions";
-import RecordFields from "./record-fields";
 
 export default async function NewRecordPage({
   params,
@@ -22,19 +20,8 @@ export default async function NewRecordPage({
         { label: "Add record" },
       ]}
     >
-      <div className="max-w-[520px] rounded-xl border border-line bg-white p-6">
-        <h1 className="mb-4 font-display text-[30px] leading-[33px] text-forest">
-          Add a record for {pet.name}
-        </h1>
-        <FormWithError
-          action={createRecord.bind(null, pet.id)}
-          submitLabel="Save record"
-          pendingLabel="Saving..."
-          cancelHref={`/pets/${pet.id}/records`}
-        >
-          <RecordFields today={today} />
-        </FormWithError>
-      </div>
+      <h1 className="font-display text-[34px] leading-[38px] text-forest">Add a health record</h1>
+      <RecordForm pets={[{ id: pet.id, name: pet.name }]} defaultPetId={pet.id} today={today} />
     </OwnerPage>
   );
 }

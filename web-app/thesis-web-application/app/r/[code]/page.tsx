@@ -40,7 +40,7 @@ export default async function ScanPage({
             select: { name: true, phone: true, address: true, showPhone: true, showAddress: true },
           },
           records: {
-            where: { type: "VACCINATION" },
+            where: { type: "VACCINATION", voidedAt: null },
             orderBy: { recordDate: "desc" },
             take: 1,
             select: { title: true, recordDate: true },

@@ -14,7 +14,7 @@ export const getOwnedPet = cache(async (id: string) => {
       qrCode: { select: { code: true }},
       _count: {
         select: {
-          records: true,
+          records: { where: { voidedAt: null } },
           reminders: { where: { completedAt: null } },
         },
       },

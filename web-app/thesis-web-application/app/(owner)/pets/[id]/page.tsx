@@ -21,7 +21,7 @@ export default async function PetOverviewPage({
       take: 3,
     }),
     prisma.healthRecord.findMany({
-      where: { petId: pet.id },
+      where: { petId: pet.id, voidedAt: null },
       orderBy: { recordDate: "desc" },
       take: 3,
     }),
