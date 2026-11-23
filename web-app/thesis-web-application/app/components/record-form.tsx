@@ -6,9 +6,15 @@ import { useRouter } from "next/navigation";
 import Icon from "@/app/components/app-icon";
 import { Field, FormError, INPUT_CLASS, PRIMARY_BUTTON_CLASS } from "@/app/components/ui";
 import { createRecord, deleteRecord, updateRecord } from "@/app/(owner)/records/actions";
+import { submitVetRecord } from "@/app/v/[token]/actions";
 import { DOCUMENT_ACCEPT, MAX_FILES_PER_RECORD, checkUpload } from "@/app/lib/file-rules";
 import { RECORD_TYPE_OPTIONS } from "@/app/lib/records";
-import { documentTypeFor, formatBytes, uploadRecordFile } from "@/app/lib/upload-client";
+import {
+  documentTypeFor,
+  formatBytes,
+  uploadRecordFile,
+  uploadVetFile,
+} from "@/app/lib/upload-client";
 
 export type RecordFormPet = { id: string; name: string };
 export type RecordFormFile = { id: string; fileName: string; sizeBytes: number };
@@ -69,6 +75,7 @@ export default function RecordForm({
   recordId,
   initial,
   existingFiles = [],
+  vet,
 }: {
   pets: RecordFormPet[];
   defaultPetId: string;
@@ -76,6 +83,8 @@ export default function RecordForm({
   recordId?: string;
   initial?: RecordFormValues;
   existingFiles?: RecordFormFile[];
+  /** Set on the public vet page: submits through the QR session instead of an owner login. */
+  vet?: { token: string };
 }) {
   const router = useRouter();
   const editing = recordId !== undefined;
@@ -100,7 +109,7 @@ export default function RecordForm({
   const vaccine = type === "VACCINATION";
   const weight = type === "WEIGHT";
   const slotsLeft = MAX_FILES_PER_RECORD - saved.length - items.length;
-  const leaveHref = `/pets/${petId}/records`;
+  const leaveHref = vet ? `/v/${vet.token}` : `/pets/${petId}/records`;
 
   function addFiles(list: FileList | File[] | null) {
     if (!list) return;
@@ -155,7 +164,11 @@ export default function RecordForm({
       const fd = new FormData(e.currentTarget);
       fd.set("type", type);
       fd.set("petId", petId);
-      const result = recordId ? await updateRecord(recordId, fd) : await createRecord(fd);
+      const result = vet
+        ? await submitVetRecord(vet.token, fd)
+        : recordId
+          ? await updateRecord(recordId, fd)
+          : await createRecord(fd);
       if ("error" in result) {
         setError(result.error);
         setBusy(false);
@@ -169,13 +182,17 @@ export default function RecordForm({
     for (const item of items) {
       if (item.status === "done") continue;
       patch(item.key, { status: "uploading", percent: 0, error: undefined });
-      const res = await uploadRecordFile(
-        target.petId,
-        target.recordId,
-        item.file,
-        documentTypeFor(type),
-        (percent) => patch(item.key, { percent }),
-      );
+      const res = vet
+        ? await uploadVetFile(vet.token, item.file, documentTypeFor(type), (percent) =>
+            patch(item.key, { percent }),
+          )
+        : await uploadRecordFile(
+            target.petId,
+            target.recordId,
+            item.file,
+            documentTypeFor(type),
+            (percent) => patch(item.key, { percent }),
+          );
       if (res.ok) patch(item.key, { status: "done", percent: 100 });
       else {
         failed += 1;
@@ -185,7 +202,7 @@ export default function RecordForm({
 
     setBusy(false);
     if (failed === 0) {
-      router.push(`/pets/${target.petId}/records`);
+      router.push(vet ? `/v/${vet.token}` : `/pets/${target.petId}/records`);
       router.refresh();
     } else {
       setError(
@@ -252,7 +269,7 @@ export default function RecordForm({
               <select
                 value={petId}
                 onChange={(e) => setPetId(e.target.value)}
-                disabled={editing}
+                disabled={editing || Boolean(vet)}
                 className={INPUT_CLASS}
               >
                 {pets.map((p) => (
@@ -299,10 +316,20 @@ export default function RecordForm({
                 />
               </Field>
             ) : null}
-            <Field label={medication ? "Prescribed by (optional)" : "Clinic (optional)"}>
+            {vet ? (
+              <Field label="Your name" hint="Shown to the owner as who added this">
+                <input name="vetName" type="text" required maxLength={120} className={INPUT_CLASS} />
+              </Field>
+            ) : null}
+            <Field
+              label={
+                vet ? "Clinic name" : medication ? "Prescribed by (optional)" : "Clinic (optional)"
+              }
+            >
               <input
                 name="clinic"
                 type="text"
+                required={Boolean(vet)}
                 maxLength={120}
                 defaultValue={values.clinic}
                 className={INPUT_CLASS}
@@ -324,7 +351,7 @@ export default function RecordForm({
                 <input name="endDate" type="date" defaultValue={values.endDate} className={INPUT_CLASS} />
               </Field>
             ) : null}
-            {medication ? (
+            {medication && !vet ? (
               <div className="flex flex-col gap-3 rounded-lg bg-cream p-3.5">
                 <label className="flex items-center gap-2 text-sm font-medium">
                   <input
@@ -431,7 +458,7 @@ export default function RecordForm({
                   : "Save record"}
           </button>
           <Link
-            href={savedId ? `/pets/${savedId.petId}/records` : leaveHref}
+            href={savedId ? (vet ? leaveHref : `/pets/${savedId.petId}/records`) : leaveHref}
             className="text-[15px] font-medium text-sky"
           >
             {savedId ? "Continue without them" : "Cancel"}

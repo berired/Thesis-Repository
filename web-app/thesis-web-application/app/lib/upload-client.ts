@@ -78,3 +78,41 @@ export function formatBytes(bytes: number) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+/**
+ * The vet's version of an upload: same three steps, but through the QR session
+ * (the cookie) instead of an owner login, and always attached to the submitted record.
+ */
+export async function uploadVetFile(
+  token: string,
+  file: File,
+  documentType: string,
+  onProgress: (percent: number) => void,
+): Promise<UploadResult> {
+  const early = checkUpload("vet-upload", file.type, file.size);
+  if (!early.ok) return early;
+
+  try {
+    const presign = await fetch(`/api/vet/${token}/upload-url`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contentType: file.type, sizeBytes: file.size }),
+    });
+    const presigned = await presign.json().catch(() => null);
+    if (!presign.ok) return { ok: false, error: presigned?.error ?? "Couldn't start the upload." };
+
+    const uploaded = await putWithProgress(presigned.url, file, onProgress);
+    if (!uploaded) return { ok: false, error: "The upload didn't finish. Try again." };
+
+    const confirm = await fetch(`/api/vet/${token}/files`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: presigned.key, fileName: file.name, type: documentType }),
+    });
+    const doc = await confirm.json().catch(() => null);
+    if (!confirm.ok) return { ok: false, error: doc?.error ?? "Couldn't save the file." };
+    return { ok: true, documentId: doc.id };
+  } catch {
+    return { ok: false, error: "Couldn't reach the server. Check your connection." };
+  }
+}

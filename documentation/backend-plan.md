@@ -133,7 +133,7 @@ Before writing code in any phase, read the relevant guide in `node_modules/next/
 
 **Time zone fix (2026-11-23, after Phase 3):** the whole app now uses one time zone, `Asia/Manila`, set as `APP_TIME_ZONE` in `app/lib/time.ts` (change it there if the app ever serves another region). Form dates and times are parsed as Manila time, "today" and day boundaries, repeat stepping (months and years clamp to the month end, so 31 Jan + 1 month = 28 Feb) and every displayed date and time use it, so a UTC server (Vercel) and a Manila browser agree. Record, birth and end dates are date-only values stored as UTC midnight and are read back as UTC. Checked with unit cases under UTC and Los Angeles server clocks, and live with the dev server forced to UTC. Known limit: a monthly reminder that starts on the 29th to 31st drifts to the clamped day after a short month (31 Jan, 28 Feb, 28 Mar), because only the current due date is stored.
 
-### Phase 4: Vet QR flow
+### Phase 4: Vet QR flow (DONE 2026-11-23)
 **Prerequisites:** Phases 1, 2 and 3 done (uploads, record provenance fields, bell).
 **Deliverables:**
 - Record-request token model: hashed token, pet, allowed sections, 24 h expiry, burned-at, revoked-at, created by.
@@ -144,6 +144,20 @@ Before writing code in any phase, read the relevant guide in `node_modules/next/
 - Vet form: reuse the add-record form built in Phase 2 (same component, per-type fields and attachment uploader) in a public, no-login layout. Differences: Vet Name and Clinic Name are required, the animal is fixed to the QR's pet, and all six record types are offered (vaccination, check-up or vet visit, lab result, medication, weight, other; decided 2026-11-23). Plus a read-only view of the allowed sections. Server-side checks and per-session upload cap. Build the Phase 2 form as a shared component so Phase 4 does not fork it.
 - Bell trigger: vet record submitted.
 **Exit checks:** expired, revoked, burned and unknown tokens are rejected; a bot request does not burn the token; the session cannot see sections the owner did not allow; the submitted record shows with the badge; the owner can edit only its visit date and cannot delete it.
+
+**Design decisions (2026-11-23).** The Figma file has no vet-side screens (checked all three pages), so these were built in the existing look (the forest frame and cream card of the QR scan page, the owner dialog style, the Phase 2 form):
+- **Readable sections** reuse the ID-and-QR page's "Vet health summary" wording: Allergies, Vaccine status, Current medication, Additional notes. Basic info (name, species, age, sex) is always shown; owner contact details never. Allergies and Vaccine status are ticked by default.
+- **Opening the link changes nothing.** The first visit shows a Start step that reveals no pet data; only tapping Start burns the link and starts the session. Link previews and bots therefore cannot spend it.
+- **Record first, files after.** Submitting the form creates the record and spends the QR in one transaction; the vet's files then upload through the live session and attach only to that record.
+- **Where things live:** "Generate vet QR" is on the pet overview and Health records tab; the recent-QR list (with Cancel) sits under the records list.
+
+**Done notes (2026-11-23):**
+- Migration `20261123160000_vet_record_requests` (applied to Neon `stage` only, **not yet to production**): `RecordRequest` (token hash, sections, expiry, burned, session hash and expiry, used, record, revoked, upload count) and `RateLimit` (fixed-window counters in Postgres, since serverless has no shared memory).
+- Tokens are 256-bit random values; only the SHA-256 hash is stored, so a link can't be shown again after the owner closes the dialog. Session secret is an httpOnly cookie (hash stored), valid 45 minutes. Code: `app/lib/vet-access.ts`, `app/lib/rate-limit.ts`, public page and actions under `app/v/[token]/`, upload routes under `app/api/vet/[token]/` (presign and confirm, same three-step flow as owner uploads, `vet-uploads/` prefix, server-side type, size and file-count checks).
+- The shared `RecordForm` gained a `vet` prop (Your name and Clinic name required, animal fixed, all six types, no dose reminders, submits through the QR session). Not forked.
+- Limits: at most 5 active QRs per pet, 10 upload hand-outs per session, per-IP windows of 60 page loads a minute, 10 Start taps per 10 minutes, 20 submits and 60 uploads an hour. The bell shows "<vet> added a record for <pet>".
+- Smoke test (browser, local dev against the stage DB, owner, second owner and a no-login vet browser, test data and bucket file deleted afterwards): three bot-style requests left the QR unburned and showed no pet data; Start burned it and began a 45 minute session; the vet saw only the two allowed sections (a "notes" value on the pet never appeared); submitting with a PNG created a Vet-submitted record with the vet's name and clinic, attached the file under `vet-uploads/`, spent the QR and notified the owner; replaying the link without the cookie said already used; the upload API returned 403 without the session and 429 after 10 hand-outs; an expired, a cancelled and an unknown link each showed their own message; the sixth active QR was refused with a clear message; owner could open the vet's file through a signed URL and sees only "Edit visit date"; another owner got 404 on the pet; the page limiter blocked requests past 60 a minute.
+- Known limits: the owner-side `deleteRecord` refusal for vet records still has no UI path and was not exercised live. A revoke during a live session is covered by the state check order but was not exercised live. A presigned upload that is never confirmed can leave an orphan object in `vet-uploads/` (the cap bounds it; a sweep is not built). Caretakers can generate vet QRs once Phase 7 exists.
 
 ### Phase 5: Admin void and audit
 **Prerequisites:** Phase 4 done.
@@ -230,4 +244,4 @@ End-to-end walkthrough of owner, vet, admin, finder and invitee flows, with no o
 - No Figma screens yet for: vet QR generate/list/revoke, the public vet form, admin void and audit, caretaker invite flow. Decided 2026-11-23: build these directly in the existing style (existing components and the Figma style guide); they do not block their phases. Add Figma frames afterward if wanted.
 
 ## Still open
-Nothing. Phases 0 to 3 are done; the next step is Phase 4 (vet QR flow).
+Nothing. Phases 0 to 4 are done; the next step is Phase 5 (admin void and audit).

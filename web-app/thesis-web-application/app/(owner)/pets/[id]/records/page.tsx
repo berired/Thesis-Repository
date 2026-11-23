@@ -5,6 +5,7 @@ import { getOwnedPet } from "@/app/lib/pet-data";
 import { RECORD_LABEL, fmtFull } from "@/app/lib/care";
 import type { RecordType } from "@/app/generated/prisma/client";
 import PetShell from "../pet-shell";
+import VetQrList from "../vet-qr-list";
 import YearSelect from "@/app/components/year-select";
 
 const FILTERS: { label: string; type?: RecordType; icon?: IconName }[] = [
@@ -161,6 +162,7 @@ export default async function RecordsPage({
           </table>
         </div>
       )}
+      <VetQrList petId={pet.id} />
     </PetShell>
   );
 }

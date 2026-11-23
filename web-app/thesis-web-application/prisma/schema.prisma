@@ -31,6 +31,7 @@ model User {
   remindersAssigned   Reminder[]           @relation("ReminderAssignee")
   reminderCompletions ReminderCompletion[]
   notifications       Notification[]
+  recordRequests      RecordRequest[]
 
   @@map("user")
 }
@@ -120,14 +121,14 @@ enum DocumentType {
 }
 
 model Pet {
-  id                   String         @id @default(cuid())
+  id                   String          @id @default(cuid())
   name                 String
   species              String
   breed                String?
   color                String
   sex                  PetSex
   birthDate            DateTime
-  birthDateApproximate Boolean        @default(false)
+  birthDateApproximate Boolean         @default(false)
   neutered             Boolean?
   weightKg             Float?
   microchip            String?
@@ -135,18 +136,19 @@ model Pet {
   medicalNotes         String?
   allergies            String?
   photoKey             String?
-  lostMode             Boolean        @default(false)
+  lostMode             Boolean         @default(false)
   archivedAt           DateTime?
   ownerId              String
-  owner                User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  qrCodeId             String?        @unique
-  qrCode               QrCode?        @relation(fields: [qrCodeId], references: [id])
+  owner                User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  qrCodeId             String?         @unique
+  qrCode               QrCode?         @relation(fields: [qrCodeId], references: [id])
   documents            PetDocument[]
   records              HealthRecord[]
   reminders            Reminder[]
+  recordRequests       RecordRequest[]
   appointments         Appointment[]
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
 
   @@index([ownerId])
   @@map("pet")
@@ -186,32 +188,33 @@ enum RecordSource {
 }
 
 model HealthRecord {
-  id          String        @id @default(cuid())
-  petId       String
-  pet         Pet           @relation(fields: [petId], references: [id], onDelete: Cascade)
-  type        RecordType
-  title       String
-  recordDate  DateTime
-  clinic      String?
-  vetName     String?
-  notes       String?
-  weightKg    Float?
+  id            String         @id @default(cuid())
+  petId         String
+  pet           Pet            @relation(fields: [petId], references: [id], onDelete: Cascade)
+  type          RecordType
+  title         String
+  recordDate    DateTime
+  clinic        String?
+  vetName       String?
+  notes         String?
+  weightKg      Float?
   // Type-specific fields: vaccination (batchNumber, nextDueDate) and medication (dose, endDate;
   // the start date is recordDate).
-  dose        String?
-  batchNumber String?
-  endDate     DateTime?
-  nextDueDate DateTime?
+  dose          String?
+  batchNumber   String?
+  endDate       DateTime?
+  nextDueDate   DateTime?
   // Provenance: OWNER records are fully editable by the owner; VET records come from the
   // one-time QR form (Phase 4), keep the vet's name and clinic, and are read-only to owners.
-  source      RecordSource  @default(OWNER)
-  voidedAt    DateTime?
-  voidedById  String?
-  voidReason  String?
-  files       PetDocument[]
-  reminders   Reminder[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @default(now()) @updatedAt
+  source        RecordSource   @default(OWNER)
+  voidedAt      DateTime?
+  voidedById    String?
+  voidReason    String?
+  files         PetDocument[]
+  reminders     Reminder[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @default(now()) @updatedAt
+  recordRequest RecordRequest?
 
   @@index([petId, recordDate])
   @@map("health_record")
@@ -329,4 +332,50 @@ model Appointment {
 
   @@index([petId, scheduledAt])
   @@map("appointment")
+}
+
+/// What a vet may read on the public page. Basic info (name, species, age, sex) is always shown.
+enum VetSection {
+  ALLERGIES
+  VACCINES
+  MEDICATION
+  NOTES
+}
+
+/// A one-time vet QR. The link carries a random token; only its hash is stored.
+model RecordRequest {
+  id               String        @id @default(cuid())
+  petId            String
+  pet              Pet           @relation(fields: [petId], references: [id], onDelete: Cascade)
+  tokenHash        String        @unique
+  sections         VetSection[]
+  createdById      String
+  createdBy        User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt        DateTime      @default(now())
+  /// The link stops working to start with 24 hours after it was made.
+  expiresAt        DateTime
+  /// Set when the vet taps Start: the link is spent and a session begins.
+  burnedAt         DateTime?
+  /// Hash of the session secret held in the vet's cookie, and when that session ends.
+  sessionHash      String?
+  sessionExpiresAt DateTime?
+  /// Set when the record is submitted: the QR is spent for good.
+  usedAt           DateTime?
+  recordId         String?       @unique
+  record           HealthRecord? @relation(fields: [recordId], references: [id], onDelete: SetNull)
+  revokedAt        DateTime?
+  /// Upload URLs handed out in this session, capped.
+  uploadCount      Int           @default(0)
+
+  @@index([petId, createdAt])
+  @@map("record_request")
+}
+
+/// Fixed-window counters for the public routes (serverless has no shared memory).
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@map("rate_limit")
 }

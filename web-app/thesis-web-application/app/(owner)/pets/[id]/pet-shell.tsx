@@ -8,6 +8,7 @@ import { restorePet } from "@/app/(owner)/actions";
 import type { getOwnedPet } from "@/app/lib/pet-data";
 import QrTag from "./qr-tag";
 import LostModeToggle from "./lost-mode-toggle";
+import VetQrDialog from "./vet-qr-dialog";
 
 type Pet = Awaited<ReturnType<typeof getOwnedPet>>;
 export type PetTab = "overview" | "records" | "reminders" | "appointments";
@@ -129,6 +130,9 @@ export default function PetShell({
                 className = {GHOST_BUTTON}
               />
             </>
+          ) : null}
+          {active === "overview" || active === "records" ? (
+            <VetQrDialog petId={pet.id} petName={pet.name} />
           ) : null}
           {active === "reminders" ? (
             <StickerLink href={`${base}/reminders/new`} rotate={-3}>
