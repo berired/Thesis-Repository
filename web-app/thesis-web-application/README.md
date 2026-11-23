@@ -20,6 +20,21 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Environment
+
+Set these in `.env` locally and in the Vercel project settings. Never commit real values.
+
+| Variable | What it is |
+|---|---|
+| `DATABASE_URL` | Neon Postgres connection string. Local work points at the `stage` branch; production uses `main`. |
+| `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` | Sign-in secret and the app address for auth callbacks. |
+| `APP_URL` | Public address of this deployment. Pet tag and vet QR links are built from it. |
+| `AWS_ENDPOINT_URL_S3`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Neon object storage (S3-compatible) credentials. |
+| `STORAGE_BUCKET_QR` | Bucket for QR images and pet photos (`qr-codes`). |
+| `STORAGE_BUCKET_FILES` | Private bucket for health-record files (`pet-files`). |
+
+The app time zone is a constant (`Asia/Manila`) in `app/lib/time.ts`, not a variable. Migrations are applied by hand with `npx prisma migrate deploy`; deploys do not run them. See `documentation/backend-plan.md` for the phased plan and the production deploy checklist.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

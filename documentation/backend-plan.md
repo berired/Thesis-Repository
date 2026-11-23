@@ -199,6 +199,28 @@ Before writing code in any phase, read the relevant guide in `node_modules/next/
 ### Final phase gate
 End-to-end walkthrough of owner, vet, admin, finder and invitee flows, with no open items left in this file.
 
+## Production deploy checklist (as of Phase 4, 2026-11-23)
+
+Deploys do not run migrations, and `stage` uses its own Neon branch, so production needs these by hand before or at the deploy.
+
+**1. Apply these migrations to the production Neon branch (`main`, `br-bitter-water-a1rschti`), in order, with `prisma migrate deploy` against the production `DATABASE_URL`:**
+1. `20261123120000_phase0_enum_cleanup`
+2. `20261123140000_health_record_fields_and_provenance`
+3. `20261123141000_drop_record_start_date`
+4. `20261123150000_reminders_and_notifications` (remaps existing reminder categories: Care to Other, Walk to Exercise, Check-up to Appointment)
+5. `20261123160000_vet_record_requests`
+
+Apply them before the new code goes live: the old code does not know the new enum values or columns.
+
+**2. Vercel environment variables (production):**
+- `APP_URL` must be the public address (`https://pawketbook.vercel.app` in production, `https://pawketbook-stage.vercel.app` on stage). Vet QR links and pet tag QR codes are built from it; the local `.env` value was a stale tunnel address.
+- `STORAGE_BUCKET_FILES=pet-files` (set during Phase 1; redeploy picks it up). `STORAGE_BUCKET_QR`, the `AWS_*` storage credentials and the auth settings already exist.
+- There is no time zone variable: `Asia/Manila` is a constant in `app/lib/time.ts`.
+
+**3. Storage:** the `pet-files` bucket's CORS must list the production and stage origins (already: `https://pawketbook.vercel.app`, `https://pawketbook-stage.vercel.app`, `http://localhost:3000`).
+
+**4. After the deploy, check:** sign in and open Reminders and Notifications; generate a vet QR and confirm the link starts with the production address; open it in a private window and confirm Start works; add a record with a file and confirm it appears with the Vet-submitted badge.
+
 ## Decided 2026-11-19 (second session, former open questions)
 
 - **Appointments:** owner-only calendar. The owner adds entries (date, vet/clinic name as free text, reason) with statuses Upcoming / Done / Cancelled. No clinic confirmation step.

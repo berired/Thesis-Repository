@@ -1,84 +1,79 @@
 # Pawket Book: what's left to build
 
-Last updated 2026-11-23, on branch `frontend-updates`. Before starting new work, pull the latest from `stage`.
+Last updated 2026-11-23, after Phase 4 (branch `stage` at `1b2c81a`). Before starting new work, pull the latest from `stage`.
 
-The backend is planned phase by phase in `backend-plan.md`, which is the source of truth for decisions. This file tracks the frontend and loose ends. Where the two disagree, `backend-plan.md` wins.
+The backend is planned phase by phase in `backend-plan.md`, which is the source of truth for decisions and records what each finished phase did. This file tracks the frontend and loose ends. Where the two disagree, `backend-plan.md` wins.
+
+**Where the plan stands:** Phases 0 to 4 are done (foundations, private storage and uploads, owner records, reminders and notifications, vet QR flow), plus the time zone fix. Phases 5 to 8 and the final gate remain. Production still needs the migrations and settings in the "Production deploy checklist" in `backend-plan.md`.
 
 ## 1. Figma status
 
-File: `42BmxWxt8Hq6HaNtjPikX9` (Pawket Book, Final Pages), page "UI Pages" (`9:178`). Cross-referenced on 2026-11-23.
+File: `42BmxWxt8Hq6HaNtjPikX9` (Pawket Book, Final Pages). It has three pages: Style Guide (`19:31`), UI Pages (`9:178`) and Components (`190:4549`, only the filter chips). Re-checked 2026-11-23.
 
-The 6 nodes that were unread before: 9:1425 (Notifications), 39:42 (My Animals), 39:402 (Add Animal) and 39:1024 (Edit animal profile) now exist and can be built. 39:1515 and 39:2042 no longer appear as top-level frames (likely replaced or deleted).
-
-Built earlier from screenshots only (spacing, colours and icons approximated). Re-check these against `get_design_context`:
-
-- 9:880 Home (`/dashboard`)
-- 39:683 Pet overview (`/pets/[id]`)
-- 39:1262 Health records tab (`/pets/[id]/records`)
-- 39:1797 Appointments tab (`/pets/[id]/appointments`)
-- 39:2287 Remove-animal dialog
-
-Pages in Figma not built yet:
+Built since the last review of this file:
 
 | Page | Node id |
 |---|---|
-| Notifications | 9:1425 |
+| Notifications (without the settings card and clinic items) | 9:1425 |
 | My animals list | 39:42 |
-| Add animal (new design, 8 species, photo, allergies) | 39:402, 190:2333 |
-| Edit animal profile (incl. archive or delete, caretakers) | 39:1024 |
-| ID and QR tag tab (download, lost mode, public-info toggles, scan preview) | 203:5464 |
-| Mobile QR scan page | 203:4866 |
+| Add animal, Edit animal profile | 190:2333, 39:1024 |
 | All-pets Health records list | 131:355 |
-| Add health record with attachment | 131:1018 |
-| Edit health record | 131:1283 |
-| Upload attachment dialog | 131:1628 |
+| Add and edit health record, with attachments (the form's attachments panel replaces the separate dialog) | 131:1018, 131:1283, 131:1628 |
 | Pet Reminders tab | 185:1009 |
-| All-pets Reminders overview | 142:1867, 142:2743, 145:3920 |
-| Create reminder | 142:2203 |
+| All-pets Reminders overview, Create reminder | 142:1867, 142:2203 |
+
+Not built yet:
+
+| Page | Node id |
+|---|---|
+| ID and QR tag tab (download, lost mode, per-field public-info pill toggles, scan preview). The tab is still an inert label; the QR tag opens from the pet banner. | 203:5464 |
+| Mobile QR scan page (the public `/r/[code]` page exists but has not been re-checked against this frame) | 203:4866 |
 | Privacy Policy, Terms of Use, Contact Us, FAQs, Features | 163:42, 163:282, 167:586, 168:*, 173:5055 |
 | Landing page (final) | 75:2460 |
 
-Figma frames to edit to match the decisions:
+Built earlier from screenshots only (spacing, colours and icons approximated). Not re-checked in later phases:
 
-- Notifications (9:1425): remove the clinic items ("received your request", "Appointment confirmed", "New message from <clinic>").
+- 9:880 Home (`/dashboard`)
+- 39:683 Pet overview (`/pets/[id]`)
+- 39:1797 Appointments tab (`/pets/[id]/appointments`)
+- 39:2287 Remove-animal dialog
+
+Figma frames still to edit to match the decisions (the code already follows the decisions):
+
+- Notifications (9:1425): remove the clinic items and the "Too many pings?" block.
 - Owner dashboard Vet visits card (9:880 and variants): replace "Awaiting clinic" and "Confirmed" with Upcoming / Done / Cancelled.
-- Edit record (131:1283): for vet-submitted records, remove "Delete record" and the copy-on-edit text. Only the visit date is editable.
-- Reminders create form (142:2203): remove the Email notify toggle.
-- Find a vet (190:3963, 190:4427): leave locked, not built.
-- Sidebar: remove "Appointments" from the frames that show it (131:1283, 131:1628). Decided: no Appointments sidebar link.
-- Notifications (9:1425): remove the "Notification settings" link and the "Too many pings?" block.
+- Edit record (131:1283): for vet-submitted records, remove "Delete record" and the copy-on-edit text.
+- Reminders create form (142:2203): remove Email and Phone, and the Email notify option.
+- Sidebar: remove "Appointments" from the frames that show it. Decided: no Appointments sidebar link.
 - Header search placeholder: change to "Search animals and records".
 - Medication record form (131:1018): hide "Also notify <caretaker>" until caretakers exist (Phase 7).
-- ID and QR tag (203:5464): the public-info controls must be pill toggles (switches) per field.
+- Find a vet (190:3963, 190:4427): leave locked.
+- ID and QR tag (203:5464): the public-info controls must be pill toggles per field.
 
-Figma screens that do not exist yet: owner generate, list and revoke vet QR; the public vet form; admin void and audit; the caretaker invite flow beyond the "Invite someone" button. Decided: build these in the existing style without new frames.
+Figma screens that do not exist: owner generate, list and cancel vet QR; the public vet page and form (built in the existing style, see `backend-plan.md` Phase 4); admin void and audit; the caretaker invite flow beyond the "Invite someone" button. Decided: build these in the existing style without new frames.
 
 ## 2. Locked or placeholder items in the UI
 
-Greyed out with a "Coming soon" tooltip, or with no page behind them.
-
-- Sidebar: My animals (no list page), Health records, Reminders, Find a vet, Appointments, Messages
-- Pet page tabs: Reminders, ID and QR tag
-- Pet banner: Edit, QR tag
-- Home: Find a vet button; "View all" and "See all" links were left out
-- Health records: Export PDF, file upload (the Files column counts linked documents, but nothing uploads them yet)
-- Header: notifications bell does nothing; search box does nothing
-- Footer links on the landing page (everything except Features)
+- Sidebar: Find a vet and Messages (locked). Health records and Reminders are live; there is no Appointments item.
+- Pet page tab: ID and QR tag (inert).
+- Pet banner: QR tag opens a dialog; Edit works.
+- Home: Find a vet button (locked).
+- Health records: Export PDF (disabled until Phase 8).
+- Header: the search box does nothing yet (Phase 8). The bell and Notifications page work.
+- Footer links on the landing page (everything except Features).
 
 Stays locked on purpose: **Find a vet** ("Coming soon" until clinics exist).
 
 ## 3. Data and features the designs imply but the database lacks
 
-- Caretakers (shared access): no sharing model. Role is view, generate vet QRs, be assigned and complete reminders; no editing animal info, adding animals, or editing records; no owner contact details or lost-pet messages. Phase 7.
-- Reminders: need an assignee and a completion history (who, when), repeats and end date, more types, "also add to health records". Phase 3 and 7.
-- Lost-mode public info: needs a per-pet setting for which fields (vaccines, allergies, medication, notes, contact options) are public, shown as pill toggles. The server must only return fields that are switched on.
+- Caretakers (shared access): no sharing model. Role is view, generate vet QRs, be assigned and complete reminders; no editing animal info, adding animals, or editing records; no owner contact details or lost-pet messages. Phase 7. This also unlocks "whoever gets to it first", the "Only mine" reminder filter and caretaker bell triggers.
+- Lost-mode public info: needs a per-pet setting for which fields (vaccines, allergies, medication, notes, contact options) are public, shown as pill toggles. The server must only return fields that are switched on. Only the owner's `showPhone` and `showAddress` exist today.
 - Messages: lost-pet messaging only (thread model needed). Phase 6.
-- Notifications: no model. Triggers are reminders due, vet record submitted, lost-pet message, shared access invite, and caretaker activity.
-- Record types: add Weight and Other to the vet types.
-- Pet photos: no upload. Avatars use species icons.
-- Document uploads: a second private storage bucket for pet documents was never created (only `qr-codes` exists). Phase 1.
-- Edit pet: no page. Allergies has no field in the registration form either (it shows on the overview but can only be set in the database).
-- Pet species icons: only Dog, Cat and Reptile have icons; other species show an initial. Figma now lists Dog, Cat, Bird, Poultry, Reptile, Fish, Rabbit, Other.
+- Admin void and audit of vet records, and owner reports. Phase 5.
+- Pet photos: no upload. Avatars use species icons. Phase 8.
+- Pet species icons: only Dog, Cat and Reptile have icons; other species show an initial. Figma lists Dog, Cat, Bird, Poultry, Reptile, Fish, Rabbit, Other.
+
+Done since the last version of this file: private `pet-files` bucket and uploads (Phase 1), record types and provenance, owner records with attachments and the Edit animal page with allergies (Phase 2), reminders with a completion log, the `Notification` model and bell (Phase 3), vet QR tokens, sessions and the vet form (Phase 4).
 
 ## 4. Dropped for now
 
@@ -86,22 +81,24 @@ Stays locked on purpose: **Find a vet** ("Coming soon" until clinics exist).
 - The "Awaiting clinic" to "Confirmed" appointment flow and all clinic-style notifications. Appointments are an owner-only calendar: Upcoming / Done / Cancelled.
 - Email: Resend, email verification, forgot and reset password, and email reminders stay off. Reminders are in-app only. Do not build the Verify email, Forgot password or New password pages yet.
   - If email is revived later: set `RESEND_API_KEY` and `EMAIL_FROM`, verify a sending domain, and re-test the flows. Accounts created while email was off have `emailVerified: false`.
+- A notification settings page. Revisit only if email returns.
 
 ## 5. Known issues and decisions to revisit
 
-- Dates use the server's local time zone. Fine on a dev machine, wrong if the server is deployed in a different zone from the users. Pick a zone (for example Asia/Manila) and use it everywhere.
-- `POST /api/email-exists` tells anyone whether an email has an account (used by the sign-up form). Add rate limiting or accept the trade-off.
+- `POST /api/email-exists` tells anyone whether an email has an account (used by the sign-up form). Add rate limiting (the Phase 4 limiter in `app/lib/rate-limit.ts` can be reused) or accept the trade-off.
+- A monthly reminder that starts on the 29th to 31st drifts to the clamped day after a short month, because only the current due date is stored.
+- Due notifications are created when a signed-in user loads a page (there is no scheduler), so a reminder that falls due while nobody is signed in notifies on the next visit.
+- The owner-side `deleteRecord` refusal for vet records has no UI path and was never exercised live; a vet-QR cancel during a live session was not either.
+- A vet upload that is presigned but never confirmed can leave an orphan object in `vet-uploads/`. There is no cleanup sweep.
 - Deleting a pet resets its QR tag to UNUSED so the tag can be registered again.
 - Archived pets stay reachable by direct URL and show a restore banner.
-- `scripts/make-admin.mjs` was deleted in the working tree but `package.json` still has the `make-admin` script. Restore the file or remove the script.
-- `prisma/migrations/migration_lock.toml` showed as modified (likely line endings only). Check before committing.
-- Server actions (add record, book appointment, add reminder, mark done, cancel appointment, archive, delete, restore) were type-checked and the pages were load-tested against real data, but the form submissions were not clicked through in a browser.
-- Test data is still in the Neon database (user `uitest+...@example.com` and its three pets). Delete it when done testing.
-- Neon is shared. Create a dev branch before schema work (see `backend-plan.md` Phase 0).
+- `package.json` still has a `make-admin` script but `scripts/make-admin.mjs` does not exist. Restore the file or remove the script.
+- Preview deployments on other branches cannot upload files (the bucket's CORS allows only production, stage and localhost).
+- Test data: always delete what a smoke test creates (rule in the root `CLAUDE.md`). Stage currently holds only real data.
+- Neon is shared. Local `.env` points at the `stage` branch; production is the `main` branch.
 
 ## 6. Not started at all
 
-- Backend phases 0 to 8 (see `backend-plan.md`): foundations, private storage and uploads, owner records, appointments/reminders/notifications, vet QR flow, admin void and audit, lost-pet messaging, shared access, photos and PDF export.
-- Admin side for voiding vet records (no Figma yet).
+- Backend phases 5 to 8 (see `backend-plan.md`): admin void and audit, lost-pet messaging, shared access, photos and PDF export.
 - Tests (none in the repo; deliberately deferred, see `backend-plan.md`).
 - Final end-to-end walkthrough.
