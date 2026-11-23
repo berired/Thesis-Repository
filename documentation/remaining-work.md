@@ -8,6 +8,8 @@ The backend is planned phase by phase in `backend-plan.md`, which is the source 
 
 ## 1. Figma status
 
+Links to every frame, with its route and status, are in `figma-links.md`.
+
 File: `42BmxWxt8Hq6HaNtjPikX9` (Pawket Book, Final Pages). It has three pages: Style Guide (`19:31`), UI Pages (`9:178`) and Components (`190:4549`, only the filter chips). Re-checked 2026-11-23.
 
 Built since the last review of this file:

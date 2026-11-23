@@ -16,7 +16,15 @@ This repository contains the codebase and supporting materials for the thesis pr
 | `/web-app/thesis-web-application` | The main Next.js web application. |
 
 
+## Documents in this folder
+
+| File | What it holds |
+|---|---|
+| `backend-plan.md` | The phased backend plan and the source of truth for decisions. Each finished phase has its design decisions and "Done notes"; it also has the production deploy checklist. |
+| `remaining-work.md` | What is left to build on the frontend, locked UI items, and known issues. |
+| `figma-links.md` | Links to every Figma frame, with its app route and build status. |
+| `topics/` | Candidate thesis topics and their assessments. |
+
 ## Notes
 
-- `documentation` is currently empty aside from this file and will grow as the thesis project develops.
-- Update this index whenever new top-level folders are added so it stays an accurate map of the repository.
+- Update this index whenever new top-level folders or documents are added so it stays an accurate map of the repository.
