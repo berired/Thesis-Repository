@@ -8,26 +8,29 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  role          String?   @default("user")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  emailVerified Boolean   @default(false)
-  image         String?
-  animalTypes   String?
-  phone         String?
-  address       String?
-  showPhone     Boolean   @default(false)
-  showAddress   Boolean   @default(false)
-  banned        Boolean?  @default(false)
-  banReason     String?
-  banExpires    DateTime?
-  sessions      Session[]
-  accounts      Account[]
-  pets          Pet[]
-  qrCodes       QrCode[]
+  id                  String               @id @default(cuid())
+  name                String
+  email               String               @unique
+  role                String?              @default("user")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  emailVerified       Boolean              @default(false)
+  image               String?
+  animalTypes         String?
+  phone               String?
+  address             String?
+  showPhone           Boolean              @default(false)
+  showAddress         Boolean              @default(false)
+  banned              Boolean?             @default(false)
+  banReason           String?
+  banExpires          DateTime?
+  sessions            Session[]
+  accounts            Account[]
+  pets                Pet[]
+  qrCodes             QrCode[]
+  remindersAssigned   Reminder[]           @relation("ReminderAssignee")
+  reminderCompletions ReminderCompletion[]
+  notifications       Notification[]
 
   @@map("user")
 }
@@ -183,31 +186,32 @@ enum RecordSource {
 }
 
 model HealthRecord {
-  id           String         @id @default(cuid())
-  petId        String
-  pet          Pet            @relation(fields: [petId], references: [id], onDelete: Cascade)
-  type         RecordType
-  title        String
-  recordDate   DateTime
-  clinic       String?
-  vetName      String?
-  notes        String?
-  weightKg     Float?
+  id          String        @id @default(cuid())
+  petId       String
+  pet         Pet           @relation(fields: [petId], references: [id], onDelete: Cascade)
+  type        RecordType
+  title       String
+  recordDate  DateTime
+  clinic      String?
+  vetName     String?
+  notes       String?
+  weightKg    Float?
   // Type-specific fields: vaccination (batchNumber, nextDueDate) and medication (dose, endDate;
   // the start date is recordDate).
-  dose         String?
-  batchNumber  String?
-  endDate      DateTime?
-  nextDueDate  DateTime?
+  dose        String?
+  batchNumber String?
+  endDate     DateTime?
+  nextDueDate DateTime?
   // Provenance: OWNER records are fully editable by the owner; VET records come from the
   // one-time QR form (Phase 4), keep the vet's name and clinic, and are read-only to owners.
-  source       RecordSource   @default(OWNER)
-  voidedAt     DateTime?
-  voidedById   String?
-  voidReason   String?
-  files        PetDocument[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @default(now()) @updatedAt
+  source      RecordSource  @default(OWNER)
+  voidedAt    DateTime?
+  voidedById  String?
+  voidReason  String?
+  files       PetDocument[]
+  reminders   Reminder[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now()) @updatedAt
 
   @@index([petId, recordDate])
   @@map("health_record")
@@ -216,9 +220,12 @@ model HealthRecord {
 enum ReminderCategory {
   MEDICATION
   VACCINE
-  CHECKUP
-  CARE
-  WALK
+  FEEDING
+  GROOMING
+  EXERCISE
+  HABITAT
+  APPOINTMENT
+  OTHER
 }
 
 enum ReminderRepeat {
@@ -230,18 +237,78 @@ enum ReminderRepeat {
 }
 
 model Reminder {
-  id          String           @id @default(cuid())
-  petId       String
-  pet         Pet              @relation(fields: [petId], references: [id], onDelete: Cascade)
-  title       String
-  category    ReminderCategory @default(CARE)
-  dueAt       DateTime
-  repeat      ReminderRepeat   @default(NONE)
-  completedAt DateTime?
-  createdAt   DateTime         @default(now())
+  id              String               @id @default(cuid())
+  petId           String
+  pet             Pet                  @relation(fields: [petId], references: [id], onDelete: Cascade)
+  title           String
+  category        ReminderCategory     @default(OTHER)
+  dueAt           DateTime
+  repeat          ReminderRepeat       @default(NONE)
+  /// Repeat interval: every N days, weeks, months or years.
+  repeatEvery     Int                  @default(1)
+  /// The reminder stops repeating after this date.
+  endsAt          DateTime?
+  remindDayBefore Boolean              @default(false)
+  /// Free-text place, used by the Appointment type.
+  place           String?
+  /// On completion, also write a health record.
+  addToRecords    Boolean              @default(false)
+  assigneeId      String?
+  assignee        User?                @relation("ReminderAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  /// Set for dose reminders made from a medication record.
+  recordId        String?
+  record          HealthRecord?        @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  completedAt     DateTime?
+  createdAt       DateTime             @default(now())
+  completions     ReminderCompletion[]
 
   @@index([petId, completedAt, dueAt])
+  @@index([recordId])
   @@map("reminder")
+}
+
+model ReminderCompletion {
+  id            String   @id @default(cuid())
+  reminderId    String
+  reminder      Reminder @relation(fields: [reminderId], references: [id], onDelete: Cascade)
+  completedById String?
+  completedBy   User?    @relation(fields: [completedById], references: [id], onDelete: SetNull)
+  /// The due date that was completed.
+  dueAt         DateTime
+  completedAt   DateTime @default(now())
+
+  @@index([reminderId, completedAt])
+  @@index([completedAt])
+  @@map("reminder_completion")
+}
+
+enum NotificationType {
+  REMINDER_DUE
+  REMINDER_OVERDUE
+  REMINDER_SOON
+  APPOINTMENT_SOON
+  VET_RECORD
+  LOST_MESSAGE
+  SHARE_INVITE
+  CARETAKER_COMPLETED
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String?
+  href      String?
+  /// One notification per user per event, so repeated checks never duplicate.
+  dedupeKey String
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, readAt, createdAt])
+  @@map("notification")
 }
 
 enum AppointmentStatus {

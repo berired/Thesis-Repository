@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SignOutButton from "@/app/components/sign-out-button";
 import Icon from "@/app/components/app-icon";
+import NotificationBell from "@/app/components/notification-bell";
 
 export type Crumb = { label: string; href?: string };
 
@@ -59,14 +60,7 @@ export default function OwnerPage({
           >
             <Icon name="qr-code" size={20} />
           </Link>
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="flex size-10 items-center justify-center rounded-xl"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/bell.svg" alt="" width={20} height={20} />
-          </button>
+          <NotificationBell />
           <SignOutButton className="hidden h-10 rounded-xl sm:block border border-line bg-white px-4 text-sm font-medium text-ink hover:bg-[#f6f8fa]" />
         </div>
       </header>

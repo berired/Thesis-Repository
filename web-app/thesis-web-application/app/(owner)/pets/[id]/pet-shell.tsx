@@ -10,7 +10,7 @@ import QrTag from "./qr-tag";
 import LostModeToggle from "./lost-mode-toggle";
 
 type Pet = Awaited<ReturnType<typeof getOwnedPet>>;
-export type PetTab = "overview" | "records" | "appointments";
+export type PetTab = "overview" | "records" | "reminders" | "appointments";
 
 const LOCKED_TITLE = "Coming soon";
 
@@ -51,7 +51,7 @@ export default function PetShell({
   const tabs: { key: string; label: string; href?: string; count?: number }[] = [
     { key: "overview", label: "Overview", href: base },
     { key: "records", label: "Health records", href: `${base}/records`, count: pet._count.records },
-    { key: "reminders", label: "Reminders", count: pet._count.reminders },
+    { key: "reminders", label: "Reminders", href: `${base}/reminders`, count: pet._count.reminders },
     { key: "appointments", label: "Appointments", href: `${base}/appointments` },
     { key: "id", label: "ID and QR tag" },
   ];
@@ -130,7 +130,12 @@ export default function PetShell({
               />
             </>
           ) : null}
-          {active === "appointments" ? (
+          {active === "reminders" ? (
+            <StickerLink href={`${base}/reminders/new`} rotate={-3}>
+              <Icon name="plus" size={18} />
+              Add reminder
+            </StickerLink>
+          ) : active === "appointments" ? (
             <StickerLink href={`${base}/appointments/new`} rotate={-3}>
               <Icon name="calendar-plus" size={18} />
               Book appointment

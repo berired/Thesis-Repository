@@ -1,7 +1,7 @@
 import Icon from "@/app/components/app-icon";
 import {
   CATEGORY_ICON,
-  REPEAT_LABEL,
+  repeatLabel,
   STATE_CHIP,
   STATE_ICON,
   STATE_LABEL,
@@ -10,7 +10,7 @@ import {
   fmtTime,
   reminderState,
 } from "@/app/lib/care";
-import { completeReminder } from "@/app/(owner)/actions";
+import { completeReminder, deleteReminder } from "@/app/(owner)/reminders/actions";
 import type { ReminderCategory, ReminderRepeat } from "@/app/generated/prisma/client";
 
 type ReminderData = {
@@ -19,6 +19,7 @@ type ReminderData = {
   category: ReminderCategory;
   dueAt: Date;
   repeat: ReminderRepeat;
+  repeatEvery: number;
 };
 
 function dueLabel(dueAt: Date, state: ReturnType<typeof reminderState>) {
@@ -56,7 +57,7 @@ export default function ReminderCard({
               <span aria-hidden="true">·</span>
               <span className="flex items-center gap-1">
                 <Icon name="repeat" size={12} />
-                {REPEAT_LABEL[reminder.repeat]}
+                {repeatLabel(reminder.repeat, reminder.repeatEvery)}
               </span>
             </>
           ) : null}
@@ -76,6 +77,16 @@ export default function ReminderCard({
           className="flex size-8 items-center justify-center rounded-full border border-line text-muted hover:border-[#0f6b47] hover:bg-[#ddf1e8] hover:text-[#0f6b47]"
         >
           <Icon name="check" size={14} />
+        </button>
+      </form>
+      <form action={deleteReminder.bind(null, reminder.id)}>
+        <button
+          type="submit"
+          aria-label={`Delete "${reminder.title}"`}
+          title="Delete"
+          className="flex size-8 items-center justify-center rounded-full text-muted hover:bg-[#fde8e6] hover:text-[#b42318]"
+        >
+          <Icon name="trash-2" size={14} />
         </button>
       </form>
     </li>

@@ -1,7 +1,7 @@
 import OwnerPage from "@/app/components/owner-page";
 import RecordForm from "@/app/components/record-form";
 import RecordDateForm from "@/app/components/record-date-form";
-import { dateInput, getOwnedRecord } from "@/app/lib/record-data";
+import { dateInput, getOwnedRecord, timeInput } from "@/app/lib/record-data";
 
 export default async function EditRecordPage({
   params,
@@ -50,6 +50,7 @@ export default async function EditRecordPage({
             batchNumber: record.batchNumber ?? "",
             endDate: dateInput(record.endDate),
             nextDueDate: dateInput(record.nextDueDate),
+            doseTimes: [...new Set(record.reminders.map((r) => timeInput(r.dueAt)))].sort(),
           }}
         />
       )}

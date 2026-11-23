@@ -55,17 +55,30 @@ export const STATE_ICON: Record<ReminderState, IconName> = {
 export const CATEGORY_ICON: Record<ReminderCategory, IconName> = {
   MEDICATION: "pill",
   VACCINE: "syringe",
-  CHECKUP: "stethoscope",
-  CARE: "droplets",
-  WALK: "footprints",
+  FEEDING: "utensils",
+  GROOMING: "scissors",
+  EXERCISE: "footprints",
+  HABITAT: "house",
+  APPOINTMENT: "calendar",
+  OTHER: "bell",
 };
 
 export const CATEGORY_LABEL: Record<ReminderCategory, string> = {
   MEDICATION: "Medication",
   VACCINE: "Vaccine",
-  CHECKUP: "Check-up",
-  CARE: "Care",
-  WALK: "Walk",
+  FEEDING: "Feeding",
+  GROOMING: "Grooming",
+  EXERCISE: "Exercise",
+  HABITAT: "Habitat",
+  APPOINTMENT: "Appointment",
+  OTHER: "Other",
+};
+
+export const REPEAT_UNIT: Record<Exclude<ReminderRepeat, "NONE">, [string, string]> = {
+  DAILY: ["day", "days"],
+  WEEKLY: ["week", "weeks"],
+  MONTHLY: ["month", "months"],
+  YEARLY: ["year", "years"],
 };
 
 export const REPEAT_LABEL: Record<ReminderRepeat, string> = {
@@ -76,17 +89,56 @@ export const REPEAT_LABEL: Record<ReminderRepeat, string> = {
   YEARLY: "Yearly",
 };
 
-/** The next due date after completing a repeating reminder, skipping past any missed ones. */
-export function nextDue(dueAt: Date, repeat: ReminderRepeat, now = new Date()) {
-  if (repeat === "NONE") return null;
-  const next = new Date(dueAt);
-  do {
-    if (repeat === "DAILY") next.setDate(next.getDate() + 1);
-    else if (repeat === "WEEKLY") next.setDate(next.getDate() + 7);
-    else if (repeat === "MONTHLY") next.setMonth(next.getMonth() + 1);
-    else next.setFullYear(next.getFullYear() + 1);
-  } while (next <= now);
+/** "Daily", "Every 3 months", "Doesn't repeat". */
+export function repeatLabel(repeat: ReminderRepeat, every: number) {
+  if (repeat === "NONE") return REPEAT_LABEL.NONE;
+  if (every <= 1) return REPEAT_LABEL[repeat];
+  return `Every ${every} ${REPEAT_UNIT[repeat][1]}`;
+}
+
+/** One step forward from a due date. */
+function step(from: Date, repeat: ReminderRepeat, every: number) {
+  const next = new Date(from);
+  if (repeat === "DAILY") next.setDate(next.getDate() + every);
+  else if (repeat === "WEEKLY") next.setDate(next.getDate() + 7 * every);
+  else if (repeat === "MONTHLY") next.setMonth(next.getMonth() + every);
+  else next.setFullYear(next.getFullYear() + every);
   return next;
+}
+
+/**
+ * The next due date after completing a repeating reminder, skipping past any missed ones.
+ * Null when it doesn't repeat or the next date would fall after its end date.
+ */
+export function nextDue(
+  dueAt: Date,
+  repeat: ReminderRepeat,
+  every = 1,
+  endsAt: Date | null = null,
+  now = new Date(),
+) {
+  if (repeat === "NONE") return null;
+  let next = step(dueAt, repeat, every);
+  while (next <= now) next = step(next, repeat, every);
+  return endsAt && next > endsAt ? null : next;
+}
+
+/** The next few occurrences, for the form preview. */
+export function upcomingDates(
+  start: Date,
+  repeat: ReminderRepeat,
+  every: number,
+  endsAt: Date | null,
+  count: number,
+) {
+  const out: Date[] = [];
+  if (repeat === "NONE") return out;
+  let next = step(start, repeat, every);
+  while (out.length < count && (!endsAt || next <= endsAt)) {
+    out.push(next);
+    next = step(next, repeat, every);
+  }
+  return out;
 }
 
 export const RECORD_LABEL: Record<RecordType, string> = {

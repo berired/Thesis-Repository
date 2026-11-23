@@ -11,6 +11,7 @@ export default async function OwnerLayout({
 }) {
   const session = await requireUser();
 
+
   // Badge on "Reminders": things overdue or due by the end of today.
   const reminderCount = await prisma.reminder.count({
     where: {

@@ -6,16 +6,9 @@ import { prisma } from "@/app/lib/prisma";
 import { getPetAccess, ownedPets } from "@/app/lib/pet-access";
 import { requireUser } from "@/app/lib/session";
 import { deleteFile } from "@/app/lib/storage";
-import { nextDue } from "@/app/lib/care";
-import type {
-  ReminderCategory,
-  ReminderRepeat,
-} from "@/app/generated/prisma/client";
 
 export type FormState = { error?: string } | undefined;
 
-const CATEGORIES: ReminderCategory[] = ["MEDICATION", "VACCINE", "CHECKUP", "CARE", "WALK"];
-const REPEATS: ReminderRepeat[] = ["NONE", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
 
 function text(fd: FormData, key: string) {
   const v = fd.get(key);
@@ -67,43 +60,12 @@ export async function createAppointment(
   redirect(`/pets/${petId}/appointments`);
 }
 
-export async function createReminder(
-  petId: string,
-  _prev: FormState,
-  fd: FormData,
-): Promise<FormState> {
-  await ownedPet(petId);
-  const title = text(fd, "title");
-  const category = text(fd, "category") as ReminderCategory;
-  const repeat = text(fd, "repeat") as ReminderRepeat;
-  const dueAt = parseDate(text(fd, "dueAt"));
-  if (!title) return { error: "Give the reminder a title." };
-  if (!CATEGORIES.includes(category)) return { error: "Choose a category." };
-  if (!REPEATS.includes(repeat)) return { error: "Choose how often it repeats." };
-  if (!dueAt) return { error: "Choose a date and time." };
-
-  await prisma.reminder.create({ data: { petId, title, category, repeat, dueAt } });
-  revalidatePath(`/pets/${petId}`, "layout");
-  revalidatePath("/dashboard");
-  redirect(`/pets/${petId}`);
-}
-
-/** Marks a reminder done; repeating ones roll forward instead of closing. */
-export async function completeReminder(reminderId: string) {
+/** Marks an upcoming appointment as done. */
+export async function completeAppointment(appointmentId: string) {
   const session = await requireUser();
-  const reminder = await prisma.reminder.findFirst({
-    where: {
-      id: reminderId,
-      completedAt: null,
-      pet: ownedPets(session.user.id),
-    },
-  });
-  if (!reminder) return;
-
-  const next = nextDue(reminder.dueAt, reminder.repeat);
-  await prisma.reminder.update({
-    where: { id: reminder.id },
-    data: next ? { dueAt: next } : { completedAt: new Date() },
+  await prisma.appointment.updateMany({
+    where: { id: appointmentId, status: "UPCOMING", pet: ownedPets(session.user.id) },
+    data: { status: "DONE" },
   });
   revalidatePath("/", "layout");
 }

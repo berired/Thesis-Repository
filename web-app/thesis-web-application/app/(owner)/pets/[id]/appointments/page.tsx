@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import Icon from "@/app/components/app-icon";
 import { getOwnedPet } from "@/app/lib/pet-data";
@@ -5,9 +6,10 @@ import {
   APPOINTMENT_CHIP,
   APPOINTMENT_ICON,
   APPOINTMENT_LABEL,
+  fmtFull,
   fmtTime,
 } from "@/app/lib/care";
-import { cancelAppointment } from "@/app/(owner)/actions";
+import { cancelAppointment, completeAppointment } from "@/app/(owner)/actions";
 import type { AppointmentStatus } from "@/app/generated/prisma/client";
 import PetShell from "../pet-shell";
 
@@ -19,6 +21,12 @@ type Appt = {
   status: AppointmentStatus;
 };
 
+const TABS: { key: AppointmentStatus; label: string; param: string }[] = [
+  { key: "UPCOMING", label: "Upcoming", param: "upcoming" },
+  { key: "DONE", label: "Done", param: "done" },
+  { key: "CANCELLED", label: "Cancelled", param: "cancelled" },
+];
+
 function CalendarTile({ date, muted }: { date: Date; muted?: boolean }) {
   return (
     <div
@@ -29,9 +37,7 @@ function CalendarTile({ date, muted }: { date: Date; muted?: boolean }) {
       <span className="bg-sky py-0.5 text-xs font-semibold text-white">
         {date.toLocaleDateString("en-GB", { month: "short" })}
       </span>
-      <span className="text-[26px] font-semibold leading-8 text-ink">
-        {date.getDate()}
-      </span>
+      <span className="text-[26px] font-semibold leading-8 text-ink">{date.getDate()}</span>
       <span className="pb-1 text-[11px] text-muted">
         {date.toLocaleDateString("en-GB", { weekday: "short" })}
       </span>
@@ -39,16 +45,10 @@ function CalendarTile({ date, muted }: { date: Date; muted?: boolean }) {
   );
 }
 
-function ApptCard({
-  appt,
-  status,
-  cancellable,
-}: {
-  appt: Appt;
-  status: AppointmentStatus;
-  cancellable?: boolean;
-}) {
-  const cancelled = status === "CANCELLED";
+function ApptCard({ appt, now }: { appt: Appt; now: Date }) {
+  const cancelled = appt.status === "CANCELLED";
+  const open = appt.status === "UPCOMING";
+  const passed = open && appt.scheduledAt < now;
   return (
     <li className="flex gap-4 rounded-xl border border-line bg-white p-4">
       <CalendarTile date={appt.scheduledAt} muted={cancelled} />
@@ -62,14 +62,15 @@ function ApptCard({
             {appt.title}
           </p>
           <span
-            className={`flex h-6 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-semibold ${APPOINTMENT_CHIP[status]}`}
+            className={`flex h-6 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-semibold ${APPOINTMENT_CHIP[appt.status]}`}
           >
-            <Icon name={APPOINTMENT_ICON[status]} size={12} />
-            {APPOINTMENT_LABEL[status]}
+            <Icon name={APPOINTMENT_ICON[appt.status]} size={12} />
+            {APPOINTMENT_LABEL[appt.status]}
           </span>
         </div>
         <p className="flex items-center gap-1.5 text-[13px] text-muted">
           <Icon name="clock" size={14} />
+          {passed ? `${fmtFull(appt.scheduledAt)}, ` : ""}
           {fmtTime(appt.scheduledAt)}
         </p>
         {appt.clinicName ? (
@@ -78,12 +79,21 @@ function ApptCard({
             {appt.clinicName}
           </p>
         ) : null}
-        {cancellable ? (
-          <form action={cancelAppointment.bind(null, appt.id)} className="mt-1">
-            <button type="submit" className="text-[13px] font-medium text-[#b42318] underline">
-              Cancel appointment
-            </button>
-          </form>
+        {open ? (
+          <div className="mt-1 flex flex-wrap items-center gap-4">
+            {passed ? (
+              <form action={completeAppointment.bind(null, appt.id)}>
+                <button type="submit" className="text-[13px] font-semibold text-[#0f6b47] underline">
+                  Mark as done
+                </button>
+              </form>
+            ) : null}
+            <form action={cancelAppointment.bind(null, appt.id)}>
+              <button type="submit" className="text-[13px] font-medium text-[#b42318] underline">
+                Cancel appointment
+              </button>
+            </form>
+          </div>
         ) : null}
       </div>
     </li>
@@ -92,60 +102,68 @@ function ApptCard({
 
 export default async function AppointmentsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ status?: string }>;
 }) {
   const { id } = await params;
+  const { status: statusParam } = await searchParams;
   const pet = await getOwnedPet(id);
   const now = new Date();
+  const tab = TABS.find((t) => t.param === statusParam) ?? TABS[0];
 
-  const all = await prisma.appointment.findMany({
-    where: { petId: pet.id },
-    orderBy: { scheduledAt: "asc" },
-  });
-
-  const isOpen = (a: Appt) => a.status === "UPCOMING";
-  const upcoming = all.filter((a) => isOpen(a) && a.scheduledAt >= now);
-  const past = all
-    .filter((a) => !(isOpen(a) && a.scheduledAt >= now))
-    .sort((a, b) => b.scheduledAt.getTime() - a.scheduledAt.getTime());
-
-  // The owner keeps this calendar, so an upcoming visit whose date has passed counts as done.
-  const pastStatus = (a: Appt): AppointmentStatus => (a.status === "UPCOMING" ? "DONE" : a.status);
+  const [list, counts] = await Promise.all([
+    prisma.appointment.findMany({
+      where: { petId: pet.id, status: tab.key },
+      orderBy: { scheduledAt: tab.key === "UPCOMING" ? "asc" : "desc" },
+    }),
+    prisma.appointment.groupBy({
+      by: ["status"],
+      where: { petId: pet.id },
+      _count: { _all: true },
+    }),
+  ]);
+  const countOf = (status: AppointmentStatus) =>
+    counts.find((c) => c.status === status)?._count._all ?? 0;
 
   return (
     <PetShell pet={pet} active="appointments" crumb="Appointments">
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-        <section className="flex flex-col gap-3">
-          <h2 className="font-display text-[26px] leading-7 text-forest">Upcoming</h2>
-          {upcoming.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-[#c3c9d1] p-5 text-sm text-muted">
-              No upcoming visits for {pet.name}.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {upcoming.map((a) => (
-                <ApptCard key={a.id} appt={a} status={a.status} cancellable />
-              ))}
-            </ul>
-          )}
-        </section>
+      <nav aria-label="Appointment status" className="flex gap-1 border-b border-line">
+        {TABS.map((t) => (
+          <Link
+            key={t.key}
+            href={t.key === "UPCOMING" ? `/pets/${pet.id}/appointments` : `/pets/${pet.id}/appointments?status=${t.param}`}
+            aria-current={t.key === tab.key ? "page" : undefined}
+            className={`-mb-px flex h-10 items-center gap-2 border-b-2 px-3 text-sm font-medium ${
+              t.key === tab.key
+                ? "border-sky text-[#2a559e]"
+                : "border-transparent text-muted hover:text-ink"
+            }`}
+          >
+            {t.label}
+            {countOf(t.key) > 0 ? (
+              <span className="rounded-full bg-[#eef0f3] px-1.5 text-xs">{countOf(t.key)}</span>
+            ) : null}
+          </Link>
+        ))}
+      </nav>
 
-        <section className="flex flex-col gap-3">
-          <h2 className="font-display text-[26px] leading-7 text-forest">Past visits</h2>
-          {past.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-[#c3c9d1] p-5 text-sm text-muted">
-              Past visits will show up here.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {past.map((a) => (
-                <ApptCard key={a.id} appt={a} status={pastStatus(a)} />
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
+      {list.length === 0 ? (
+        <p className="max-w-[560px] rounded-xl border border-dashed border-[#c3c9d1] p-5 text-sm text-muted">
+          {tab.key === "UPCOMING"
+            ? `No upcoming visits for ${pet.name}.`
+            : tab.key === "DONE"
+              ? "Visits you mark as done will show up here."
+              : "Cancelled visits will show up here."}
+        </p>
+      ) : (
+        <ul className="flex max-w-[560px] flex-col gap-3">
+          {list.map((a) => (
+            <ApptCard key={a.id} appt={a} now={now} />
+          ))}
+        </ul>
+      )}
     </PetShell>
   );
 }

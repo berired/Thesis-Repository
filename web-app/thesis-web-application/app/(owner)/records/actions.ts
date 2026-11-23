@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/app/lib/prisma";
 import { getPetAccess } from "@/app/lib/pet-access";
 import { parseRecordDate, parseRecordFields, syncPetWeight } from "@/app/lib/records";
+import { parseDoseTimes, syncDoseReminders } from "@/app/lib/reminders";
 import { requireUser } from "@/app/lib/session";
 import { deleteFile } from "@/app/lib/storage";
 
@@ -12,6 +13,19 @@ export type RecordResult = { error: string } | { ok: true; petId: string; record
 function refresh(petId: string) {
   revalidatePath(`/pets/${petId}`, "layout");
   revalidatePath("/records");
+}
+
+/** Dose reminders only apply to a medication with an end date and at least one dose time. */
+function doseRemindersFor(
+  type: string,
+  endDate: Date | null,
+  fd: FormData,
+): { ok: true; times: string[] } | { ok: false; error: string } {
+  if (type !== "MEDICATION" || fd.get("remindDoses") !== "on") return { ok: true, times: [] };
+  const times = parseDoseTimes(fd);
+  if (times.length === 0) return { ok: false, error: "Add at least one dose time." };
+  if (!endDate) return { ok: false, error: "Add an end date to set dose reminders." };
+  return { ok: true, times };
 }
 
 /** The record, if it exists, is visible (not voided) and belongs to a pet the user owns. */
@@ -35,6 +49,8 @@ export async function createRecord(fd: FormData): Promise<RecordResult> {
 
   const parsed = parseRecordFields(fd);
   if (!parsed.ok) return { error: parsed.error };
+  const doses = doseRemindersFor(parsed.data.type, parsed.data.endDate, fd);
+  if (!doses.ok) return { error: doses.error };
 
   const record = await prisma.$transaction(async (tx) => {
     const created = await tx.healthRecord.create({
@@ -42,6 +58,14 @@ export async function createRecord(fd: FormData): Promise<RecordResult> {
       select: { id: true },
     });
     if (parsed.data.type === "WEIGHT") await syncPetWeight(tx, petId);
+    if (doses.times.length > 0) {
+      await syncDoseReminders(
+        tx,
+        { id: created.id, petId, title: parsed.data.title, endDate: parsed.data.endDate },
+        session.user.id,
+        doses.times,
+      );
+    }
     return created;
   });
 
@@ -68,11 +92,22 @@ export async function updateRecord(recordId: string, fd: FormData): Promise<Reco
   const parsed = parseRecordFields(fd);
   if (!parsed.ok) return { error: parsed.error };
 
+  const doses = doseRemindersFor(parsed.data.type, parsed.data.endDate, fd);
+  if (!doses.ok) return { error: doses.error };
+
+  const session = await requireUser();
   await prisma.$transaction(async (tx) => {
     await tx.healthRecord.update({ where: { id: record.id }, data: parsed.data });
     if (parsed.data.type === "WEIGHT" || record.type === "WEIGHT") {
       await syncPetWeight(tx, record.petId);
     }
+    // Always rewritten, so turning the option off (or changing the type) clears old dose reminders.
+    await syncDoseReminders(
+      tx,
+      { id: record.id, petId: record.petId, title: parsed.data.title, endDate: parsed.data.endDate },
+      session.user.id,
+      doses.times,
+    );
   });
 
   refresh(record.petId);

@@ -23,6 +23,8 @@ export type RecordFormValues = {
   batchNumber: string;
   endDate: string;
   nextDueDate: string;
+  /** "HH:mm" dose times of the reminders linked to this medication record. */
+  doseTimes: string[];
 };
 
 const EMPTY: RecordFormValues = {
@@ -36,6 +38,7 @@ const EMPTY: RecordFormValues = {
   batchNumber: "",
   endDate: "",
   nextDueDate: "",
+  doseTimes: [],
 };
 
 type Item = {
@@ -79,6 +82,10 @@ export default function RecordForm({
   const values = initial ?? { ...EMPTY, recordDate: today };
 
   const [type, setType] = useState(values.type);
+  const [remindDoses, setRemindDoses] = useState(values.doseTimes.length > 0);
+  const [doseTimes, setDoseTimes] = useState(
+    values.doseTimes.length > 0 ? values.doseTimes : ["08:00"],
+  );
   const [petId, setPetId] = useState(defaultPetId);
   const [items, setItems] = useState<Item[]>([]);
   const [saved, setSaved] = useState(existingFiles);
@@ -316,6 +323,67 @@ export default function RecordForm({
               <Field label="End date (optional)">
                 <input name="endDate" type="date" defaultValue={values.endDate} className={INPUT_CLASS} />
               </Field>
+            ) : null}
+            {medication ? (
+              <div className="flex flex-col gap-3 rounded-lg bg-cream p-3.5">
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input
+                    type="checkbox"
+                    name="remindDoses"
+                    checked={remindDoses}
+                    onChange={(e) => setRemindDoses(e.target.checked)}
+                    className="size-4 accent-[#356ac3]"
+                  />
+                  Remind me at each dose
+                </label>
+                {remindDoses ? (
+                  <>
+                    <p className="text-[13px] text-muted">
+                      Daily reminders at these times, until the end date.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {doseTimes.map((time, index) => (
+                        <span key={index} className="flex items-center gap-1">
+                          <input
+                            name="doseTime"
+                            type="time"
+                            required
+                            value={time}
+                            aria-label={`Dose time ${index + 1}`}
+                            onChange={(e) =>
+                              setDoseTimes((current) =>
+                                current.map((t, i) => (i === index ? e.target.value : t)),
+                              )
+                            }
+                            className={`${INPUT_CLASS} w-[130px]`}
+                          />
+                          {doseTimes.length > 1 ? (
+                            <button
+                              type="button"
+                              aria-label={`Remove dose time ${index + 1}`}
+                              onClick={() =>
+                                setDoseTimes((current) => current.filter((_, i) => i !== index))
+                              }
+                              className="flex size-8 items-center justify-center rounded-full text-muted hover:bg-white"
+                            >
+                              <Icon name="circle-x" size={16} />
+                            </button>
+                          ) : null}
+                        </span>
+                      ))}
+                      {doseTimes.length < 6 ? (
+                        <button
+                          type="button"
+                          onClick={() => setDoseTimes((current) => [...current, "20:00"])}
+                          className="text-sm font-semibold text-sky"
+                        >
+                          + Add a time
+                        </button>
+                      ) : null}
+                    </div>
+                  </>
+                ) : null}
+              </div>
             ) : null}
             {vaccine ? (
               <>
