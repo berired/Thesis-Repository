@@ -1,3 +1,4 @@
+import { fmtFull } from "@/app/lib/time";
 import { prisma } from "@/app/lib/prisma";
 import { requireAdmin } from "@/app/lib/session";
 
@@ -33,7 +34,7 @@ export default async function PetsPage() {
                 {pet.owner.name} ({pet.owner.email})
               </td>
               <td className="font-mono">{pet.qrCode?.code ?? "-"}</td>
-              <td>{pet.createdAt.toLocaleDateString()}</td>
+              <td>{fmtFull(pet.createdAt)}</td>
             </tr>
           ))}
           {pets.length === 0 && (

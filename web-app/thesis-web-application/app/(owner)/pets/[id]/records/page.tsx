@@ -40,8 +40,8 @@ export default async function RecordsPage({
         ...(yearNumber
           ? {
               recordDate: {
-                gte: new Date(yearNumber, 0, 1),
-                lt: new Date(yearNumber + 1, 0, 1),
+                gte: new Date(Date.UTC(yearNumber, 0, 1)),
+                lt: new Date(Date.UTC(yearNumber + 1, 0, 1)),
               },
             }
           : {}),
@@ -55,7 +55,7 @@ export default async function RecordsPage({
     }),
   ]);
 
-  const years = [...new Set(allDates.map((r) => r.recordDate.getFullYear()))].sort(
+  const years = [...new Set(allDates.map((r) => r.recordDate.getUTCFullYear()))].sort(
     (a, b) => b - a,
   );
 

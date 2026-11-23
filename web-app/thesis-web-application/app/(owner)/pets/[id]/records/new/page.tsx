@@ -1,3 +1,4 @@
+import { todayInput } from "@/app/lib/time";
 import OwnerPage from "@/app/components/owner-page";
 import RecordForm from "@/app/components/record-form";
 import { getOwnedPet } from "@/app/lib/pet-data";
@@ -9,7 +10,7 @@ export default async function NewRecordPage({
 }) {
   const { id } = await params;
   const pet = await getOwnedPet(id);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayInput();
 
   return (
     <OwnerPage

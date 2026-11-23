@@ -6,24 +6,12 @@ import type {
 } from "../generated/prisma/client";
 import type { IconName } from "@/app/components/app-icon";
 
-/* Dates are read and written in the server's local time zone. */
+import { addZoned, endOfDay, fmtDay, startOfDay } from "./time";
 
-export function startOfToday(now = new Date()) {
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
-export function endOfToday(now = new Date()) {
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-}
-
-export const fmtDay = (d: Date) =>
-  d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-
-export const fmtFull = (d: Date) =>
-  d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-
-export const fmtTime = (d: Date) =>
-  d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+/* Dates are read and written in the app time zone (see lib/time.ts). */
+export { fmtDay, fmtFull, fmtTime } from "./time";
+export const startOfToday = startOfDay;
+export const endOfToday = endOfDay;
 
 export type ReminderState = "overdue" | "today" | "upcoming";
 
@@ -98,12 +86,10 @@ export function repeatLabel(repeat: ReminderRepeat, every: number) {
 
 /** One step forward from a due date. */
 function step(from: Date, repeat: ReminderRepeat, every: number) {
-  const next = new Date(from);
-  if (repeat === "DAILY") next.setDate(next.getDate() + every);
-  else if (repeat === "WEEKLY") next.setDate(next.getDate() + 7 * every);
-  else if (repeat === "MONTHLY") next.setMonth(next.getMonth() + every);
-  else next.setFullYear(next.getFullYear() + every);
-  return next;
+  if (repeat === "DAILY") return addZoned(from, "day", every);
+  if (repeat === "WEEKLY") return addZoned(from, "day", 7 * every);
+  if (repeat === "MONTHLY") return addZoned(from, "month", every);
+  return addZoned(from, "year", every);
 }
 
 /**

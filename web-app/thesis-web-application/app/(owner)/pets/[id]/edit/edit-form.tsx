@@ -1,5 +1,7 @@
 "use client";
 
+import { todayInput } from "@/app/lib/time";
+
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import Icon from "@/app/components/app-icon";
@@ -72,7 +74,7 @@ export default function EditPetForm({
   const [state, formAction, pending] = useActionState(updatePet.bind(null, pet.id), initialState);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayInput();
 
   useEffect(() => {
     return () => {

@@ -1,3 +1,4 @@
+import { todayInput } from "@/app/lib/time";
 import OwnerPage from "@/app/components/owner-page";
 import RecordForm from "@/app/components/record-form";
 import RecordDateForm from "@/app/components/record-date-form";
@@ -10,7 +11,7 @@ export default async function EditRecordPage({
 }) {
   const { id, recordId } = await params;
   const { pet, record } = await getOwnedRecord(id, recordId);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayInput();
 
   return (
     <OwnerPage

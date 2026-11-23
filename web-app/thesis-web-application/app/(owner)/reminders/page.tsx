@@ -1,3 +1,4 @@
+import { dayKey, fmtHeading } from "@/app/lib/time";
 import Link from "next/link";
 import OwnerPage from "@/app/components/owner-page";
 import AppointmentTile from "@/app/components/appointment-tile";
@@ -28,9 +29,9 @@ const TABS: { key: Tab; label: string }[] = [
 type Search = { tab?: string; pet?: string; type?: string };
 
 function dayHeading(d: Date, now: Date) {
-  const day = startOfToday(d).getTime();
-  const today = startOfToday(now).getTime();
-  const label = d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const day = dayKey(d);
+  const today = dayKey(now);
+  const label = fmtHeading(d);
   if (day === today) return `Today · ${label}`;
   if (day === today + 86_400_000) return `Tomorrow · ${label}`;
   return label;

@@ -1,3 +1,4 @@
+import { dayKey } from "@/app/lib/time";
 import Link from "next/link";
 import Icon from "@/app/components/app-icon";
 import { PetAvatar, SpeciesBadge, petPhotoSrc } from "@/app/components/pet-avatar";
@@ -25,7 +26,7 @@ type Next = { icon: IconName; title: string; urgent: boolean; when: string; at: 
 export function nextThing(pet: PetCardData, now = new Date()): Next | null {
   const reminder = pet.reminders[0];
   const appt = pet.appointments[0];
-  const isToday = (d: Date) => d.toDateString() === now.toDateString();
+  const isToday = (d: Date) => dayKey(d) === dayKey(now);
 
   if (reminder && (!appt || reminder.dueAt <= appt.scheduledAt)) {
     const overdue = reminderState(reminder.dueAt, now) === "overdue";

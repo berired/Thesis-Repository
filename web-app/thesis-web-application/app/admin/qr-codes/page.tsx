@@ -1,3 +1,4 @@
+import { fmtFull } from "@/app/lib/time";
 import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import { requireAdmin } from "@/app/lib/session";
@@ -55,7 +56,7 @@ export default async function QrCodesPage() {
                 <EditLabel id={qr.id} label={qr.batch} />
               </td>
               <td>{qr.status}</td>
-              <td>{qr.createdAt.toLocaleDateString()}</td>
+              <td>{fmtFull(qr.createdAt)}</td>
               <td>
                 {qr.imageUrl ? (
                   <a href={qr.imageUrl} target="_blank" className="underline">

@@ -1,3 +1,4 @@
+import { todayInput } from "@/app/lib/time";
 import { notFound } from "next/navigation";
 import OwnerPage from "@/app/components/owner-page";
 import RecordForm from "@/app/components/record-form";
@@ -20,7 +21,7 @@ export default async function NewRecordAnyPetPage({
   });
   if (pets.length === 0) notFound();
   const defaultPetId = pets.find((p) => p.id === petParam)?.id ?? pets[0].id;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayInput();
 
   return (
     <OwnerPage crumbs={[{ label: "Health records", href: "/records" }, { label: "Add record" }]}>

@@ -22,6 +22,4 @@ export async function getOwnedRecord(petId: string, recordId: string) {
 /** yyyy-mm-dd for a date input. */
 export const dateInput = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : "");
 
-/** hh:mm for a time input, in the server's local time (the same zone reminders are saved in). */
-export const timeInput = (d: Date) =>
-  `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+export { timeInput } from "./time";

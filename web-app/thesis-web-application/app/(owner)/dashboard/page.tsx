@@ -1,3 +1,4 @@
+import { APP_TIME_ZONE, dayOfMonth, hourOf, monthShort, weekdayShort } from "@/app/lib/time";
 import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
@@ -173,11 +174,12 @@ export default async function DashboardPage() {
     );
   }
 
-  const dateLabel = now.toLocaleDateString("en-GB", {
+  const dateLabel = new Intl.DateTimeFormat("en-GB", {
+    timeZone: APP_TIME_ZONE,
     weekday: "long",
     day: "numeric",
     month: "long",
-  });
+  }).format(now);
 
   const overdueTotal = await prisma.reminder.count({
     where: { completedAt: null, dueAt: { lt: startOfToday(now) }, pet: activePets },
@@ -203,7 +205,7 @@ export default async function DashboardPage() {
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <p className="text-sm font-medium leading-[21px] text-white">{dateLabel}</p>
           <h1 className="font-display text-[40px] leading-none text-butter sm:text-5xl md:text-[56px]">
-            {greeting(now.getHours())}, {firstName}
+            {greeting(hourOf(now))}, {firstName}
           </h1>
           <p className="text-base leading-6 text-white">{summary}</p>
         </div>
@@ -254,13 +256,13 @@ export default async function DashboardPage() {
                 <li key={v.id} className="flex gap-4 rounded-xl border border-line bg-white p-4">
                   <div className="flex w-[58px] shrink-0 flex-col self-start overflow-clip rounded-lg border border-line bg-white text-center">
                     <span className="bg-sky py-0.5 text-xs font-semibold text-white">
-                      {v.scheduledAt.toLocaleDateString("en-GB", { month: "short" })}
+                      {monthShort(v.scheduledAt)}
                     </span>
                     <span className="text-[26px] font-semibold leading-8 text-ink">
-                      {v.scheduledAt.getDate()}
+                      {dayOfMonth(v.scheduledAt)}
                     </span>
                     <span className="pb-1 text-[11px] text-muted">
-                      {v.scheduledAt.toLocaleDateString("en-GB", { weekday: "short" })}
+                      {weekdayShort(v.scheduledAt)}
                     </span>
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">

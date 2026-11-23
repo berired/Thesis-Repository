@@ -1,3 +1,4 @@
+import { todayInput } from "@/app/lib/time";
 import Link from "next/link";
 import OwnerPage from "@/app/components/owner-page";
 import ReminderForm from "@/app/components/reminder-form";
@@ -34,7 +35,7 @@ export default async function NewReminderPage({
         <ReminderForm
           pets={pets}
           defaultPetId={defaultPetId}
-          today={new Date().toISOString().slice(0, 10)}
+          today={todayInput()}
           next={back}
         />
       )}

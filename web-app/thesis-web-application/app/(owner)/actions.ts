@@ -1,5 +1,6 @@
 "use server";
 
+import { parseZoned } from "@/app/lib/time";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/app/lib/prisma";
@@ -17,12 +18,6 @@ function text(fd: FormData, key: string) {
 
 function optional(fd: FormData, key: string) {
   return text(fd, key) || null;
-}
-
-function parseDate(value: string) {
-  if (!value) return null;
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 /** The signed-in user's pet (archived or not), or throws. */
@@ -47,7 +42,7 @@ export async function createAppointment(
   await ownedPet(petId);
   const title = text(fd, "title");
   const clinicName = optional(fd, "clinicName");
-  const scheduledAt = parseDate(text(fd, "scheduledAt"));
+  const scheduledAt = parseZoned(text(fd, "scheduledAt"));
   if (!title) return { error: "Give the appointment a title." };
   if (!scheduledAt) return { error: "Choose a date and time." };
   if (scheduledAt <= new Date()) return { error: "Choose a time in the future." };

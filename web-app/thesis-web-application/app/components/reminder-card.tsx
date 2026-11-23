@@ -1,3 +1,4 @@
+import { dayKey, yearOf } from "@/app/lib/time";
 import Icon from "@/app/components/app-icon";
 import {
   CATEGORY_ICON,
@@ -25,8 +26,8 @@ type ReminderData = {
 function dueLabel(dueAt: Date, state: ReturnType<typeof reminderState>) {
   if (state === "overdue") return `Overdue · ${fmtDay(dueAt)}`;
   const now = new Date();
-  if (dueAt.toDateString() === now.toDateString()) return `Today, ${fmtTime(dueAt)}`;
-  return dueAt.getFullYear() === now.getFullYear()
+  if (dayKey(dueAt) === dayKey(now)) return `Today, ${fmtTime(dueAt)}`;
+  return yearOf(dueAt) === yearOf(now)
     ? `${fmtDay(dueAt)}, ${fmtTime(dueAt)}`
     : fmtFull(dueAt);
 }

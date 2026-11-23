@@ -1,3 +1,4 @@
+import { dayOfMonth, monthShort, weekdayShort } from "@/app/lib/time";
 import Link from "next/link";
 import Icon from "@/app/components/app-icon";
 import { fmtTime } from "@/app/lib/care";
@@ -25,11 +26,11 @@ export default function AppointmentTile({
       >
         <span className="flex w-[52px] shrink-0 flex-col overflow-hidden rounded-lg border border-line text-center">
           <span className="bg-sky py-0.5 text-[11px] font-semibold text-white">
-            {d.toLocaleDateString("en-GB", { month: "short" })}
+            {monthShort(d)}
           </span>
-          <span className="text-[20px] font-semibold leading-6">{d.getDate()}</span>
+          <span className="text-[20px] font-semibold leading-6">{dayOfMonth(d)}</span>
           <span className="pb-0.5 text-[10px] text-muted">
-            {d.toLocaleDateString("en-GB", { weekday: "short" })}
+            {weekdayShort(d)}
           </span>
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">

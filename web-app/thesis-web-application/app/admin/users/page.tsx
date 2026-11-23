@@ -1,3 +1,4 @@
+import { fmtFull } from "@/app/lib/time";
 import { prisma } from "@/app/lib/prisma";
 import { requireAdmin } from "@/app/lib/session";
 import { banUser, setUserRole, unbanUser } from "./actions";
@@ -61,7 +62,7 @@ export default async function UsersPage({
                 <td>{user.email}</td>
                 <td>{user.role ?? "user"}</td>
                 <td>{user.banned ? "Banned" : "Active"}</td>
-                <td>{user.createdAt.toLocaleDateString()}</td>
+                <td>{fmtFull(user.createdAt)}</td>
                 <td>
                   {isSelf ? (
                     <span className="text-gray-500">You</span>

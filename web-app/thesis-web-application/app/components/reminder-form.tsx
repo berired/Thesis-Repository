@@ -1,5 +1,7 @@
 "use client";
 
+import { parseZoned } from "@/app/lib/time";
+
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import Icon from "@/app/components/app-icon";
@@ -52,9 +54,8 @@ export default function ReminderForm({
   const [endsAt, setEndsAt] = useState("");
 
   const petName = pets.find((p) => p.id === petId)?.name ?? "";
-  const start = startDate ? new Date(`${startDate}T${startTime || "09:00"}`) : null;
-  const end = endsAt ? new Date(`${endsAt}T23:59`) : null;
-  const validStart = start && !Number.isNaN(start.getTime()) ? start : null;
+  const validStart = parseZoned(startDate, startTime || "09:00");
+  const end = endsAt ? parseZoned(endsAt, "23:59") : null;
   const following = validStart
     ? upcomingDates(validStart, repeat, Math.max(1, every), end, 3)
     : [];

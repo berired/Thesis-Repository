@@ -1,3 +1,4 @@
+import { dayOfMonth, monthShort, weekdayShort } from "@/app/lib/time";
 import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import Icon from "@/app/components/app-icon";
@@ -35,11 +36,11 @@ function CalendarTile({ date, muted }: { date: Date; muted?: boolean }) {
       }`}
     >
       <span className="bg-sky py-0.5 text-xs font-semibold text-white">
-        {date.toLocaleDateString("en-GB", { month: "short" })}
+        {monthShort(date)}
       </span>
-      <span className="text-[26px] font-semibold leading-8 text-ink">{date.getDate()}</span>
+      <span className="text-[26px] font-semibold leading-8 text-ink">{dayOfMonth(date)}</span>
       <span className="pb-1 text-[11px] text-muted">
-        {date.toLocaleDateString("en-GB", { weekday: "short" })}
+        {weekdayShort(date)}
       </span>
     </div>
   );

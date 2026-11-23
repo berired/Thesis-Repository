@@ -48,7 +48,7 @@ export default async function AllRecordsPage({
     ...scope,
     ...(activeType ? { type: activeType } : {}),
     ...(yearNumber
-      ? { recordDate: { gte: new Date(yearNumber, 0, 1), lt: new Date(yearNumber + 1, 0, 1) } }
+      ? { recordDate: { gte: new Date(Date.UTC(yearNumber, 0, 1)), lt: new Date(Date.UTC(yearNumber + 1, 0, 1)) } }
       : {}),
     ...(search
       ? {
@@ -71,7 +71,7 @@ export default async function AllRecordsPage({
     prisma.healthRecord.findMany({ where: scope, select: { recordDate: true } }),
     prisma.healthRecord.count({ where: { voidedAt: null, petId: { in: pets.map((p) => p.id) } } }),
   ]);
-  const years = [...new Set(allDates.map((r) => r.recordDate.getFullYear()))].sort((a, b) => b - a);
+  const years = [...new Set(allDates.map((r) => r.recordDate.getUTCFullYear()))].sort((a, b) => b - a);
 
   const href = (next: Partial<Search>) => {
     const merged = { pet: activePet?.id, type: activeType, year: yearNumber?.toString(), q: search, ...next };

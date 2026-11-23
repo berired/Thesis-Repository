@@ -1,4 +1,5 @@
 import { CATEGORY_LABEL, nextDue } from "./care";
+import { addZoned, fromZoned, parseZoned, todayInput, zonedParts } from "./time";
 import type {
   Prisma,
   RecordType,
@@ -33,19 +34,13 @@ const text = (fd: FormData, key: string) => {
   return typeof v === "string" ? v.trim() : "";
 };
 
-function parseDate(value: string) {
-  if (!value) return null;
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
 export function parseReminderFields(fd: FormData): ParsedReminder {
   const title = text(fd, "title");
   const category = text(fd, "category") as ReminderCategory;
   const repeat = (text(fd, "repeat") || "NONE") as ReminderRepeat;
   const every = Math.floor(Number(text(fd, "repeatEvery") || "1"));
-  const dueAt = parseDate(`${text(fd, "startDate")}T${text(fd, "startTime") || "09:00"}`);
-  const endsAt = parseDate(text(fd, "endsAt") ? `${text(fd, "endsAt")}T23:59` : "");
+  const dueAt = parseZoned(text(fd, "startDate"), text(fd, "startTime") || "09:00");
+  const endsAt = text(fd, "endsAt") ? parseZoned(text(fd, "endsAt"), "23:59") : null;
 
   if (!title) return { ok: false, error: "Give the reminder a title." };
   if (title.length > 120) return { ok: false, error: "Keep the title under 120 characters." };
@@ -118,7 +113,7 @@ export async function completeReminderIn(
         petId: reminder.petId,
         type: RECORD_FOR[reminder.category] ?? "OTHER",
         title: reminder.title,
-        recordDate: now,
+        recordDate: new Date(todayInput(now)),
         clinic: reminder.place,
         source: "OWNER",
       },
@@ -145,12 +140,14 @@ export async function syncDoseReminders(
   if (doseTimes.length === 0 || !record.endDate) return;
 
   const now = new Date();
-  const endsAt = new Date(record.endDate);
-  endsAt.setHours(23, 59, 0, 0);
+  // endDate is a date-only value stored as UTC midnight; the last dose is that day in the app zone.
+  const endsAt = parseZoned(record.endDate.toISOString().slice(0, 10), "23:59");
+  if (!endsAt) return;
+  const today = zonedParts(now);
   for (const time of doseTimes) {
     const [h, m] = time.split(":").map(Number);
-    const first = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
-    if (first <= now) first.setDate(first.getDate() + 1);
+    let first = fromZoned(today.year, today.month, today.day, h, m);
+    if (first <= now) first = addZoned(first, "day", 1);
     if (first > endsAt) continue;
     await tx.reminder.create({
       data: {
