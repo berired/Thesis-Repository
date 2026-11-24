@@ -28,7 +28,7 @@ There are no partnered clinics yet, so there are no clinic or vet accounts. Vets
 - Export PDF: a printable health summary for one pet, with vet entries marked. Attached files are listed, not embedded.
 
 ## Dropped for now
-Clinic roles, the clinic admin side, clinic messaging, the "Awaiting clinic" to "Confirmed" flow and clinic-style notifications, email (verification, forgot or reset password, email reminders), and Find a vet (stays locked as "Coming soon").
+Clinic roles, the clinic admin side, clinic messaging, the "Awaiting clinic" to "Confirmed" flow and clinic-style notifications, email (verification, forgot or reset password, email reminders), and Find a vet (locked as "Coming soon" until Phase 10).
 
 ## Build phases
 
@@ -265,6 +265,48 @@ Reverses part of the Phase 2 rules. Decided with the developer:
 - **Needs a real-phone test before relying on it:** write a tag and read it back with an Android phone in Chrome over HTTPS (the stage or production site), then tap the same tag with an iPhone and an Android phone's normal reader and confirm it opens the scan page.
 - Limits: the chip serial check only catches the wrong physical tag at registration; it does not stop someone copying a tag's link, which is also true of the QR code (a copied tag opens the same page). Unlocked tags can be overwritten by anyone with a phone, so lock admin tags where the browser allows it. Web NFC cannot read or write on iPhone or desktop browsers. Tags with a different layout (not a URL or text record) are ignored.
 
+### Phase 10: Find a vet (PLANNED, not started; decisions made 2026-11-24)
+**Prerequisites:** Phase 9 done. The developer sets up the Google Cloud project and keys first (see "Setup the developer does").
+**Goal:** a **Find a vet** page that shows vet clinics near where the owner is right now, on a Google map and in a list, built from the Figma frames 190:3963 (page) and 190:4427 (Filters). It replaces the earlier decision that Find a vet stays locked until clinics exist. It only finds and shows clinics; it does not connect to appointments, records or messages, and no clinic accounts are involved.
+
+**Decisions (2026-11-24):**
+- **Data source:** Google Places API (New), Text Search, restricted to vet clinics (`includedType: veterinary_care` with strict type filtering). The map is the Maps JavaScript API.
+- **Where the owner is:** the phone or browser's current location, asked for when they open the page or tap "Use my location" (needs HTTPS and the browser's permission). Nothing about the owner is stored; the coordinates are used for the search and discarded. If permission is denied, the owner types an area ("Quezon City") and the search becomes "veterinary clinic in <area>"; distances are hidden in that mode because there is no starting point.
+- **Animal type and home visits come from keywords**, because Google has no such data. Choosing animals adds words to the search ("dog", "cat", "bird", "exotic reptile", "aquatic fish"...); "Home visits" adds "home visit" or "mobile vet". A clinic's tag is shown only when the search matched it or its name suggests it, labelled as a possible match. A count like "6 clinics treat reptiles" therefore means "6 of the clinics found matched that search", never a promise.
+- **Rating filter** is "N stars and up" (Google only filters on a minimum), not exact star counts.
+- **Open now / Open 24 hours** come from Google's opening hours. "Open 24 hours" is worked out from the hours, not a Google field.
+- **Distance** filter and the **Nearest** sort are done on our server from the owner's position (the 0 to 20 km slider drops clinics beyond it). Sort options: Nearest, Highest rated.
+- **No route line.** Each clinic has a "Get directions" link that opens Google Maps, which is free. No Routes API.
+- **No connection to the rest of the app** (no "use this clinic" on appointments or records).
+
+**Free-of-charge rule:** the plan must not cost money. Google Maps Platform needs a billing account with a card, but each product has a monthly free allowance, so the app is built to stay far under it and to stop calling Google when it gets close:
+1. **Hard daily caps** set in Google Cloud (API quotas, which actually stop requests, unlike budget alerts which only notify): Places Text Search (the tier that includes rating and opening hours has the smallest free allowance, about 1,000 requests a month at the time of writing, so a cap of roughly 30 a day) and Maps JavaScript map loads (about 300 a day). **Check the current free allowances on Google's pricing page when setting this up; they change.**
+2. A **budget with an alert at a few dollars**, as a second line of defence.
+3. **In the app:** only searches the owner starts (a Search or filter tap, never as they type), at most one Google call per search, a per-user limit (the existing rate limiter, for example 10 searches an hour), a global daily counter in the database that stops calling Google once it reaches our cap and shows "Find a vet is busy, try again tomorrow", the minimum field mask, and no automatic refresh.
+4. The map loads only when the page opens and is not reloaded by filters.
+5. If the developer cannot or will not add a card to Google, the fallback is an OpenStreetMap map with Overpass and Nominatim (no key, no billing), which is a different design; decide before starting.
+
+**Google's rules to respect:** results must be shown on a Google map or with Google attribution; do not store place details (only a place id may be kept, and none is needed here); keep the keys private (below); show a short note that the owner's location is sent to Google to find clinics.
+
+**Setup the developer does (before the build):**
+- A Google Cloud project, billing account, budget alert and the two quota caps above.
+- Enable **Maps JavaScript API** and **Places API (New)**. Nothing else.
+- Two keys: a **server key** restricted to Places API (New), used only in our server route, never sent to the browser; and a **browser key** restricted to Maps JavaScript API and to HTTP referrers (`http://localhost:3000/*`, `https://pawketbook.vercel.app/*`, `https://pawketbook-stage.vercel.app/*`).
+- Environment variables, locally and on Vercel for production and preview: `GOOGLE_PLACES_API_KEY` (server) and `NEXT_PUBLIC_GOOGLE_MAPS_KEY` (browser). Env changes only apply to a new deploy.
+
+**Deliverables (steps):**
+1. **Server.** `/api/vets/search` (signed in only): takes the position or area, the filters and the sort; applies the per-user limit and the global daily counter (a small table, since serverless has no shared memory); calls Places Text Search once with a field mask (name, address, location, rating, rating count, opening hours, phone, website, Google Maps link); returns clinics with distance, open status ("Open, closes 8:00 PM", "Closed, opens 10:00 AM", "Open 24 hours"), phone, website and directions link. A provider interface hides Google so tests can use fixtures. A missing key, a hit cap or a Google error returns a friendly message, never the key or Google's raw error.
+2. **Page `/vets`.** Search box, location field showing "Current location" or the typed area, "Open now" chip and the Filters panel (animal type, availability, distance slider, rating), sort, count line and the list with numbered rows, tags and open status, from the Figma frames. Filters live in the URL. The sidebar item and the dashboard "Find a vet" button are unlocked.
+3. **Map.** Google map with numbered markers that match the list, clicking a marker or row selects it, the map fits the results, a marker for the owner's position, and on a phone a list/map toggle.
+4. **Clinic details.** Opening hours, a call link (`tel:`), the website and "Get directions".
+5. **Docs and deploy.** Update this file, the Figma index, the deploy checklist (the two env vars, key restrictions, the quota caps).
+
+**Exit checks:** only vet clinics are returned; a search makes exactly one Google call; the daily cap and the per-user limit stop further calls with a clear message; signed-out users get nothing; the server key never reaches the browser (checked in the page source and network); with location denied the typed-area search works; each filter changes the results as designed; the list and the map agree; and Google usage and cost stay at zero over the test period (check the Cloud console after testing).
+
+**Not testable without a key:** build against a fixture provider first; the real-key test (and the console check that usage is within the free allowance) is the last step.
+
+**Known limits to accept:** each search returns about 20 clinics; animal type and home visits are keyword guesses; opening hours are only as accurate as Google's data; the page needs location permission or a typed area; if the daily cap is reached the page says so until the next day.
+
 ### Final phase gate
 End-to-end walkthrough of owner, vet, admin, finder and invitee flows (including tapping an NFC tag on a real Android and iPhone), with no open items left in this file.
 
@@ -321,7 +363,7 @@ Apply them before the new code goes live: the old code does not know the new enu
 - **Caretakers (shared access role):** can view the pet and records, generate vet QRs, be assigned reminders and mark them done. Cannot edit animal info or add animals to the owner's profile. For records they are view-only plus generating vet QRs: no adding, editing or deleting records (confirmed 2026-11-23). Reminder completion stays allowed as decided above. Still no owner contact details and no lost-pet messages. Supersedes the "cannot edit anything" line above. Reminders therefore need an assignee field (owner, a caretaker, or "whoever gets to it first") and a completion history (who, when).
 - **Email stays off.** Do not build Verify email, Forgot password, New password, or the Email toggle on reminders yet.
 - **Lost-mode scan page shows health info, owner-controlled.** In the ID and QR tag tab the owner gets a pill toggle (switch) per field to choose what is public: for example vaccine status, allergies, current medication, notes, plus the contact options (text, call, in-app message). Needs a per-pet public-field settings model. The server must only return fields the owner switched on.
-- **Find a vet stays locked** ("Coming soon"). Remove or ignore the Find a vet page frames in Figma.
+- **Find a vet stays locked** ("Coming soon") until Phase 10. Superseded 2026-11-24: Phase 10 builds it from the Figma frames using Google Maps, with no clinic accounts.
 - **Clinic-style items removed (confirmed).** No "Awaiting clinic" / "Confirmed" appointment badges (use Upcoming / Done / Cancelled), and no clinic notifications ("received your request", "Appointment confirmed", "New message from <clinic>"). Notifications show only the planned triggers (reminders due, vet record submitted, lost-pet message, shared access invite) plus caretaker activity such as "Marco completed Evening walk". "Health record added by <vet>" stays, as the vet-record-submitted trigger. Figma frames to edit: Notifications (9:1425) and the dashboard Vet visits card (9:880, and the other Owner dashboard frames).
 
 ### Follow-up decisions 2026-11-23 (already applied to the phases above)
@@ -343,4 +385,4 @@ Apply them before the new code goes live: the old code does not know the new enu
 - No Figma screens yet for: vet QR generate/list/revoke, the public vet form, admin void and audit, caretaker invite flow. Decided 2026-11-23: build these directly in the existing style (existing components and the Figma style guide); they do not block their phases. Add Figma frames afterward if wanted.
 
 ## Still open
-Nothing. Phases 0 to 9 are done; what remains is the final phase gate (the end-to-end walkthrough, now including NFC on a real phone), then the production deploy checklist.
+Nothing. Phases 0 to 9 are done. Phase 10 (Find a vet with Google Maps) is planned and waiting on the developer's Google Cloud setup. After it, the final phase gate (the end-to-end walkthrough, including NFC on a real phone), then the production deploy checklist.
