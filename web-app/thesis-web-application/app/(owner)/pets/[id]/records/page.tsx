@@ -97,14 +97,13 @@ export default async function RecordsPage({
         })}
         <div className="ml-auto flex items-center gap-3">
           <YearSelect years={years} current={yearNumber} />
-          <span
-            aria-disabled="true"
-            title="Coming soon"
-            className="flex h-9 cursor-not-allowed select-none items-center gap-2 rounded-lg border border-line bg-white px-3.5 text-[13px] font-semibold text-[#a0a7b0]"
+          <a
+            href={`/api/pets/${pet.id}/export`}
+            className="flex h-9 items-center gap-2 rounded-lg border border-line bg-white px-3.5 text-[13px] font-semibold text-ink hover:bg-[#f6f8fa]"
           >
             <Icon name="download" size={15} />
             Export PDF
-          </span>
+          </a>
         </div>
       </div>
 

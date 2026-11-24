@@ -106,6 +106,13 @@ export function presignFileDownload(key: string, fileName?: string, expiresInSec
   );
 }
 
+/** Stores a file the server made itself (like a resized photo) in the private files bucket. */
+export async function putFile(key: string, body: Buffer, contentType: string) {
+  await s3.send(
+    new PutObjectCommand({ Bucket: filesBucket(), Key: key, Body: body, ContentType: contentType }),
+  );
+}
+
 /** What is really stored under a key, or null when nothing is. */
 export async function headFile(key: string) {
   try {

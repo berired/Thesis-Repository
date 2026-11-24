@@ -144,7 +144,11 @@ model Pet {
   markings             String?
   medicalNotes         String?
   allergies            String?
+  /// The large photo. New photos live in the pet-files bucket under photos/; older ones are
+  /// pet-photos/... in the original bucket and keep working until replaced.
   photoKey             String?
+  /// The small square copy used for avatars. Null for an older photo, which uses photoKey.
+  photoThumbKey        String?
   lostMode             Boolean            @default(false)
   archivedAt           DateTime?
   ownerId              String

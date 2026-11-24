@@ -7,6 +7,7 @@ import { prisma } from "@/app/lib/prisma";
 import { getPetAccess, ownedPets } from "@/app/lib/pet-access";
 import { requireUser } from "@/app/lib/session";
 import { deleteFile } from "@/app/lib/storage";
+import { deletePhotoObjects } from "@/app/lib/pet-photo";
 
 export type FormState = { error?: string } | undefined;
 
@@ -28,7 +29,7 @@ async function ownedPet(petId: string) {
   }
   const pet = await prisma.pet.findUnique({
     where: { id: petId },
-    select: { id: true, name: true, qrCodeId: true },
+    select: { id: true, name: true, qrCodeId: true, photoKey: true, photoThumbKey: true },
   });
   if (!pet) throw new Error("Pet not found");
   return pet;
@@ -104,8 +105,9 @@ export async function removePet(
         });
       }
     });
-    // The rows cascaded away; remove the stored files too (best effort).
+    // The rows cascaded away; remove the stored files and photos too (best effort).
     await Promise.allSettled(files.map((f) => deleteFile(f.fileKey)));
+    await deletePhotoObjects([pet.photoKey, pet.photoThumbKey]);
   } else {
     return { error: "Choose archive or delete." };
   }

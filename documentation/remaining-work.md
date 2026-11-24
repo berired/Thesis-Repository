@@ -4,7 +4,7 @@ Last updated 2026-11-24, after Phase 5 and the tracked-edits change (branch `sta
 
 The backend is planned phase by phase in `backend-plan.md`, which is the source of truth for decisions and records what each finished phase did. This file tracks the frontend and loose ends. Where the two disagree, `backend-plan.md` wins.
 
-**Where the plan stands:** Phases 0 to 6 are done (foundations, private storage and uploads, owner records, reminders and notifications, vet QR flow, admin void and audit, lost-pet messaging with the per-field scan page settings, shared access for caretakers), plus the time zone fix and the tracked-edits change (record history, add-only notes, locked files). Phase 8 and the final gate remain. Production still needs the migrations (now nine, through `20261124075412_caretaker_shares`) and settings in the "Production deploy checklist" in `backend-plan.md`.
+**Where the plan stands:** Phases 0 to 6 are done (foundations, private storage and uploads, owner records, reminders and notifications, vet QR flow, admin void and audit, lost-pet messaging with the per-field scan page settings, shared access for caretakers, pet photos, the PDF export and the header search), plus the time zone fix and the tracked-edits change (record history, add-only notes, locked files). Only the final gate (the end-to-end walkthrough) remains. Production still needs the migrations (now ten, through `20261124081237_pet_photo_thumbnails`), plus running `scripts/migrate-pet-photos.mjs` after the deploy and settings in the "Production deploy checklist" in `backend-plan.md`.
 
 ## 1. Figma status
 
@@ -47,7 +47,7 @@ Figma frames still to edit to match the decisions (the code already follows the 
 - Edit record (131:1283): for vet-submitted records, remove "Delete record" and the copy-on-edit text. Also add the "Edited on" stamp, the History and Notes sections on the record page, and drop the remove button on saved files.
 - Reminders create form (142:2203): remove Email and Phone, and the Email notify option.
 - Sidebar: remove "Appointments" from the frames that show it. Decided: no Appointments sidebar link.
-- Header search placeholder: change to "Search animals and records".
+- Header search placeholder: change to "Search animals and records" (built that way).
 - Medication record form (131:1018): the dose reminders now have a "Who gives the doses" choice (me, a caretaker, or whoever first) when the animal has caretakers.
 - Find a vet (190:3963, 190:4427): leave locked.
 - ID and QR tag (203:5464): the public-info controls must be pill toggles per field.
@@ -59,15 +59,12 @@ Figma screens that do not exist: owner generate, list and cancel vet QR; the pub
 - Sidebar: Find a vet (locked). Health records, Reminders and Messages are live; there is no Appointments item.
 - Pet banner: QR tag opens a dialog; Edit works.
 - Home: Find a vet button (locked).
-- Health records: Export PDF (disabled until Phase 8).
-- Header: the search box does nothing yet (Phase 8). The bell and Notifications page work.
 - Footer links on the landing page (everything except Features).
 
 Stays locked on purpose: **Find a vet** ("Coming soon" until clinics exist).
 
 ## 3. Data and features the designs imply but the database lacks
 
-- Pet photos: no upload. Avatars use species icons. Phase 8.
 - Pet species icons: only Dog, Cat and Reptile have icons; other species show an initial. Figma lists Dog, Cat, Bird, Poultry, Reptile, Fish, Rabbit, Other.
 
 Done since the last version of this file: admin void and audit with owner reports (Phase 5); record edit history, add-only notes and locked files (2026-11-24); private `pet-files` bucket and uploads (Phase 1), record types and provenance, owner records with attachments and the Edit animal page with allergies (Phase 2), reminders with a completion log, the `Notification` model and bell (Phase 3), vet QR tokens, sessions and the vet form (Phase 4).
@@ -81,6 +78,8 @@ Done since the last version of this file: admin void and audit with owner report
 - A notification settings page. Revisit only if email returns.
 
 ## 5. Known issues and decisions to revisit
+
+- The old pet photos have not been moved to the new format yet: run `scripts/migrate-pet-photos.mjs` on stage (it would move the one real photo there) and on production after the deploy. Search is a plain contains match, and Figma has no frames for the search results page or the PDF.
 
 - The owner is not told when a caretaker invitation is accepted or declined, and there is no Figma frame for the invite flow, the invitations banner or the caretaker list (built in the existing style).
 
@@ -101,6 +100,6 @@ Done since the last version of this file: admin void and audit with owner report
 
 ## 6. Not started at all
 
-- Backend phase 8 (see `backend-plan.md`): photos, PDF export and the header search.
+- The final phase gate in `backend-plan.md`: an end-to-end walkthrough of the owner, vet, admin, finder and caretaker flows.
 - Tests (none in the repo; deliberately deferred, see `backend-plan.md`).
 - Final end-to-end walkthrough.

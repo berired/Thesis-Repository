@@ -5,16 +5,9 @@ import { SPECIES } from "@/app/lib/pets";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
 import { claimQrAndCreatePet, extractCode } from "@/app/lib/claim-pet";
-import { uploadPetPhoto } from "@/app/lib/storage";
+import { checkPetPhoto, savePetPhoto } from "@/app/lib/pet-photo";
 
 export type RegisterPetState = { error?: string };
-
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
-const PHOTO_TYPES: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-};
 
 const text = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const optional = (fd: FormData, k: string) => text(fd, k) || null;
@@ -54,8 +47,9 @@ export async function registerPet(
   const photo = formData.get("photo");
   const hasPhoto = photo instanceof File && photo.size > 0;
   if (hasPhoto) {
-    if (!PHOTO_TYPES[photo.type]) return { error: "Photo must be a JPG, PNG or WebP image." };
-    if (photo.size > MAX_PHOTO_BYTES) return { error: "Photo must be 5 MB or smaller." };
+    // Checked before the tag is claimed, so a bad photo doesn't leave a half-made pet behind.
+    const checked = await checkPetPhoto(photo);
+    if (!checked.ok) return { error: checked.error };
   }
 
   const result = await claimQrAndCreatePet(session.user.id, code, {
@@ -78,12 +72,12 @@ export async function registerPet(
 
   // The pet is already saved; a failed upload shouldn't lose it.
   if (hasPhoto) {
-    try {
-      const key = `pet-photos/${result.petId}.${PHOTO_TYPES[photo.type]}`;
-      await uploadPetPhoto(key, Buffer.from(await photo.arrayBuffer()), photo.type);
-      await prisma.pet.update({ where: { id: result.petId }, data: { photoKey: key } });
-    } catch (e) {
-      console.error("Pet photo upload failed", e);
+    const saved = await savePetPhoto(result.petId, photo);
+    if (saved.ok) {
+      await prisma.pet.update({
+        where: { id: result.petId },
+        data: { photoKey: saved.photoKey, photoThumbKey: saved.photoThumbKey },
+      });
     }
   }
 

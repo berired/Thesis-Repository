@@ -8,7 +8,7 @@ import { getPublicSettings, loadScanSource } from "@/app/lib/scan-data";
 import { applySettings } from "@/app/lib/scan-view";
 import { getPetAccess } from "@/app/lib/pet-access";
 import { getSession } from "@/app/lib/session";
-import { getPetPhotoUrl } from "@/app/lib/storage";
+import { petPhotoUrl } from "@/app/lib/pet-photo";
 
 // Scan pages are for whoever holds the tag, not for search engines.
 export const metadata = { robots: { index: false, follow: false } };
@@ -87,7 +87,7 @@ export default async function ScanPage({
       if (!view || !source) {
         body = <p className={PLAIN}>This tag isn&apos;t active right now.</p>;
       } else {
-        const photoUrl = pet.photoKey ? await getPetPhotoUrl(pet.photoKey, 300) : null;
+        const photoUrl = pet.photoKey ? await petPhotoUrl(pet.photoKey, 300) : null;
         const phone = view.canCall ? (pet.owner.phone ?? "").replace(/[^\d+]/g, "") : "";
         const next = encodeURIComponent(`/r/${code}`);
         const nobody = !phone && !view.canMessage;

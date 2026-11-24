@@ -6,16 +6,9 @@ import { SPECIES } from "@/app/lib/pets";
 import { prisma } from "@/app/lib/prisma";
 import { getPetAccess } from "@/app/lib/pet-access";
 import { requireUser } from "@/app/lib/session";
-import { deletePetPhoto, uploadPetPhoto } from "@/app/lib/storage";
+import { deletePhotoObjects, savePetPhoto } from "@/app/lib/pet-photo";
 
 export type EditPetState = { error?: string };
-
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
-const PHOTO_TYPES: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-};
 
 const text = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const optional = (fd: FormData, k: string) => text(fd, k) || null;
@@ -30,7 +23,7 @@ export async function updatePet(
     (await getPetAccess(session.user.id, petId)) === "owner"
       ? await prisma.pet.findUnique({
           where: { id: petId },
-          select: { id: true, photoKey: true },
+          select: { id: true, photoKey: true, photoThumbKey: true },
         })
       : null;
   if (!pet) return { error: "We couldn't find this animal." };
@@ -59,27 +52,17 @@ export async function updatePet(
 
   const photo = formData.get("photo");
   const hasPhoto = photo instanceof File && photo.size > 0;
-  if (hasPhoto) {
-    if (!PHOTO_TYPES[photo.type]) return { error: "Photo must be a JPG, PNG or WebP image." };
-    if (photo.size > MAX_PHOTO_BYTES) return { error: "Photo must be 5 MB or smaller." };
-  }
-
   let photoKey = pet.photoKey;
+  let photoThumbKey = pet.photoThumbKey;
+  const oldKeys = [pet.photoKey, pet.photoThumbKey];
   if (hasPhoto) {
-    const key = `pet-photos/${pet.id}.${PHOTO_TYPES[photo.type]}`;
-    try {
-      await uploadPetPhoto(key, Buffer.from(await photo.arrayBuffer()), photo.type);
-    } catch (e) {
-      console.error("Pet photo upload failed", e);
-      return { error: "We couldn't upload the photo. Try again." };
-    }
-    // A different file type means a different key, so clear the old file.
-    if (pet.photoKey && pet.photoKey !== key) {
-      await deletePetPhoto(pet.photoKey).catch((e) =>
-        console.error("Old pet photo cleanup failed", e),
-      );
-    }
-    photoKey = key;
+    const saved = await savePetPhoto(pet.id, photo);
+    if (!saved.ok) return { error: saved.error };
+    photoKey = saved.photoKey;
+    photoThumbKey = saved.photoThumbKey;
+  } else if (formData.get("removePhoto") === "1") {
+    photoKey = null;
+    photoThumbKey = null;
   }
 
   await prisma.pet.update({
@@ -95,8 +78,11 @@ export async function updatePet(
       microchip: optional(formData, "microchip"),
       allergies: optional(formData, "allergies"),
       photoKey,
+      photoThumbKey,
     },
   });
+  // The pet now points at the new photo (or none); clear the old files.
+  if (photoKey !== pet.photoKey) await deletePhotoObjects(oldKeys);
 
   revalidatePath("/", "layout");
   redirect(`/pets/${pet.id}`);

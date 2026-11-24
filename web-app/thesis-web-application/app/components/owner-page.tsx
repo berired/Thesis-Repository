@@ -35,7 +35,11 @@ export default function OwnerPage({
             ))}
           </nav>
         ) : (
-          <div className="relative w-full max-w-[360px] min-w-0 flex-1 sm:flex-none">
+          <form
+            action="/search"
+            role="search"
+            className="relative w-full max-w-[360px] min-w-0 flex-1 sm:flex-none"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/icons/search.svg"
@@ -46,11 +50,14 @@ export default function OwnerPage({
             />
             <input
               type="search"
-              aria-label="Search"
-              placeholder="Search animals, records, clinics"
+              name="q"
+              minLength={2}
+              maxLength={80}
+              aria-label="Search animals and records"
+              placeholder="Search animals and records"
               className="h-9 w-full rounded-lg border border-line bg-white pl-[42px] pr-3.5 text-sm text-ink placeholder:text-[#a0a7b0]"
             />
-          </div>
+          </form>
         )}
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <Link

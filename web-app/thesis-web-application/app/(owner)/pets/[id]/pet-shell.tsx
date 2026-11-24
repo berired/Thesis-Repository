@@ -87,7 +87,7 @@ export default function PetShell({
           <span
             className={`flex size-[116px] shrink-0 items-center justify-center rounded-full border-[3px] border-white bg-white shadow-[6px_6px_0_var(--color-butter)]`}
           >
-            <PetAvatar name={pet.name} species={pet.species} size={104} photoSrc={petPhotoSrc(pet)} />
+            <PetAvatar name={pet.name} species={pet.species} size={104} photoSrc={petPhotoSrc(pet, "large")} />
           </span>
         ) : (
           <PetAvatar

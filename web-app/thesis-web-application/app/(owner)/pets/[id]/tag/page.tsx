@@ -85,7 +85,7 @@ export default async function TagPage({ params }: { params: Promise<{ id: string
             source={source}
             species={pet.species}
             memberNo={code ?? "no-tag"}
-            photoUrl={petPhotoSrc(pet)}
+            photoUrl={petPhotoSrc(pet, "large")}
             ownerHasCity={Boolean(owner.city)}
             lost={pet.lostMode}
           />

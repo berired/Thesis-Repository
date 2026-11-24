@@ -43,9 +43,14 @@ export const FALLBACK_STYLE: SpeciesStyle = {
 export const styleFor = (species: string) => SPECIES_STYLE[species] ?? FALLBACK_STYLE;
 
 /** Owner-only URL for a pet's profile photo, or null when it has none. */
-export function petPhotoSrc(pet: { id: string; photoKey: string | null; updatedAt: Date }) {
+export function petPhotoSrc(
+  pet: { id: string; photoKey: string | null; updatedAt: Date },
+  size: "thumb" | "large" = "thumb",
+) {
   // The version changes on every save, so a replaced photo isn't served from cache.
-  return pet.photoKey ? `/api/pets/${pet.id}/photo?v=${pet.updatedAt.getTime()}` : null;
+  return pet.photoKey
+    ? `/api/pets/${pet.id}/photo?v=${pet.updatedAt.getTime()}${size === "thumb" ? "&size=thumb" : ""}`
+    : null;
 }
 
 export function PetAvatar({

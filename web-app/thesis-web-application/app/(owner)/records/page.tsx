@@ -36,6 +36,8 @@ export default async function AllRecordsPage({
   });
   const ownsAny = pets.some((p) => p.ownerId === session.user.id);
   const activePet = pets.find((p) => p.id === petParam);
+  // The summary is for one animal: the chosen one, or the only one there is.
+  const exportPet = activePet ?? (pets.length === 1 ? pets[0] : null);
   const activeType = FILTERS.find((f) => f.type && f.type === type)?.type;
   const yearNumber = /^\d{4}$/.test(year ?? "") ? Number(year) : undefined;
   const search = (q ?? "").trim().slice(0, 80);
@@ -164,14 +166,24 @@ export default async function AllRecordsPage({
             })}
             <div className="ml-auto flex items-center gap-3">
               <YearSelect years={years} current={yearNumber} />
-              <span
-                aria-disabled="true"
-                title="Coming soon"
-                className="flex h-9 cursor-not-allowed select-none items-center gap-2 rounded-lg border border-line bg-white px-3.5 text-[13px] font-semibold text-[#a0a7b0]"
+              {exportPet ? (
+                <a
+                href={`/api/pets/${exportPet.id}/export`}
+                className="flex h-9 items-center gap-2 rounded-lg border border-line bg-white px-3.5 text-[13px] font-semibold text-ink hover:bg-[#f6f8fa]"
               >
                 <Icon name="download" size={15} />
                 Export PDF
-              </span>
+              </a>
+              ) : (
+                <span
+                  aria-disabled="true"
+                  title="Pick one animal to export its summary"
+                  className="flex h-9 cursor-not-allowed select-none items-center gap-2 rounded-lg border border-line bg-white px-3.5 text-[13px] font-semibold text-[#a0a7b0]"
+                >
+                  <Icon name="download" size={15} />
+                  Export PDF
+                </span>
+              )}
             </div>
           </div>
 

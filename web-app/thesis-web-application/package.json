@@ -18,10 +18,12 @@
     "better-auth": "^1.7.18",
     "dotenv": "^18.0.9",
     "next": "16.3.5",
+    "pdf-lib": "^1.17.1",
     "qr-scanner": "^1.4.2",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

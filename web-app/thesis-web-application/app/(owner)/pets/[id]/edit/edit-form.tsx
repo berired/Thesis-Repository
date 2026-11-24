@@ -77,6 +77,7 @@ export default function EditPetForm({
   const [state, formAction, pending] = useActionState(updatePet.bind(null, pet.id), initialState);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [removePhoto, setRemovePhoto] = useState(false);
   const today = todayInput();
 
   useEffect(() => {
@@ -85,7 +86,8 @@ export default function EditPetForm({
     };
   }, [photoUrl]);
 
-  const shownPhoto = photoUrl ?? (pet.hasPhoto ? `/api/pets/${pet.id}/photo?v=${pet.version}` : null);
+  const shownPhoto =
+    photoUrl ?? (pet.hasPhoto && !removePhoto ? `/api/pets/${pet.id}/photo?v=${pet.version}` : null);
 
   return (
     <div className="flex min-w-0 flex-1 flex-col">
@@ -287,9 +289,27 @@ export default function EditPetForm({
                         return;
                       }
                       setPhotoUrl(file ? URL.createObjectURL(file) : null);
+                      if (file) setRemovePhoto(false);
                     }}
                   />
                 </label>
+                {pet.hasPhoto && !photoUrl ? (
+                  <>
+                    <input
+                      form={FORM_ID}
+                      type="hidden"
+                      name="removePhoto"
+                      value={removePhoto ? "1" : "0"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setRemovePhoto((v) => !v)}
+                      className="text-xs font-semibold text-[#b42318] underline"
+                    >
+                      {removePhoto ? "Keep the photo" : "Remove photo"}
+                    </button>
+                  </>
+                ) : null}
                 {photoError ? (
                   <p role="alert" className="text-[11px] text-[#c2372e]">
                     {photoError}
