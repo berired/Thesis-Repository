@@ -75,7 +75,7 @@ export default async function AdminMessagesPage() {
                 ))
               )}
             </ul>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <form action={closeThreadReport.bind(null, r.id, "RESOLVED")}>
                 <button type="submit" className="rounded bg-gray-800 px-3 py-1.5 text-white">
                   Mark resolved

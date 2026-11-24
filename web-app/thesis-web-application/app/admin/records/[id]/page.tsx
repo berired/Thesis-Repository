@@ -69,9 +69,9 @@ export default async function AdminRecordPage({ params }: { params: Promise<{ id
         {details
           .filter(([, v]) => v)
           .map(([k, v]) => (
-            <div key={k} className="flex gap-4">
-              <dt className="w-32 shrink-0 text-gray-600">{k}</dt>
-              <dd className="whitespace-pre-line">{v}</dd>
+            <div key={k} className="flex gap-3 sm:gap-4">
+              <dt className="w-24 shrink-0 text-gray-600 sm:w-32">{k}</dt>
+              <dd className="min-w-0 break-words whitespace-pre-line">{v}</dd>
             </div>
           ))}
       </dl>

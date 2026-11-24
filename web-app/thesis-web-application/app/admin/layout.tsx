@@ -12,7 +12,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 sm:px-6 print:hidden">
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
           <Link href="/admin" className="font-semibold">
             Admin
           </Link>
@@ -22,8 +22,8 @@ export default async function AdminLayout({
           <Link href="/admin/messages">Messages</Link>
           <Link href="/admin/qr-codes">QR codes</Link>
         </nav>
-        <div className="flex items-center gap-3 text-sm">
-          <span>{session.user.email}</span>
+        <div className="flex min-w-0 items-center gap-3 text-sm">
+          <span className="truncate">{session.user.email}</span>
           <SignOutButton />
         </div>
       </header>

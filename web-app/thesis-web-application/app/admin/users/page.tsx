@@ -29,19 +29,19 @@ export default async function UsersPage({
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Users</h1>
 
-      <form className="flex gap-2">
+      <form className="flex flex-wrap gap-2">
         <input
           name="q"
           defaultValue={query}
           placeholder="Search name or email"
-          className="w-72 rounded border px-3 py-2 text-sm"
+          className="w-full max-w-72 rounded border px-3 py-2 text-sm"
         />
         <button type="submit" className="rounded border px-3 py-2 text-sm">
           Search
         </button>
       </form>
 
-      <table className="w-full text-left text-sm">
+      <div className="overflow-x-auto"><table className="w-full min-w-[40rem] text-left text-sm">
         <thead className="border-b">
           <tr>
             <th className="py-2">Name</th>
@@ -67,7 +67,7 @@ export default async function UsersPage({
                   {isSelf ? (
                     <span className="text-gray-500">You</span>
                   ) : (
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <form action={setUserRole}>
                         <input type="hidden" name="userId" value={user.id} />
                         <input
@@ -99,7 +99,7 @@ export default async function UsersPage({
             </tr>
           )}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default async function PetsPage() {
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Pets</h1>
 
-      <table className="w-full text-left text-sm">
+      <div className="overflow-x-auto"><table className="w-full min-w-[40rem] text-left text-sm">
         <thead className="border-b">
           <tr>
             <th className="py-2">Name</th>
@@ -45,7 +45,7 @@ export default async function PetsPage() {
             </tr>
           )}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }

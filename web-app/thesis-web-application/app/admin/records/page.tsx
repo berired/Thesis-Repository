@@ -28,7 +28,7 @@ export default async function AdminRecordsPage({
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Vet records</h1>
-      <nav className="flex gap-2 text-sm">
+      <nav className="flex flex-wrap gap-2 text-sm">
         {VIEWS.map((v) => (
           <Link
             key={v.id}
@@ -65,7 +65,7 @@ async function Reports() {
     },
   });
   return (
-    <table className="w-full text-left text-sm">
+    <div className="overflow-x-auto"><table className="w-full min-w-[40rem] text-left text-sm">
       <thead className="border-b">
         <tr>
           <th className="py-2">Reported</th>
@@ -109,7 +109,7 @@ async function Reports() {
           </tr>
         )}
       </tbody>
-    </table>
+    </table></div>
   );
 }
 
@@ -124,7 +124,7 @@ async function VetRecords() {
     },
   });
   return (
-    <table className="w-full text-left text-sm">
+    <div className="overflow-x-auto"><table className="w-full min-w-[40rem] text-left text-sm">
       <thead className="border-b">
         <tr>
           <th className="py-2">Added</th>
@@ -163,14 +163,14 @@ async function VetRecords() {
           </tr>
         )}
       </tbody>
-    </table>
+    </table></div>
   );
 }
 
 async function Audit() {
   const entries = await prisma.auditEntry.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
   return (
-    <table className="w-full text-left text-sm">
+    <div className="overflow-x-auto"><table className="w-full min-w-[40rem] text-left text-sm">
       <thead className="border-b">
         <tr>
           <th className="py-2">When</th>
@@ -214,6 +214,6 @@ async function Audit() {
           </tr>
         )}
       </tbody>
-    </table>
+    </table></div>
   );
 }
