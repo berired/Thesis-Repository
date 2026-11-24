@@ -602,7 +602,7 @@ export default function RecordForm({
                   {item.status === "uploading" || item.status === "done" ? (
                     <div className="h-1.5 overflow-hidden rounded-full bg-[#e6eefb]">
                       <div
-                        className={`h-full ${item.status === "done" ? "bg-[#0f6b47]" : "bg-sky"}`}
+                        className={`h-full rounded-full transition-[width,background-color] duration-300 ease-out ${item.status === "done" ? "bg-[#0f6b47]" : "bg-sky"}`}
                         style={{ width: `${item.percent}%` }}
                       />
                     </div>

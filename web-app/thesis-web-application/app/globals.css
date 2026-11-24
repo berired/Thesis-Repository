@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Motion: short and soft. Only opacity and transform are animated, so nothing reflows. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 150ms;
+  --dur-base: 240ms;
+  --dur-slow: 400ms;
 }
 
 @theme inline {
@@ -33,6 +40,94 @@
       transform: translateX(-50%);
     }
   }
+
+  /* Things that appear: use as animate-rise, animate-pop and so on. */
+  --animate-rise: rise 280ms var(--ease-out) both;
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  --animate-fade-in: fade-in 240ms ease-out both;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  --animate-pop: pop 360ms var(--ease-spring) both;
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  /* A count that just changed: a quick bounce. */
+  --animate-bump: bump 380ms var(--ease-spring) both;
+  @keyframes bump {
+    0% {
+      transform: scale(1);
+    }
+    40% {
+      transform: scale(1.35);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  --animate-shake: shake 360ms ease-in-out both;
+  @keyframes shake {
+    20% {
+      transform: translateX(-4px);
+    }
+    40% {
+      transform: translateX(4px);
+    }
+    60% {
+      transform: translateX(-3px);
+    }
+    80% {
+      transform: translateX(2px);
+    }
+  }
+
+  --animate-slide-in-right: slide-in-right 260ms var(--ease-out) both;
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(14px);
+    }
+  }
+
+  --animate-slide-in-left: slide-in-left 260ms var(--ease-out) both;
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-14px);
+    }
+  }
+
+  /* A loading placeholder's moving highlight. */
+  --animate-shimmer: shimmer 1.4s ease-in-out infinite;
+  @keyframes shimmer {
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  --animate-wiggle: wiggle 420ms ease-in-out;
+  @keyframes wiggle {
+    25% {
+      rotate: calc(var(--r, 0deg) - 3deg);
+    }
+    75% {
+      rotate: calc(var(--r, 0deg) + 3deg);
+    }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -46,4 +141,290 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+@layer base {
+  /* Every button and link eases between states instead of snapping. Tailwind utilities on an
+     element still win over this. */
+  button:not(:disabled),
+  summary,
+  a {
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) ease,
+      border-color var(--dur-fast) ease,
+      color var(--dur-fast) ease,
+      box-shadow var(--dur-fast) ease,
+      opacity var(--dur-fast) ease;
+  }
+
+  /* A tiny press on plain buttons. Sticker buttons have their own, below. */
+  button:not(:disabled):active {
+    transform: scale(0.97);
+  }
+
+  input,
+  select,
+  textarea {
+    transition:
+      border-color var(--dur-fast) ease,
+      box-shadow var(--dur-fast) ease,
+      background-color var(--dur-fast) ease;
+  }
+}
+
+/* Dialogs ------------------------------------------------------------------ */
+
+dialog[open] {
+  animation: dialog-in var(--dur-base) var(--ease-out) both;
+}
+dialog[open]::backdrop {
+  animation: fade-in var(--dur-base) ease-out both;
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+
+/* Lists: children rise in one after another (first twelve). ---------------- */
+
+.stagger > * {
+  animation: rise 320ms var(--ease-out) both;
+}
+.stagger > :nth-child(2) {
+  animation-delay: 40ms;
+}
+.stagger > :nth-child(3) {
+  animation-delay: 80ms;
+}
+.stagger > :nth-child(4) {
+  animation-delay: 120ms;
+}
+.stagger > :nth-child(5) {
+  animation-delay: 160ms;
+}
+.stagger > :nth-child(6) {
+  animation-delay: 200ms;
+}
+.stagger > :nth-child(7) {
+  animation-delay: 240ms;
+}
+.stagger > :nth-child(8) {
+  animation-delay: 280ms;
+}
+.stagger > :nth-child(9) {
+  animation-delay: 320ms;
+}
+.stagger > :nth-child(10) {
+  animation-delay: 360ms;
+}
+.stagger > :nth-child(n + 11) {
+  animation-delay: 400ms;
+}
+
+/* Cards that lift on hover, like a sticker peeling up. ---------------------- */
+
+.lift {
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    border-color var(--dur-fast) ease;
+}
+.lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 4px 5px 0 var(--color-butter);
+}
+.lift:active {
+  transform: translateY(0);
+  box-shadow: 1px 1px 0 var(--color-butter);
+}
+
+/* Sticker buttons: lift on hover, press flat, wiggle once. ------------------ */
+
+.sticker-btn {
+  rotate: var(--r, 0deg);
+  transition:
+    translate var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+.sticker-btn:hover {
+  translate: -1px -2px;
+  box-shadow: 5px 6px 0 var(--color-ink);
+  animation: wiggle 420ms ease-in-out;
+}
+.sticker-btn:active {
+  translate: 2px 2px;
+  box-shadow: 1px 1px 0 var(--color-ink);
+  animation: none;
+}
+
+/* Decorative polaroids lean in when hovered. -------------------------------- */
+
+.polaroid {
+  rotate: var(--r, 0deg);
+  transition:
+    rotate 360ms var(--ease-spring),
+    translate 360ms var(--ease-spring);
+}
+.polaroid:hover {
+  rotate: calc(var(--r, 0deg) * 0.35);
+  translate: 0 -6px;
+}
+
+/* A row being completed or removed. The component sets data-leaving and an exact height. --- */
+
+[data-leaving] {
+  overflow: hidden;
+  pointer-events: none;
+}
+[data-leaving="done"] .leave-title {
+  text-decoration: line-through;
+  color: var(--color-muted);
+}
+[data-leaving="done"] .leave-check {
+  animation: pop 360ms var(--ease-spring) both;
+  background-color: #ddf1e8;
+  border-color: #0f6b47;
+  color: #0f6b47;
+}
+[data-leaving="collapse"],
+[data-leaving="delete"] {
+  height: 0 !important;
+  opacity: 0;
+  margin-bottom: -0.75rem !important;
+  padding-block: 0 !important;
+  border-width: 0 !important;
+  transform: translateX(16px);
+  transition:
+    height 300ms var(--ease-out),
+    opacity 220ms ease,
+    margin 300ms var(--ease-out),
+    padding 300ms var(--ease-out),
+    transform 300ms var(--ease-out);
+}
+
+/* Landing page: scroll-driven. Browsers without support just show everything. ---- */
+
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal-up linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 40%;
+  }
+  .parallax {
+    animation: parallax linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 700px;
+  }
+}
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+}
+@keyframes parallax {
+  to {
+    transform: translateY(-48px);
+  }
+}
+
+/* Page changes (React ViewTransition) -------------------------------------------- */
+
+/* Clicks go through to the page while a transition plays. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-old(.page-out) {
+  animation: vt-out 120ms ease-in both;
+}
+::view-transition-new(.page-in) {
+  animation: vt-in 260ms var(--ease-out) 90ms both;
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* The top bar and the animal banner stay put while the page under them changes. */
+::view-transition-group(owner-header) {
+  animation: none;
+  z-index: 10;
+}
+::view-transition-old(owner-header) {
+  display: none;
+}
+::view-transition-new(owner-header) {
+  animation: none;
+}
+
+/* A thumbnail avatar growing into the banner avatar. */
+::view-transition-group(.morph) {
+  animation-duration: 380ms;
+  animation-timing-function: var(--ease-out);
+}
+
+/* Reduced motion: no movement anywhere, content just changes. ------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal,
+  .parallax {
+    animation: none !important;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* Numbers that count up, and a ring that fills (components/count-up.tsx). -------------- */
+
+@property --n {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+.count-up {
+  --n: var(--target, 0);
+  counter-reset: count var(--n);
+  animation: count-up 800ms var(--ease-out) both;
+}
+.count-up::after {
+  content: counter(count);
+}
+@keyframes count-up {
+  from {
+    --n: 0;
+  }
+}
+
+.ring-fill {
+  animation: ring-fill 900ms var(--ease-out) 120ms both;
+}
+@keyframes ring-fill {
+  from {
+    stroke-dasharray: 0 100;
+  }
 }

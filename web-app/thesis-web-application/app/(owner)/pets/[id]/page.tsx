@@ -83,7 +83,7 @@ export default async function PetOverviewPage({
                 : "Nothing is assigned to you for " + pet.name + " right now."}
             </p>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="stagger flex flex-col gap-3">
               {reminders.map((r) => (
                 <ReminderCard
                   key={r.id}

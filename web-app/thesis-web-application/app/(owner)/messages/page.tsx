@@ -52,7 +52,7 @@ export default async function MessagesPage() {
           If you find a lost pet, scan its tag and choose &quot;Message in app&quot;.
         </div>
       ) : (
-        <ul className="flex max-w-[720px] flex-col gap-2">
+        <ul className="stagger flex max-w-[720px] flex-col gap-2">
           {threads.map((t) => {
             const isOwner = t.pet.ownerId === userId;
             const settings = t.pet.publicSettings;

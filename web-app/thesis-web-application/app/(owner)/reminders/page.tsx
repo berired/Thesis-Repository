@@ -1,3 +1,4 @@
+import CountUp, { ProgressRing } from "@/app/components/count-up";
 import { dayKey, fmtHeading } from "@/app/lib/time";
 import Link from "next/link";
 import OwnerPage from "@/app/components/owner-page";
@@ -217,7 +218,7 @@ export default async function RemindersPage({
               ? groups.map((group) => (
                   <section key={group.heading} className="flex flex-col gap-3">
                     <h2 className="text-[13px] font-semibold text-muted">{group.heading}</h2>
-                    <ul className="flex flex-col gap-3">
+                    <ul className="stagger flex flex-col gap-3">
                       {group.items.map((entry) =>
                         entry.kind === "reminder" ? (
                           <ReminderCard
@@ -250,7 +251,7 @@ export default async function RemindersPage({
                     Completed reminders will show up here.
                   </p>
                 ) : null}
-                <ul className="flex flex-col gap-3">
+                <ul className="stagger flex flex-col gap-3">
                   {completions.map((c) => (
                     <li
                       key={c.id}
@@ -283,13 +284,21 @@ export default async function RemindersPage({
           </div>
 
           <aside className="flex flex-col gap-5">
-            <div className="rounded-3xl bg-forest px-5 py-5 text-white">
-              <p className="font-display text-[34px] leading-9 text-[#ffe48a]">
-                {doneThisWeek} of {totalWeek}
-              </p>
-              <p className="text-sm">
-                {totalWeek === 0 ? "Nothing due this week." : "done this week. Keep it up."}
-              </p>
+            <div className="flex items-center gap-4 rounded-3xl bg-forest px-5 py-5 text-white">
+              <div className="min-w-0 flex-1">
+                <p className="font-display text-[34px] leading-9 text-[#ffe48a]">
+                  <CountUp value={doneThisWeek} /> of <CountUp value={totalWeek} />
+                </p>
+                <p className="text-sm">
+                  {totalWeek === 0 ? "Nothing due this week." : "done this week. Keep it up."}
+                </p>
+              </div>
+              {totalWeek > 0 ? (
+                <ProgressRing
+                  percent={(doneThisWeek / totalWeek) * 100}
+                  className="size-14 text-[#ffe48a]"
+                />
+              ) : null}
             </div>
             <div className="flex flex-col gap-2">
               <p className="text-sm font-semibold">Animal</p>

@@ -48,7 +48,7 @@ function CopyLink({ url, compact = false }: { url: string; compact?: boolean }) 
           onClick={copy}
           className="h-9 shrink-0 rounded-lg border border-[#c3c9d1] bg-white px-3 text-[13px] font-semibold text-ink hover:bg-[#f6f8fa]"
         >
-          {state === "copied" ? "Copied" : "Copy link"}
+          {state === "copied" ? <span className="inline-block animate-pop">Copied</span> : "Copy link"}
         </button>
       </div>
       {state === "failed" ? (
@@ -122,7 +122,7 @@ function Status({
       {message ? (
         <p
           role={message.kind === "error" ? "alert" : "status"}
-          className={`text-sm ${message.kind === "error" ? "text-[#c2372e]" : "text-[#1f7a3d]"}`}
+          className={`text-sm ${message.kind === "error" ? "animate-shake text-[#c2372e]" : "animate-rise text-[#1f7a3d]"}`}
         >
           {message.text}
         </p>

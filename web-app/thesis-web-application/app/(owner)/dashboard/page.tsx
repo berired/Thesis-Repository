@@ -1,3 +1,4 @@
+import CountUp from "@/app/components/count-up";
 import { APP_TIME_ZONE, dayOfMonth, hourOf, monthShort, weekdayShort } from "@/app/lib/time";
 import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
@@ -252,14 +253,16 @@ export default async function DashboardPage() {
             <h2 className="font-display text-[30px] leading-[33px] text-forest">
               Today&apos;s care
             </h2>
-            <span className="pb-1 text-[13px] text-muted">{careCount} to do</span>
+            <span className="pb-1 text-[13px] text-muted">
+              <CountUp value={careCount} /> to do
+            </span>
           </div>
           {care.length === 0 ? (
             <p className="rounded-xl border border-dashed border-[#c3c9d1] p-5 text-sm text-muted">
               All caught up. Add reminders from an animal&apos;s page.
             </p>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="stagger flex flex-col gap-3">
               {care.map((r) => (
                 <ReminderCard
                   key={r.id}
@@ -280,7 +283,7 @@ export default async function DashboardPage() {
               No visits booked. Book one from an animal&apos;s Appointments tab.
             </p>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="stagger flex flex-col gap-3">
               {visits.map((v) => (
                 <li key={v.id} className="flex gap-4 rounded-xl border border-line bg-white p-4">
                   <div className="flex w-[58px] shrink-0 flex-col self-start overflow-clip rounded-lg border border-line bg-white text-center">
@@ -346,7 +349,7 @@ export default async function DashboardPage() {
       {archived.length > 0 ? (
         <section className="flex flex-col gap-3">
           <h2 className="text-lg font-semibold leading-6">Archived</h2>
-          <ul className="flex flex-col gap-2">
+          <ul className="stagger flex flex-col gap-2">
             {archived.map((pet) => (
               <li
                 key={pet.id}

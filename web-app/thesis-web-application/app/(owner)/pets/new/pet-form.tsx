@@ -111,7 +111,7 @@ export default function PetForm({ initialCode }: { initialCode: string }) {
                       required={i === 0}
                       className="peer sr-only"
                     />
-                    <span className="flex h-[52px] flex-col items-center justify-center gap-1 rounded-xl border border-line bg-white text-[11px] font-medium text-ink transition-colors hover:bg-[#f6f8fa] peer-checked:border-2 peer-checked:border-ink peer-checked:bg-butter peer-checked:font-semibold peer-checked:shadow-[2px_2px_0_var(--color-ink)] peer-focus-visible:ring-2 peer-focus-visible:ring-sky">
+                    <span className="flex h-[52px] flex-col items-center justify-center gap-1 rounded-xl border border-line bg-white text-[11px] font-medium text-ink transition-all active:scale-95 hover:bg-[#f6f8fa] peer-checked:-translate-y-px peer-checked:border-2 peer-checked:border-ink peer-checked:bg-butter peer-checked:font-semibold peer-checked:shadow-[2px_2px_0_var(--color-ink)] peer-focus-visible:ring-2 peer-focus-visible:ring-sky">
                       {icon ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={icon} alt="" width={18} height={18} />

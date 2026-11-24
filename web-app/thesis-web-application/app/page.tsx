@@ -189,7 +189,10 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <PocketBookArt />
+          {/* The art leans up a little as the page scrolls. */}
+          <div className="parallax">
+            <PocketBookArt />
+          </div>
         </section>
       </div>
 
@@ -208,7 +211,7 @@ export default async function HomePage() {
         </div>
       </div>
 
-      <section className="mx-auto grid max-w-[1280px] items-center gap-12 px-6 py-16 lg:grid-cols-2 lg:gap-10 lg:px-14">
+      <section className="reveal mx-auto grid max-w-[1280px] items-center gap-12 px-6 py-16 lg:grid-cols-2 lg:gap-10 lg:px-14">
         <div
           style={{ transform: "rotate(-1.5deg)" }}
           className="relative max-w-[564px] rounded-[20px] border-[3px] border-ink bg-cream px-8 pb-8 pt-7 shadow-[8px_8px_0_var(--color-butter)]"
@@ -250,12 +253,12 @@ export default async function HomePage() {
 
       <section id="features" className="bg-cream">
         <div className="mx-auto flex max-w-[1280px] flex-col gap-11 px-6 pb-20 pt-[85px] lg:px-14">
-          <h2 className="text-center font-display text-4xl leading-none text-forest lg:text-[56px] lg:leading-[56px]">
+          <h2 className="reveal text-center font-display text-4xl leading-none text-forest lg:text-[56px] lg:leading-[56px]">
             Stamped, signed, sorted
           </h2>
           <ul className="grid gap-12 sm:grid-cols-3 sm:gap-6">
             {FEATURES.map((feature) => (
-              <li key={feature.title} className="flex flex-col items-center text-center">
+              <li key={feature.title} className="reveal flex flex-col items-center text-center">
                 <div
                   style={{ transform: `rotate(${feature.rotate}deg)` }}
                   className={`flex size-[210px] items-center justify-center rounded-full border-[3px] ${feature.tone}`}
@@ -279,7 +282,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <footer className="mx-auto max-w-[1280px] px-6 pb-10 pt-[72px] lg:px-14">
+      <footer className="reveal mx-auto max-w-[1280px] px-6 pb-10 pt-[72px] lg:px-14">
         <div className="rounded-3xl bg-sky p-3 shadow-[10px_10px_0_var(--color-butter)]">
           <div className="relative grid gap-10 rounded-[14px] bg-cream px-6 py-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr] lg:px-11">
             <div>

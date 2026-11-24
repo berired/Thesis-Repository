@@ -11,7 +11,7 @@ import {
   fmtTime,
   reminderState,
 } from "@/app/lib/care";
-import { completeReminder, deleteReminder } from "@/app/(owner)/reminders/actions";
+import ReminderActions from "@/app/components/reminder-actions";
 import type { ReminderCategory, ReminderRepeat } from "@/app/generated/prisma/client";
 
 type ReminderData = {
@@ -49,12 +49,12 @@ export default function ReminderCard({
 }) {
   const state = reminderState(reminder.dueAt);
   return (
-    <li className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-line bg-white p-3.5">
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-line bg-white p-3.5 transition-shadow hover:shadow-[3px_3px_0_var(--color-butter)]">
       <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-[#eef3fb] text-sky">
         <Icon name={CATEGORY_ICON[reminder.category]} size={18} />
       </span>
       <div className="flex min-w-0 flex-1 basis-40 flex-col gap-0.5">
-        <p className="break-words text-[15px] font-semibold leading-[22.5px] text-ink">
+        <p className="leave-title break-words text-[15px] font-semibold leading-[22.5px] text-ink">
           {reminder.title}
         </p>
         <p className="flex flex-wrap items-center gap-x-1.5 text-[13px] leading-[19.5px] text-muted">
@@ -90,28 +90,12 @@ export default function ReminderCard({
         {state === "upcoming" ? null : <Icon name={STATE_ICON[state]} size={12} />}
         {STATE_LABEL[state]}
       </span>
-      <form action={completeReminder.bind(null, reminder.id)}>
-        <button
-          type="submit"
-          aria-label={`Mark "${reminder.title}" done`}
-          title="Mark done"
-          className="flex size-8 items-center justify-center rounded-full border border-line text-muted hover:border-[#0f6b47] hover:bg-[#ddf1e8] hover:text-[#0f6b47]"
-        >
-          <Icon name="check" size={14} />
-        </button>
-      </form>
-      {canDelete ? (
-        <form action={deleteReminder.bind(null, reminder.id)}>
-          <button
-            type="submit"
-            aria-label={`Delete "${reminder.title}"`}
-            title="Delete"
-            className="flex size-8 items-center justify-center rounded-full text-muted hover:bg-[#fde8e6] hover:text-[#b42318]"
-          >
-            <Icon name="trash-2" size={14} />
-          </button>
-        </form>
-      ) : null}
+      <ReminderActions
+        id={reminder.id}
+        title={reminder.title}
+        repeats={reminder.repeat !== "NONE"}
+        canDelete={canDelete}
+      />
     </li>
   );
 }

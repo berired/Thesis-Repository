@@ -100,6 +100,20 @@ Done since the last version of this file: admin void and audit with owner report
 - Test data: always delete what a smoke test creates (rule in the root `CLAUDE.md`). Stage currently holds only real data.
 - Neon is shared. Local `.env` points at the `stage` branch; production is the `main` branch.
 
+## 5b. Motion and interactivity (added 2026-11-24, on `frontend-audit-and-responsiveness`)
+
+Done: all CSS and React, no animation library. Everything respects `prefers-reduced-motion` (one rule in `app/globals.css` zeroes every animation and transition, and switches the scroll effects off).
+
+- **Foundation** (`app/globals.css`): motion timing, shared keyframes (`animate-rise`, `animate-pop`, `animate-shake`, `animate-bump`, `animate-slide-in-*`, `animate-shimmer`), a gentle ease on every button, link and input, a small press on buttons, and an open animation for every `<dialog>` and its backdrop.
+- **Brand touches:** sticker buttons lift, wiggle once on hover and press flat (`.sticker-btn`); pet cards lift with an offset shadow (`.lift`); decorative polaroids lean in (`.polaroid`); reminder and appointment cards get a hover shadow; reminder-type and species chips press and pop their tick.
+- **Page changes:** `app/(owner)/template.tsx` uses React's `ViewTransition` so the old page fades out and the new one fades up; the top bar keeps its place; a pet's avatar morphs from its card into the animal page banner. Browsers without view transitions swap pages as before.
+- **Loading:** `loading.tsx` screens with shimmering skeletons for the generic owner pages, My animals, an animal's pages, Health records and Reminders (`app/components/skeleton.tsx`).
+- **Reminders:** the tick strikes the title and pops, a one-off row then folds away, a repeating one returns with its next date, delete folds the row away (`app/components/reminder-actions.tsx`); lists rise in one after another (`.stagger`).
+- **Numbers and badges:** counts that change (bell, sidebar, bottom bar) bounce (`pop-badge.tsx`); the weekly numbers count up and a progress ring fills (`count-up.tsx`, pure CSS).
+- **Forms and chat:** errors shake in, "Saved" and "Copied" rise or pop, the upload bar eases, new chat messages slide in from their side and the chat scrolls smoothly.
+- **Landing page:** sections and feature cards rise as they scroll into view and the hero art drifts up slightly (CSS scroll-driven animations; browsers without them just show the page).
+- Tested in a browser (Chromium): complete, repeat and delete animations step through the right states and the data ends correct; the loading skeleton appears during navigation; dialogs animate; the landing reveals work; with reduced motion on, every duration is zero. Not tested on Safari or Firefox, or on a real phone. Find a vet (Phase 10) is not built yet, so its marker and list effects are still to add.
+
 ## 6. Not started at all
 
 - The final phase gate in `backend-plan.md`: an end-to-end walkthrough of the owner, vet, admin, finder and caretaker flows.

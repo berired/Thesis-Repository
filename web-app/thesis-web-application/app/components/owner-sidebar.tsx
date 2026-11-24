@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "@/app/components/app-icon";
+import PopBadge from "@/app/components/pop-badge";
 
 type NavItem = {
   label: string;
@@ -105,9 +106,13 @@ export default function OwnerSidebar({
               />
               <span className="flex-1 pb-px">{item.label}</span>
               {badge ? (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-sky px-1.5 text-[11px] font-semibold text-white">
+                <PopBadge
+                  id={`side-${item.label}`}
+                  count={badge}
+                  className="flex h-5 min-w-5 items-center justify-center rounded-full bg-sky px-1.5 text-[11px] font-semibold text-white"
+                >
                   {badge}
-                </span>
+                </PopBadge>
               ) : null}
             </>
           );
@@ -190,9 +195,13 @@ export default function OwnerSidebar({
                 <Icon name="user" size={22} className={active ? "text-ink" : "text-white"} />
               )}
               {badge ? (
-                <span className="absolute right-1.5 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-sky px-1 text-[10px] font-semibold text-white">
+                <PopBadge
+                  id={`bar-${item.label}`}
+                  count={badge}
+                  className="absolute right-1.5 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-sky px-1 text-[10px] font-semibold text-white"
+                >
                   {badge}
-                </span>
+                </PopBadge>
               ) : null}
             </span>
             <span className={`text-[11px] ${active ? "font-semibold" : "font-medium"}`}>

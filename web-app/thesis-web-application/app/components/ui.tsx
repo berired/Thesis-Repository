@@ -49,8 +49,8 @@ export function Polaroid({
   return (
     <figure
       aria-hidden="true"
-      style={{ transform: `rotate(${rotate}deg)` }}
-      className={`relative flex flex-col gap-2.5 rounded-md bg-white px-3 pb-4 pt-3 ${OFFSET_SHADOW[shadow]} ${className}`}
+      style={{ "--r": `${rotate}deg` } as React.CSSProperties}
+      className={`polaroid relative flex flex-col gap-2.5 rounded-md bg-white px-3 pb-4 pt-3 ${OFFSET_SHADOW[shadow]} ${className}`}
     >
       <span
         style={{ transform: `rotate(${tapeRotate}deg)` }}
@@ -112,10 +112,7 @@ function stickerClass({
 /** A tilted label that isn't interactive. */
 export function Sticker(props: StickerProps) {
   return (
-    <span
-      className={stickerClass(props)}
-      style={{ transform: `rotate(${props.rotate ?? 0}deg)` }}
-    >
+    <span className={stickerClass(props)} style={{ rotate: `${props.rotate ?? 0}deg` }}>
       {props.children}
     </span>
   );
@@ -129,8 +126,8 @@ export function StickerLink({
   return (
     <Link
       href={href}
-      className={stickerClass(props)}
-      style={{ transform: `rotate(${props.rotate ?? -3}deg)` }}
+      className={`${stickerClass(props)} sticker-btn`}
+      style={{ "--r": `${props.rotate ?? -3}deg` } as React.CSSProperties}
     >
       {props.children}
     </Link>
@@ -171,7 +168,7 @@ export const INPUT_CLASS =
   "h-11 w-full rounded-xl border border-line bg-white px-3.5 text-[15px] text-ink placeholder:text-[#a0a7b0] focus:border-sky focus:outline-none focus:ring-2 focus:ring-sky/30";
 
 export const PRIMARY_BUTTON_CLASS =
-  "flex h-12 w-full items-center justify-center rounded-xl bg-sky px-6 text-base font-semibold text-white hover:bg-[#2d5aa8] disabled:cursor-not-allowed disabled:opacity-60";
+  "flex h-12 w-full items-center justify-center rounded-xl bg-sky px-6 text-base font-semibold text-white hover:-translate-y-px hover:bg-[#2d5aa8] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none";
 
 export const SECONDARY_BUTTON_CLASS =
   "flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#c3c9d1] bg-white px-[18px] text-[15px] font-semibold text-ink hover:bg-[#f6f8fa] disabled:opacity-60";
@@ -256,8 +253,9 @@ export function OrDivider() {
 
 export function FormError({ message }: { message: string | null }) {
   if (!message) return null;
+  // The key restarts the entrance each time the message changes, so a new error is noticed.
   return (
-    <p role="alert" className="text-sm text-[#c2372e]">
+    <p key={message} role="alert" className="animate-shake text-sm text-[#c2372e]">
       {message}
     </p>
   );

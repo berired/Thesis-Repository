@@ -1,3 +1,4 @@
+import CountUp from "@/app/components/count-up";
 import PetShell from "../pet-shell";
 import AppointmentTile from "@/app/components/appointment-tile";
 import ReminderCard from "@/app/components/reminder-card";
@@ -61,7 +62,7 @@ export default async function PetRemindersPage({
           {attention.length > 0 ? (
             <section className="flex flex-col gap-3">
               <h2 className="text-sm font-semibold text-muted">Needs attention</h2>
-              <ul className="flex flex-col gap-3">
+              <ul className="stagger flex flex-col gap-3">
                 {attention.map((r) => (
                   <ReminderCard
                     key={r.id}
@@ -77,7 +78,7 @@ export default async function PetRemindersPage({
           {appointments.length > 0 || later.length > 0 ? (
             <section className="flex flex-col gap-3">
               <h2 className="text-sm font-semibold text-muted">Coming up</h2>
-              <ul className="flex flex-col gap-3">
+              <ul className="stagger flex flex-col gap-3">
                 {appointments.map((a) => (
                   <AppointmentTile key={a.id} appointment={a} petName={pet.name} />
                 ))}
@@ -99,11 +100,15 @@ export default async function PetRemindersPage({
           <h2 className="font-display text-[24px] leading-7 text-forest">This week</h2>
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-lg bg-white p-3">
-              <p className="text-[22px] font-semibold leading-6">{doneThisWeek}</p>
+              <p className="text-[22px] font-semibold leading-6">
+                <CountUp value={doneThisWeek} />
+              </p>
               <p className="text-xs text-muted">done</p>
             </div>
             <div className="rounded-lg bg-white p-3">
-              <p className="text-[22px] font-semibold leading-6">{overdue}</p>
+              <p className="text-[22px] font-semibold leading-6">
+                <CountUp value={overdue} />
+              </p>
               <p className="text-xs text-muted">overdue</p>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ViewTransition } from "react";
 import OwnerPage from "@/app/components/owner-page";
 import Icon from "@/app/components/app-icon";
 import { PetAvatar, petPhotoSrc, styleFor } from "@/app/components/pet-avatar";
@@ -83,21 +84,23 @@ export default function PetShell({
       ) : null}
 
       <section className="flex flex-col gap-4 rounded-3xl bg-forest px-5 py-5 sm:px-8 sm:py-7 xl:flex-row xl:items-center xl:gap-6">
-        {big ? (
-          <span
-            className={`flex size-[116px] shrink-0 items-center justify-center rounded-full border-[3px] border-white bg-white shadow-[6px_6px_0_var(--color-butter)]`}
-          >
-            <PetAvatar name={pet.name} species={pet.species} size={104} photoSrc={petPhotoSrc(pet, "large")} />
-          </span>
-        ) : (
-          <PetAvatar
-            name={pet.name}
-            species={pet.species}
-            size={64}
-            photoSrc={petPhotoSrc(pet)}
-            className="border-[3px] border-white shadow-[4px_4px_0_var(--color-blush)]"
-          />
-        )}
+        <ViewTransition name={`pet-${pet.id}`} share="morph" default="none">
+          {big ? (
+            <span
+              className={`flex size-[116px] shrink-0 items-center justify-center rounded-full border-[3px] border-white bg-white shadow-[6px_6px_0_var(--color-butter)]`}
+            >
+              <PetAvatar name={pet.name} species={pet.species} size={104} photoSrc={petPhotoSrc(pet, "large")} />
+            </span>
+          ) : (
+            <PetAvatar
+              name={pet.name}
+              species={pet.species}
+              size={64}
+              photoSrc={petPhotoSrc(pet)}
+              className="border-[3px] border-white shadow-[4px_4px_0_var(--color-blush)]"
+            />
+          )}
+        </ViewTransition>
 
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <h1

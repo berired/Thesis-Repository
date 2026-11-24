@@ -71,7 +71,7 @@ export default function AccountForm({
 
       <FormError message={state.error ?? null} />
       {state.saved ? (
-        <p role="status" className="text-sm text-[#1f7a3d]">
+        <p role="status" className="animate-rise text-sm text-[#1f7a3d]">
           Saved.
         </p>
       ) : null}

@@ -18,7 +18,7 @@ export default async function Invitations({ userId }: { userId: string }) {
       <h2 className="text-base font-semibold">
         {invites.length === 1 ? "You have an invitation" : `You have ${invites.length} invitations`}
       </h2>
-      <ul className="flex flex-col gap-3">
+      <ul className="stagger flex flex-col gap-3">
         {invites.map((i) => (
           <li key={i.id} className="flex flex-wrap items-center gap-3">
             <p className="min-w-0 flex-1 text-sm">

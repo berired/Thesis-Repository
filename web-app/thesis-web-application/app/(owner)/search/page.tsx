@@ -104,7 +104,7 @@ export default async function SearchPage({
           {pets.length > 0 ? (
             <section className="flex flex-col gap-2">
               <h2 className="text-sm font-semibold text-muted">Animals ({pets.length})</h2>
-              <ul className="flex flex-col gap-2">
+              <ul className="stagger flex flex-col gap-2">
                 {pets.map((p) => (
                   <li key={p.id}>
                     <Link href={`/pets/${p.id}`} className={row}>
@@ -125,7 +125,7 @@ export default async function SearchPage({
           {records.length > 0 ? (
             <section className="flex flex-col gap-2">
               <h2 className="text-sm font-semibold text-muted">Health records ({records.length})</h2>
-              <ul className="flex flex-col gap-2">
+              <ul className="stagger flex flex-col gap-2">
                 {records.map((r) => (
                   <li key={r.id}>
                     <Link href={`/pets/${r.petId}/records/${r.id}`} className={row}>
@@ -147,7 +147,7 @@ export default async function SearchPage({
           {reminders.length > 0 ? (
             <section className="flex flex-col gap-2">
               <h2 className="text-sm font-semibold text-muted">Reminders ({reminders.length})</h2>
-              <ul className="flex flex-col gap-2">
+              <ul className="stagger flex flex-col gap-2">
                 {reminders.map((r) => (
                   <li key={r.id}>
                     <Link href={`/pets/${r.petId}/reminders`} className={row}>

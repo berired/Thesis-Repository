@@ -1,3 +1,4 @@
+import { ViewTransition } from "react";
 import { dayKey } from "@/app/lib/time";
 import Link from "next/link";
 import Icon from "@/app/components/app-icon";
@@ -64,10 +65,12 @@ export default function PetCard({
   return (
     <Link
       href={`/pets/${pet.id}`}
-      className="flex h-full flex-col gap-4 rounded-xl border border-line bg-white p-5 hover:border-forest"
+      className="lift flex h-full flex-col gap-4 rounded-xl border border-line bg-white p-5 hover:border-forest"
     >
       <span className="flex items-center gap-3.5">
-        <PetAvatar name={pet.name} species={pet.species} size={56} photoSrc={petPhotoSrc(pet)} />
+        <ViewTransition name={`pet-${pet.id}`} share="morph" default="none">
+          <PetAvatar name={pet.name} species={pet.species} size={56} photoSrc={petPhotoSrc(pet)} />
+        </ViewTransition>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-lg font-semibold leading-[23.4px]">{pet.name}</span>
           <span className="truncate text-[13px] leading-[19.5px] text-muted">

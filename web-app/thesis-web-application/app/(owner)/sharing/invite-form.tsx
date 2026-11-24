@@ -67,7 +67,7 @@ export default function InviteForm({
       </label>
       <FormError message={error} />
       {sent ? (
-        <p role="status" className="text-sm text-[#1f7a3d]">
+        <p role="status" className="animate-rise text-sm text-[#1f7a3d]">
           {sent}
         </p>
       ) : null}

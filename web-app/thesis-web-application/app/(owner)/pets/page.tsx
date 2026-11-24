@@ -173,7 +173,7 @@ export default async function MyAnimalsPage({
 
       <ul
         className={
-          view === "list" ? "flex flex-col gap-4" : "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+          view === "list" ? "stagger flex flex-col gap-4" : "stagger grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
         }
       >
         {shown.map((pet) => (

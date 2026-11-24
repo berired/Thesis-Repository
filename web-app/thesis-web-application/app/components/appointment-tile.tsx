@@ -22,7 +22,7 @@ export default function AppointmentTile({
     <li>
       <Link
         href={`/pets/${appointment.petId}/appointments`}
-        className="flex items-center gap-4 rounded-xl border border-line bg-white p-3.5 hover:bg-[#fbfcfd]"
+        className="flex items-center gap-4 rounded-xl border border-line bg-white p-3.5 transition-shadow hover:bg-[#fbfcfd] hover:shadow-[3px_3px_0_var(--color-butter)]"
       >
         <span className="flex w-[52px] shrink-0 flex-col overflow-hidden rounded-lg border border-line text-center">
           <span className="bg-sky py-0.5 text-[11px] font-semibold text-white">

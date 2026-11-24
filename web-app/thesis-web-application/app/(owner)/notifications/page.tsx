@@ -133,7 +133,7 @@ export default async function NotificationsPage({
           {recent.length > 0 ? (
             <section className="flex flex-col gap-2">
               <h2 className="text-[13px] font-semibold text-muted">Today</h2>
-              <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-white">
+              <ul className="stagger divide-y divide-line overflow-hidden rounded-xl border border-line bg-white">
                 {recent.map(row)}
               </ul>
             </section>
@@ -141,7 +141,7 @@ export default async function NotificationsPage({
           {earlier.length > 0 ? (
             <section className="flex flex-col gap-2">
               <h2 className="text-[13px] font-semibold text-muted">Earlier</h2>
-              <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-white">
+              <ul className="stagger divide-y divide-line overflow-hidden rounded-xl border border-line bg-white">
                 {earlier.map(row)}
               </ul>
             </section>

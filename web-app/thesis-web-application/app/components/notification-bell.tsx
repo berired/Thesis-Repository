@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PopBadge from "@/app/components/pop-badge";
 import { syncDueNotifications, unreadCount } from "@/app/lib/notifications";
 import { getSession } from "@/app/lib/session";
 
@@ -18,9 +19,13 @@ export default async function NotificationBell() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icons/bell.svg" alt="" width={20} height={20} />
       {unread > 0 ? (
-        <span className="absolute right-1 top-1 flex min-w-[18px] items-center justify-center rounded-full bg-sky px-1 text-[11px] font-semibold leading-[18px] text-white">
+        <PopBadge
+          id="bell"
+          count={unread}
+          className="absolute right-1 top-1 flex min-w-[18px] items-center justify-center rounded-full bg-sky px-1 text-[11px] font-semibold leading-[18px] text-white"
+        >
           {unread > 9 ? "9+" : unread}
-        </span>
+        </PopBadge>
       ) : null}
     </Link>
   );

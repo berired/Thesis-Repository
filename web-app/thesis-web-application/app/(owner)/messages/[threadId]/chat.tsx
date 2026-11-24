@@ -37,6 +37,9 @@ export default function Chat({
   const [pending, start] = useTransition();
   const last = useRef<string | null>(initial.at(-1)?.createdAt ?? null);
   const end = useRef<HTMLDivElement>(null);
+  const firstScroll = useRef(true);
+  // Messages that were already there when the chat opened don't animate; later ones slide in.
+  const [openingIds] = useState(() => new Set(initial.map((m) => m.id)));
   const form = useRef<HTMLFormElement>(null);
 
   const merge = useCallback((incoming: Msg[]) => {
@@ -75,7 +78,8 @@ export default function Chat({
   }, [poll]);
 
   useEffect(() => {
-    end.current?.scrollIntoView({ block: "end" });
+    end.current?.scrollIntoView({ block: "end", behavior: firstScroll.current ? "auto" : "smooth" });
+    firstScroll.current = false;
   }, [messages.length]);
 
   if (gone) {
@@ -173,7 +177,12 @@ export default function Chat({
             const mine = m.senderId === selfId;
             const at = new Date(m.createdAt);
             return (
-              <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
+              <div
+                key={m.id}
+                className={`flex flex-col ${mine ? "items-end" : "items-start"} ${
+                  openingIds.has(m.id) ? "" : mine ? "animate-slide-in-right" : "animate-slide-in-left"
+                }`}
+              >
                 <p
                   className={`max-w-[80%] whitespace-pre-line break-words rounded-2xl px-3.5 py-2 text-sm ${
                     mine ? "bg-sky text-white" : "bg-cream text-ink"

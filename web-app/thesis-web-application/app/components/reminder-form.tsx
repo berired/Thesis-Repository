@@ -76,7 +76,7 @@ export default function ReminderForm({
               return (
                 <label
                   key={value}
-                  className={`flex h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium ${
+                  className={`flex h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-all active:scale-95 ${
                     selected
                       ? "border-sky bg-[#eef3fb] text-[#2a559e]"
                       : "border-line bg-white text-ink hover:bg-[#f6f8fa]"
@@ -90,7 +90,12 @@ export default function ReminderForm({
                     onChange={() => setCategory(value)}
                     className="sr-only"
                   />
-                  <Icon name={selected ? "check" : CATEGORY_ICON[value]} size={14} />
+                  <Icon
+                    key={String(selected)}
+                    name={selected ? "check" : CATEGORY_ICON[value]}
+                    size={14}
+                    className={selected ? "animate-pop" : ""}
+                  />
                   {CATEGORY_LABEL[value]}
                 </label>
               );
