@@ -10,7 +10,8 @@ async function load(id: string, docId: string) {
   const role = await getPetAccess(session.user.id, id);
   if (!role) return { status: 404 as const };
   const doc = await prisma.petDocument.findFirst({
-    where: { id: docId, petId: id },
+    // Files of a voided record are kept for the audit trail but hidden from owners.
+    where: { id: docId, petId: id, NOT: { record: { voidedAt: { not: null } } } },
     select: { id: true, fileKey: true, fileName: true, record: { select: { source: true } } },
   });
   if (!doc) return { status: 404 as const };

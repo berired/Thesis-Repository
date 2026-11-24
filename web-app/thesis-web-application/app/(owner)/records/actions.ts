@@ -119,7 +119,7 @@ export async function deleteRecord(recordId: string): Promise<RecordResult> {
   const record = await ownedRecord(recordId);
   if (!record) return { error: "We couldn't find that record." };
   if (record.source === "VET") {
-    return { error: "Records added by a vet can't be deleted. Contact the admin if one is wrong." };
+    return { error: "Records added by a vet can't be deleted. Report it from the record page if it is wrong." };
   }
 
   // PetDocument.recordId is SetNull, so remove the files explicitly or they would linger.
@@ -136,4 +136,35 @@ export async function deleteRecord(recordId: string): Promise<RecordResult> {
 
   refresh(record.petId);
   return { ok: true, petId: record.petId, recordId: record.id };
+}
+
+const MAX_OPEN_REPORTS = 10;
+
+/** An owner tells the admin that a vet-submitted record on their animal is wrong or abusive. */
+export async function reportRecord(recordId: string, reason: string): Promise<{ error: string } | { ok: true }> {
+  const record = await ownedRecord(recordId);
+  if (!record || record.source !== "VET") return { error: "We couldn't find that record." };
+
+  const text = reason.trim();
+  if (text.length < 5) return { error: "Tell the admin what is wrong, in a few words." };
+  if (text.length > 500) return { error: "Keep the reason under 500 characters." };
+
+  const session = await requireUser();
+  const [already, open] = await Promise.all([
+    prisma.recordReport.count({
+      where: { recordId: record.id, reporterId: session.user.id, status: "OPEN" },
+    }),
+    prisma.recordReport.count({ where: { reporterId: session.user.id, status: "OPEN" } }),
+  ]);
+  if (already > 0) return { error: "You already reported this record. The admin will look at it." };
+  if (open >= MAX_OPEN_REPORTS) {
+    return { error: "You have several reports waiting for the admin. Please wait for a reply." };
+  }
+
+  await prisma.recordReport.create({
+    data: { recordId: record.id, reporterId: session.user.id, reason: text },
+  });
+  revalidatePath(`/pets/${record.petId}/records/${record.id}`);
+  revalidatePath("/admin/records");
+  return { ok: true };
 }

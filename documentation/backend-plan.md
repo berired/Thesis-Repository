@@ -159,13 +159,21 @@ Before writing code in any phase, read the relevant guide in `node_modules/next/
 - Smoke test (browser, local dev against the stage DB, owner, second owner and a no-login vet browser, test data and bucket file deleted afterwards): three bot-style requests left the QR unburned and showed no pet data; Start burned it and began a 45 minute session; the vet saw only the two allowed sections (a "notes" value on the pet never appeared); submitting with a PNG created a Vet-submitted record with the vet's name and clinic, attached the file under `vet-uploads/`, spent the QR and notified the owner; replaying the link without the cookie said already used; the upload API returned 403 without the session and 429 after 10 hand-outs; an expired, a cancelled and an unknown link each showed their own message; the sixth active QR was refused with a clear message; owner could open the vet's file through a signed URL and sees only "Edit visit date"; another owner got 404 on the pet; the page limiter blocked requests past 60 a minute.
 - Known limits: the owner-side `deleteRecord` refusal for vet records still has no UI path and was not exercised live. A revoke during a live session is covered by the state check order but was not exercised live. A presigned upload that is never confirmed can leave an orphan object in `vet-uploads/` (the cap bounds it; a sweep is not built). Caretakers can generate vet QRs once Phase 7 exists.
 
-### Phase 5: Admin void and audit
+### Phase 5: Admin void and audit (DONE 2026-11-24)
 **Prerequisites:** Phase 4 done.
 **Deliverables:**
 - Admin can void or delete a vet record; it stays in the audit trail as voided (who, when, why).
 - Owner can report a vet record; the admin sees reports.
 - Voided records are hidden from normal owner views and visible in the admin audit view.
 **Exit checks:** only admins can void; the audit entry is permanent and readable.
+
+**Done notes (2026-11-24):**
+- Migration `20261124065856_admin_void_and_audit` (applied to Neon `stage` only, **not yet to production**): `RecordReport` (reporter, reason, `OPEN` / `RESOLVED` / `DISMISSED`) and `AuditEntry`, an add-only log that holds plain copies (admin, pet, owner email, record title, type, date, vet, clinic, reason) with no foreign keys, so an entry survives the record, pet or admin being deleted. The void state itself (`voidedAt`, `voidedById`, `voidReason`) was already on `HealthRecord` from Phase 2.
+- Only vet-submitted records can be voided; owners delete their own. Voiding is permanent (no restore), requires a reason of at least 5 characters, resolves the record's open reports, and writes the audit entry in the same transaction. Dismissing a report also writes an audit entry. Two admins acting at once cannot both succeed.
+- Owner side: "Report a problem with this record" on a vet record's page (one open report per owner per record, at most 10 open at once). Voided records are hidden everywhere owners look, and their files are now also refused by the owner file route.
+- Admin side: `/admin/records` with Reports, Vet records and Audit trail tabs, and `/admin/records/[id]` (details, files through the admin-only `/api/admin/documents/[docId]`, report list, dismiss and void). "Vet records" is in the admin nav. Admin role is enforced by `requireAdmin` on every page and action and by a 403 on the file route.
+- Smoke test (browser, local dev against the stage DB, owner and admin test users, test data deleted afterwards): owner reported a vet record (too-short reason refused); owner was redirected away from `/admin`; admin saw the report; a 3-character void reason was refused; void succeeded, the report became resolved and the audit tab showed who, when and why; the owner then got 404 on the record and no longer saw it in the list. Type-check, lint and build pass.
+- Known limits: the owner is not notified when a report is resolved. Voiding the only vet weight record leaves the pet's weight at the voided value, because there is no earlier weight to fall back to. A voided record's files stay in the bucket.
 
 ### Phase 6: Lost-pet messaging
 **Prerequisites:** Phase 3 done (bell). Lost mode and owner contact details already exist.
@@ -266,4 +274,4 @@ Apply them before the new code goes live: the old code does not know the new enu
 - No Figma screens yet for: vet QR generate/list/revoke, the public vet form, admin void and audit, caretaker invite flow. Decided 2026-11-23: build these directly in the existing style (existing components and the Figma style guide); they do not block their phases. Add Figma frames afterward if wanted.
 
 ## Still open
-Nothing. Phases 0 to 4 are done; the next step is Phase 5 (admin void and audit).
+Nothing. Phases 0 to 5 are done; the next step is Phase 6 (lost-pet messaging).

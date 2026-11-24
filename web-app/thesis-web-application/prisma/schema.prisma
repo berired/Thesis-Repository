@@ -32,6 +32,7 @@ model User {
   reminderCompletions ReminderCompletion[]
   notifications       Notification[]
   recordRequests      RecordRequest[]
+  recordReports       RecordReport[]
 
   @@map("user")
 }
@@ -215,6 +216,7 @@ model HealthRecord {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @default(now()) @updatedAt
   recordRequest RecordRequest?
+  reports       RecordReport[]
 
   @@index([petId, recordDate])
   @@map("health_record")
@@ -378,4 +380,60 @@ model RateLimit {
   resetAt DateTime
 
   @@map("rate_limit")
+}
+
+enum ReportStatus {
+  OPEN
+  /// The record was voided.
+  RESOLVED
+  /// The admin looked and left the record as it is.
+  DISMISSED
+}
+
+/// An owner's report that a vet-submitted record is wrong or abusive. Admins read these.
+model RecordReport {
+  id           String       @id @default(cuid())
+  recordId     String
+  record       HealthRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  reporterId   String
+  reporter     User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reason       String
+  status       ReportStatus @default(OPEN)
+  createdAt    DateTime     @default(now())
+  resolvedAt   DateTime?
+  resolvedById String?
+
+  @@index([status, createdAt])
+  @@index([recordId])
+  @@map("record_report")
+}
+
+enum AuditAction {
+  RECORD_VOIDED
+  REPORT_DISMISSED
+}
+
+/// Permanent admin audit trail. Rows are only ever added, and hold plain copies instead of
+/// relations, so an entry survives the record, pet or admin it describes being deleted.
+model AuditEntry {
+  id          String      @id @default(cuid())
+  action      AuditAction
+  actorId     String
+  actorName   String
+  actorEmail  String
+  recordId    String
+  petId       String
+  petName     String
+  ownerEmail  String
+  recordTitle String
+  recordType  RecordType
+  recordDate  DateTime
+  vetName     String?
+  clinic      String?
+  reason      String
+  createdAt   DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([recordId])
+  @@map("audit_entry")
 }

@@ -4,6 +4,9 @@ import Icon from "@/app/components/app-icon";
 import { RECORD_ICON, RECORD_LABEL, fmtFull } from "@/app/lib/care";
 import { getOwnedRecord } from "@/app/lib/record-data";
 import { formatBytes } from "@/app/lib/upload-client";
+import { prisma } from "@/app/lib/prisma";
+import { requireUser } from "@/app/lib/session";
+import ReportRecord from "./report-record";
 
 export default async function RecordDetailPage({
   params,
@@ -13,6 +16,12 @@ export default async function RecordDetailPage({
   const { id, recordId } = await params;
   const { pet, record } = await getOwnedRecord(id, recordId);
   const fromVet = record.source === "VET";
+  const session = await requireUser();
+  const alreadyReported = fromVet
+    ? (await prisma.recordReport.count({
+        where: { recordId: record.id, reporterId: session.user.id, status: "OPEN" },
+      })) > 0
+    : false;
 
   const details: [string, string | null][] = [
     ["Type", RECORD_LABEL[record.type]],
@@ -77,10 +86,14 @@ export default async function RecordDetailPage({
             </p>
           ) : null}
           {fromVet ? (
-            <p className="text-[13px] text-muted">
-              Added by a vet through a one-time link, so it can&apos;t be edited or deleted. Only the
-              visit date can be corrected. If something is wrong, contact the admin.
-            </p>
+            <>
+              <p className="text-[13px] text-muted">
+                Added by a vet through a one-time link, so it can&apos;t be edited or deleted. Only
+                the visit date can be corrected. If something is wrong, report it and the admin will
+                review it.
+              </p>
+              <ReportRecord recordId={record.id} alreadyReported={alreadyReported} />
+            </>
           ) : null}
         </section>
 
