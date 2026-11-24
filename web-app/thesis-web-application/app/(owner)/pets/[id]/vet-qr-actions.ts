@@ -11,6 +11,7 @@ import {
   SECTIONS,
   activeWhere,
   newToken,
+  requestOrigin,
   sha256,
   vetUrl,
 } from "@/app/lib/vet-access";
@@ -52,8 +53,10 @@ export async function createRecordRequest(
     },
   });
 
-  const url = vetUrl(token);
-  const svg = await QRCode.toString(url, { type: "svg", margin: 1, errorCorrectionLevel: "M" });
+  // The link uses the address the owner is on right now, so the QR opens on this same site.
+  const url = vetUrl(token, await requestOrigin());
+  // A wider quiet zone (2 squares) than before helps phone cameras lock on.
+  const svg = await QRCode.toString(url, { type: "svg", margin: 2, errorCorrectionLevel: "M" });
   revalidatePath(`/pets/${petId}`, "layout");
   return { ok: true, url, svg, expiresAt: expiresAt.toISOString() };
 }

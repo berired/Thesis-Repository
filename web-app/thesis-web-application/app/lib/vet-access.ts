@@ -1,5 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { prisma } from "./prisma";
 import type { VetSection } from "../generated/prisma/client";
 
@@ -25,8 +25,29 @@ export const SECTIONS = Object.keys(SECTION_LABEL) as VetSection[];
 export const newToken = () => randomBytes(32).toString("base64url");
 export const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
 
-export function vetUrl(token: string) {
-  return `${process.env.APP_URL}/v/${token}`;
+/**
+ * The address the person making a request is using, such as https://pawketbook.vercel.app.
+ *
+ * A vet QR is made on the spot and must open on the same site that holds its token, so its link
+ * uses this instead of the fixed APP_URL setting (which is wrong on a preview, on localhost or
+ * after a tunnel address changes, and then the QR points nowhere). For a server action, Next has
+ * already checked that the Origin matches the host, so this cannot be pointed somewhere else by
+ * the caller. APP_URL is only the last resort.
+ */
+export async function requestOrigin() {
+  const h = await headers();
+  const origin = h.get("origin");
+  if (origin && /^https?:\/\/[^/\s]+$/i.test(origin)) return origin;
+  const host = (h.get("x-forwarded-host") ?? h.get("host") ?? "").split(",")[0].trim();
+  if (/^[a-z0-9.-]+(:\d+)?$/i.test(host)) {
+    const proto = (h.get("x-forwarded-proto") ?? "").split(",")[0].trim();
+    return `${proto === "http" || proto === "https" ? proto : "https"}://${host}`;
+  }
+  return process.env.APP_URL ?? "";
+}
+
+export function vetUrl(token: string, origin: string) {
+  return `${origin.replace(/\/+$/, "")}/v/${token}`;
 }
 
 /** A link that is still waiting for a vet: not revoked, not spent, not expired. */

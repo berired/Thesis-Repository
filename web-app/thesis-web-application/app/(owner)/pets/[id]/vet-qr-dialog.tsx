@@ -13,6 +13,23 @@ const OPTIONS: { key: string; label: string; on: boolean }[] = [
   { key: "NOTES", label: "Additional notes", on: false },
 ];
 
+/** True for addresses only this device (or its own network) can open, which a vet's phone cannot. */
+function isLocalAddress(url: string) {
+  try {
+    const host = new URL(url).hostname;
+    return (
+      host === "localhost" ||
+      host === "[::1]" ||
+      /^127\./.test(host) ||
+      /^10\./.test(host) ||
+      /^192\.168\./.test(host) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+    );
+  } catch {
+    return false;
+  }
+}
+
 function remaining(expiresAt: string, now: number) {
   const ms = Math.max(0, new Date(expiresAt).getTime() - now);
   const h = Math.floor(ms / 3_600_000);
@@ -111,6 +128,13 @@ export default function VetQrDialog({ petId, petName }: { petId: string; petName
                 <Icon name="clock" size={15} />
                 Expires in {remaining(result.expiresAt, now)}
               </p>
+              {isLocalAddress(result.url) ? (
+                <p role="alert" className="rounded-lg bg-[#fff6d1] px-3 py-2 text-xs text-[#7a5a00]">
+                  This QR points to {new URL(result.url).host}, which only works on this device or
+                  network. A vet&apos;s phone can&apos;t open it. Open Pawket Book at its public
+                  address and make the QR there.
+                </p>
+              ) : null}
               <input
                 readOnly
                 value={result.url}
