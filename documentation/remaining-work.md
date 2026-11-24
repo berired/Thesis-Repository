@@ -4,7 +4,7 @@ Last updated 2026-11-24, after Phase 5 and the tracked-edits change (branch `sta
 
 The backend is planned phase by phase in `backend-plan.md`, which is the source of truth for decisions and records what each finished phase did. This file tracks the frontend and loose ends. Where the two disagree, `backend-plan.md` wins.
 
-**Where the plan stands:** Phases 0 to 6 are done (foundations, private storage and uploads, owner records, reminders and notifications, vet QR flow, admin void and audit, lost-pet messaging with the per-field scan page settings, shared access for caretakers, pet photos, the PDF export and the header search), plus the time zone fix and the tracked-edits change (record history, add-only notes, locked files). Only the final gate (the end-to-end walkthrough) remains. Production still needs the migrations (now ten, through `20261124081237_pet_photo_thumbnails`), plus running `scripts/migrate-pet-photos.mjs` after the deploy and settings in the "Production deploy checklist" in `backend-plan.md`.
+**Where the plan stands:** Phases 0 to 6 are done (foundations, private storage and uploads, owner records, reminders and notifications, vet QR flow, admin void and audit, lost-pet messaging with the per-field scan page settings, shared access for caretakers, pet photos, the PDF export, the header search and NFC tags), plus the time zone fix and the tracked-edits change (record history, add-only notes, locked files). Only the final gate (the end-to-end walkthrough) remains. Production still needs the migrations (now eleven, through `20261124083444_nfc_tags`), plus running `scripts/migrate-pet-photos.mjs` after the deploy and settings in the "Production deploy checklist" in `backend-plan.md`.
 
 ## 1. Figma status
 
@@ -78,6 +78,8 @@ Done since the last version of this file: admin void and audit with owner report
 - A notification settings page. Revisit only if email returns.
 
 ## 5. Known issues and decisions to revisit
+
+- NFC tags (Phase 9) were tested only with a simulated tag reader. Before relying on them, write a tag and read it back on a real Android phone in Chrome over HTTPS, and tap it with an iPhone and an Android phone's normal reader. Web NFC does not work on iPhone or desktop. There are no Figma frames for the Scan a tag page or the NFC buttons.
 
 - The old pet photos have not been moved to the new format yet: run `scripts/migrate-pet-photos.mjs` on stage (it would move the one real photo there) and on production after the deploy. Search is a plain contains match, and Figma has no frames for the search results page or the PDF.
 

@@ -245,8 +245,28 @@ Reverses part of the Phase 2 rules. Decided with the developer:
 - Smoke test (browser and curl, local dev against the stage DB, owner, caretaker and stranger test users; the test pet's bucket files and all rows deleted afterwards): a text file renamed `.png` was refused; a 3000x2000 JPEG with EXIF rotation and camera metadata became an upright 800x1200 WebP plus a 256x256 thumbnail, both without metadata; the route gave 200 to the owner, 404 to a stranger and 401 signed out; replacing and removing the photo each deleted the old bucket file (the old signed URL turned 404); the PDF was 200 for the owner and caretaker, 404 for a stranger and 401 signed out, showed the vet mark, the attached file name, the added note and the edit line, left out a voided record and any reminder, and paged correctly with 40 extra records (7 pages); emoji and Japanese text did not crash it; search found the owner's animal, records (by title and by vet name) and reminders, found only the caretaker's own reminder and none of the owner's, found nothing for a stranger, hid a voided record, and the header box worked end to end; a legacy photo still displayed, was moved by the script (large and thumbnail created, old object deleted, route served the new one) and a second run did nothing. Type-check, lint and build pass.
 - Known limits: the migration script has not been run against the real stage photo or production yet. Photos still upload through the form (5 MB limit), not a presigned upload. Search is a plain "contains" match, with no ranking or typo tolerance. A reminder's search result opens the animal's reminders tab rather than the single reminder.
 
+### Phase 9: NFC tags (DONE 2026-11-24)
+**Prerequisites:** Phase 8 done. Requested by the developer after Phase 8.
+**Decisions (2026-11-24):**
+- **The tag holds our link.** A tag stores `https://<app>/r/<code>`, the same code and link the QR carries. A tap with any phone's normal NFC reader (iPhone or Android, no app) opens the scan page exactly like scanning the QR: the owner and caretakers land on the animal and its records, a finder sees the lost-mode page, an unclaimed tag opens registration. Nothing about the scan page changed.
+- **Admin prepares, owner taps to claim.** NFC tags share the QR code list and its statuses (unused, claimed, revoked); there is no separate tag table. The admin writes a code onto a physical tag, and the owner taps it to register an animal, the same as scanning a QR. An owner can also write their own animal's link onto an extra tag.
+- **The web app reads and writes tags with Web NFC**, which only exists in Chrome on Android over HTTPS and needs a tap on a button each time. Other browsers show a message that points to the QR code or the phone's own NFC reader. (iPhone browsers can't read tags in a page, but an iPhone can still open a tag that holds our link.)
+**Deliverables (built):**
+- Migration `20261124083444_nfc_tags` (applied to Neon `stage` only, **not yet to production**): `QrCode.nfcWrittenAt` and `QrCode.nfcSerial` (the chip's serial number).
+- `app/lib/nfc.ts` (read a tag, write a tag, plain-language errors), `app/lib/code.ts` (code format and extracting a code from a link, shared with the server) and `app/components/nfc-buttons.tsx` (`Tap an NFC tag`, `Write to an NFC tag`).
+- **Scan a tag** page (`/scan`, the header's QR icon now goes there): camera QR, NFC tap or typed code, then it opens `/r/<code>`. Add animal's scan step also has the NFC button.
+- **Registration check:** when the code came from a tap, the chip's serial is sent with the form. If the admin recorded a chip for that code, the tapped chip must match it (otherwise "This isn't the NFC tag that was set up for that code"); if none was recorded, the first tapped chip is remembered. Typed or camera-scanned codes are not checked.
+- **Admin** (QR codes page): each code has "Write to NFC tag", which writes the link, records the chip serial and the time, and has an optional "lock for good" tick (only where the browser supports locking; it can never be undone).
+- **Owner** (ID and QR tag tab): "Write to an NFC tag" puts the animal's link on an extra tag.
+**Exit checks:** a tag holding our link opens the same page as the QR; the app reads a code off a tapped tag; a tapped tag that doesn't match the one set up for its code is refused; an unsupported browser gets a clear message instead of an error.
+
+**Done notes (2026-11-24):**
+- Smoke test (browser, local dev against the stage DB, owner and admin test users, test codes and pets deleted afterwards). **There was no NFC hardware, so the tag itself was simulated:** a stand-in `NDEFReader` was installed in the page and behaved like Chrome's (a `reading` event with the chip serial and URL records, and `write()` keeping what it was given). That exercises all of our code (parsing, validation, the server checks and the screens) but not the phone's NFC radio or Chrome's permission prompt. Results: without NFC support the buttons said so clearly; tapping a registered animal's tag on `/scan` opened the animal's page; a tag holding a foreign link and a blank tag were each refused with a clear message; registering with the right code but the wrong chip was refused and created nothing, the right chip registered the animal, and a code with no chip on record kept the first tapped chip; the owner's write put exactly `{recordType: url, data: <app>/r/<code>}` on the tag; the admin write put the same link, saved the chip and the time, and the lock tick said the browser couldn't lock it. Type-check, lint and build pass.
+- **Needs a real-phone test before relying on it:** write a tag and read it back with an Android phone in Chrome over HTTPS (the stage or production site), then tap the same tag with an iPhone and an Android phone's normal reader and confirm it opens the scan page.
+- Limits: the chip serial check only catches the wrong physical tag at registration; it does not stop someone copying a tag's link, which is also true of the QR code (a copied tag opens the same page). Unlocked tags can be overwritten by anyone with a phone, so lock admin tags where the browser allows it. Web NFC cannot read or write on iPhone or desktop browsers. Tags with a different layout (not a URL or text record) are ignored.
+
 ### Final phase gate
-End-to-end walkthrough of owner, vet, admin, finder and invitee flows, with no open items left in this file.
+End-to-end walkthrough of owner, vet, admin, finder and invitee flows (including tapping an NFC tag on a real Android and iPhone), with no open items left in this file.
 
 ## Production deploy checklist (as of 2026-11-24)
 
@@ -263,6 +283,7 @@ Deploys do not run migrations, and `stage` uses its own Neon branch, so producti
 8. `20261124073352_lost_pet_messaging_and_public_settings`
 9. `20261124075412_caretaker_shares`
 10. `20261124081237_pet_photo_thumbnails`
+11. `20261124083444_nfc_tags`
 
 Apply them before the new code goes live: the old code does not know the new enum values or columns.
 
@@ -322,4 +343,4 @@ Apply them before the new code goes live: the old code does not know the new enu
 - No Figma screens yet for: vet QR generate/list/revoke, the public vet form, admin void and audit, caretaker invite flow. Decided 2026-11-23: build these directly in the existing style (existing components and the Figma style guide); they do not block their phases. Add Figma frames afterward if wanted.
 
 ## Still open
-Nothing. Phases 0 to 8 are done; what remains is the final phase gate (the end-to-end walkthrough), then the production deploy checklist.
+Nothing. Phases 0 to 9 are done; what remains is the final phase gate (the end-to-end walkthrough, now including NFC on a real phone), then the production deploy checklist.

@@ -48,6 +48,8 @@ function Label({
 export default function PetForm({ initialCode }: { initialCode: string }) {
   const [state, formAction, pending] = useActionState(registerPet, initialState);
   const [code, setCode] = useState(initialCode);
+  // Set when the code came from tapping an NFC tag: the server checks it matches that tag.
+  const [nfcSerial, setNfcSerial] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const today = todayInput();
@@ -61,6 +63,7 @@ export default function PetForm({ initialCode }: { initialCode: string }) {
   return (
     <form action={formAction} className="flex min-w-0 flex-1 flex-col">
       <input type="hidden" name="code" value={code} />
+      <input type="hidden" name="nfcSerial" value={nfcSerial} />
 
       <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-4 sm:px-8">
         <Link
@@ -231,7 +234,7 @@ export default function PetForm({ initialCode }: { initialCode: string }) {
                   Scan the QR on the tag that came with your animal to link it to this profile.
                 </p>
               </div>
-              <QrStep value={code} onChange={setCode} />
+              <QrStep value={code} onChange={setCode} onSerial={(s) => setNfcSerial(s ?? "")} />
             </section>
 
             <FormError message={state.error ?? null} />

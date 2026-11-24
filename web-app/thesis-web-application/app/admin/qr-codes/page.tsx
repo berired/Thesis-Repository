@@ -7,6 +7,7 @@ import { qrUrlForCode } from "@/app/lib/qr";
 import CreateQrForm from "./create-form";
 import DeleteButton from "./delete-button";
 import EditLabel from "./edit-label";
+import WriteNfc from "./write-nfc";
 
 export default async function QrCodesPage() {
   await requireAdmin();
@@ -44,6 +45,7 @@ export default async function QrCodesPage() {
             <th>Status</th>
             <th>Created</th>
             <th>Image</th>
+            <th>NFC tag</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -66,6 +68,19 @@ export default async function QrCodesPage() {
                   "-"
                 )}
               </td>
+              <td className="max-w-[240px]">
+                {qr.nfcWrittenAt ? (
+                  <p className="mb-1 text-xs text-gray-600">
+                    Written {fmtFull(qr.nfcWrittenAt)}
+                    {qr.nfcSerial ? ` (chip ${qr.nfcSerial})` : ""}
+                  </p>
+                ) : null}
+                {qr.status === "REVOKED" ? (
+                  <span className="text-gray-500">-</span>
+                ) : (
+                  <WriteNfc id={qr.id} url={qrUrlForCode(qr.code)} />
+                )}
+              </td>
               <td>
                 {qr.pet ? (
                   <span className="text-gray-500">In use</span>
@@ -77,7 +92,7 @@ export default async function QrCodesPage() {
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={7} className="py-4 text-gray-600">
+              <td colSpan={8} className="py-4 text-gray-600">
                 No QR codes yet.
               </td>
             </tr>

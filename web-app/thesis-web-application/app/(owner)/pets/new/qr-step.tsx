@@ -2,15 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/app/components/app-icon";
+import { NfcReadButton } from "@/app/components/nfc-buttons";
 import { INPUT_CLASS, SECONDARY_BUTTON_CLASS } from "@/app/components/ui";
+import { codeFromText } from "@/app/lib/code";
 
 // Camera scanning needs HTTPS (or localhost); typing the code always works.
 export default function QrStep({
   value,
   onChange,
+  onSerial,
+  onDetected,
 }: {
   value: string;
   onChange: (code: string) => void;
+  /** The chip serial number when the code came from an NFC tap, otherwise null. */
+  onSerial?: (serial: string | null) => void;
+  /** Called when a camera scan or an NFC tap finds a code (not when one is typed). */
+  onDetected?: (code: string) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [scanning, setScanning] = useState(false);
@@ -28,7 +36,10 @@ export default function QrStep({
         videoRef.current,
         (result) => {
           onChange(result.data);
+          onSerial?.(null);
           setScanning(false);
+          const found = codeFromText(result.data);
+          if (found) onDetected?.(found);
         },
         { preferredCamera: "environment", highlightScanRegion: true },
       );
@@ -44,7 +55,7 @@ export default function QrStep({
       stopped = true;
       scanner?.destroy();
     };
-  }, [scanning, onChange]);
+  }, [scanning, onChange, onSerial, onDetected]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -73,13 +84,25 @@ export default function QrStep({
         </button>
       )}
 
+      <NfcReadButton
+        onRead={(tag) => {
+          setError(null);
+          onChange(tag.code);
+          onSerial?.(tag.serial);
+          onDetected?.(tag.code);
+        }}
+      />
+
       {error && <p className="text-sm text-[#c2372e]">{error}</p>}
 
       <label className="flex flex-col gap-1.5 text-xs font-medium text-ink">
         Or type the code
         <input
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            onChange(e.target.value);
+            onSerial?.(null);
+          }}
           placeholder="e.g. 7k3m9xq2wd4h"
           autoCapitalize="none"
           autoComplete="off"

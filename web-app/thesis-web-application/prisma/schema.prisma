@@ -101,16 +101,19 @@ enum QrStatus {
 }
 
 model QrCode {
-  id          String    @id @default(cuid())
-  code        String    @unique
-  batch       String?
-  status      QrStatus  @default(UNUSED)
-  imageKey    String?
-  createdById String
-  createdBy   User      @relation(fields: [createdById], references: [id])
-  createdAt   DateTime  @default(now())
-  claimedAt   DateTime?
-  pet         Pet?
+  id           String    @id @default(cuid())
+  code         String    @unique
+  batch        String?
+  status       QrStatus  @default(UNUSED)
+  imageKey     String?
+  createdById  String
+  createdBy    User      @relation(fields: [createdById], references: [id])
+  createdAt    DateTime  @default(now())
+  claimedAt    DateTime?
+  /// Set when the admin wrote this code's link onto a physical NFC tag, with that chip's serial number.
+  nfcWrittenAt DateTime?
+  nfcSerial    String?
+  pet          Pet?
 
   @@index([batch])
   @@index([status])

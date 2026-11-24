@@ -52,6 +52,10 @@ export async function registerPet(
     if (!checked.ok) return { error: checked.error };
   }
 
+  // A chip serial looks like "04:a2:5b:..."; anything else is ignored.
+  const serialRaw = text(formData, "nfcSerial").toLowerCase();
+  const nfcSerial = /^[0-9a-f]{2}(:[0-9a-f]{2}){3,9}$/.test(serialRaw) ? serialRaw : null;
+
   const result = await claimQrAndCreatePet(session.user.id, code, {
     name,
     species,
@@ -66,7 +70,7 @@ export async function registerPet(
     markings: null,
     allergies: optional(formData, "allergies"),
     medicalNotes: null,
-  });
+  }, nfcSerial);
 
   if (!result.ok) return { error: result.error };
 

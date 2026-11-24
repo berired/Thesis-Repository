@@ -6,6 +6,7 @@ import { qrUrlForCode } from "@/app/lib/qr";
 import { getPublicSettings, loadScanSource } from "@/app/lib/scan-data";
 import { setLostMode } from "@/app/(owner)/actions";
 import Icon from "@/app/components/app-icon";
+import { NfcWriteButton } from "@/app/components/nfc-buttons";
 import PetShell from "../pet-shell";
 import SettingsPanel from "./settings-panel";
 
@@ -46,6 +47,13 @@ export default async function TagPage({ params }: { params: Promise<{ id: string
                   <Icon name="download" size={16} />
                   Download
                 </a>
+                <div className="w-full rounded-xl bg-white/10 p-3 text-left text-[13px] text-white">
+                  <p className="mb-2">
+                    Put {pet.name}&apos;s link on an NFC tag too, so a tap opens the same page as the
+                    QR code.
+                  </p>
+                  <NfcWriteButton url={qrUrlForCode(code)} />
+                </div>
               </>
             ) : (
               <p className="text-sm text-white">No tag has been assigned to this animal yet.</p>

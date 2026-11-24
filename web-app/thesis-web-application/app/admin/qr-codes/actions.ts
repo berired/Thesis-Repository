@@ -53,6 +53,28 @@ export async function createQrCodes(
   return { created: count };
 }
 
+/**
+ * Remembers that a code's link was written onto a physical NFC tag, and which chip it was.
+ * Later, an owner who taps that tag to register it must tap this same chip.
+ */
+export async function recordNfcWrite(
+  id: string,
+  serial: string | null,
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  const clean = (serial ?? "").toLowerCase();
+  if (clean && !/^[0-9a-f]{2}(:[0-9a-f]{2}){3,9}$/.test(clean)) {
+    return { error: "The tag's serial number looked wrong. Try writing it again." };
+  }
+  const { count } = await prisma.qrCode.updateMany({
+    where: { id },
+    data: { nfcWrittenAt: new Date(), nfcSerial: clean || null },
+  });
+  if (count === 0) return { error: "That code no longer exists." };
+  revalidatePath("/admin/qr-codes");
+  return {};
+}
+
 /** Sets or clears one code's label (stored in the `batch` column). */
 export async function updateQrLabel(formData: FormData) {
   await requireAdmin();

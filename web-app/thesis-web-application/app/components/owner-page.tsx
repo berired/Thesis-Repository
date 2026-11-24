@@ -61,8 +61,8 @@ export default function OwnerPage({
         )}
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
-            href="/pets/new"
-            aria-label="Scan a QR tag"
+            href="/scan"
+            aria-label="Scan a QR code or NFC tag"
             className="flex size-10 items-center justify-center rounded-xl text-muted hover:text-ink"
           >
             <Icon name="qr-code" size={20} />

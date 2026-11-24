@@ -27,6 +27,8 @@ export async function claimQrAndCreatePet(
   ownerId: string,
   code: string,
   pet: PetInput,
+  /** The serial number of the NFC tag the owner tapped, if the code came from a tap. */
+  nfcSerial: string | null = null,
 ): Promise<ClaimResult> {
   const qr = await prisma.qrCode.findUnique({ where: { code } });
   if (!qr) return { ok: false, error: "That QR code isn't recognised." };
@@ -37,11 +39,22 @@ export async function claimQrAndCreatePet(
     return { ok: false, error: "That QR code is already registered to a pet." };
   }
 
+  // A tapped tag must be the physical tag the admin set up for this code. A typed or scanned
+  // code carries no serial, so it isn't checked.
+  if (nfcSerial && qr.nfcSerial && nfcSerial !== qr.nfcSerial) {
+    return { ok: false, error: "This isn't the NFC tag that was set up for that code." };
+  }
+
   try {
     const petId = await prisma.$transaction(async (tx) => {
       const { count } = await tx.qrCode.updateMany({
         where: { id: qr.id, status: "UNUSED" },
-        data: { status: "CLAIMED", claimedAt: new Date() },
+        data: {
+          status: "CLAIMED",
+          claimedAt: new Date(),
+          // Remember the chip the first time one is tapped.
+          ...(nfcSerial && !qr.nfcSerial ? { nfcSerial } : {}),
+        },
       });
       if (count === 0) throw new Error("QR_TAKEN");
       const created = await tx.pet.create({
@@ -58,9 +71,4 @@ export async function claimQrAndCreatePet(
   }
 }
 
-// Accepts a bare code or a full /r/<code> URL (what the scanner returns).
-export function extractCode(raw: string) {
-  const trimmed = raw.trim();
-  const match = trimmed.match(/\/r\/([a-z0-9]+)\/?(?:[?#].*)?$/i);
-  return (match ? match[1] : trimmed).toLowerCase();
-}
+export { extractCode } from "./code";
