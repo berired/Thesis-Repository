@@ -184,7 +184,7 @@ Reverses part of the Phase 2 rules. Decided with the developer:
 - Migration `20261124071149_record_edit_history_and_notes` (applied to Neon `stage` only, **not yet to production**).
 - Known limits: deleting an owner-made record still removes it, its history and its files; the admin record page does not show history or notes; dose-reminder time changes are not written to the history.
 
-### Phase 6: Lost-pet messaging
+### Phase 6: Lost-pet messaging (DONE 2026-11-24)
 **Prerequisites:** Phase 3 done (bell). Lost mode and owner contact details already exist.
 **Deliverables:**
 - Thread and message models, in Postgres. A thread starts only when a signed-in owner scans a lost-mode pet's QR (`/r/[code]`); the pet's owner is the other side.
@@ -194,6 +194,17 @@ Reverses part of the Phase 2 rules. Decided with the developer:
 - Messages are unavailable when the pet is not in lost mode; shared invitees cannot see them.
 - Lost-mode public info settings (ID and QR tag tab, Figma 203:5464): every field is individually toggleable with a pill switch (decided 2026-11-23). Groups and fields, as in Figma: Pet information (pet's name, species, age, gender); Lost pet contact (owner first name, owner city, allow finders to SMS or call, message through Pawket Book); Vet health summary (allergies, vaccine status, current medication, additional notes). Data model: a per-pet settings row (or JSON column) with one boolean per field, created in the Phase 6 migration (not before; the Neon database is shared). The scan page (`/r/[code]`) and its mobile preview return only fields switched on, and only while lost mode is on; defaults are decided at build time (suggest: pet name, species, age, gender and Message in app on; health and phone off). The owner's phone number only reaches the page through the SMS/call buttons (their links expose it), so it is included only when that toggle is on.
 **Exit checks:** a non-owner sees nothing of a non-lost pet; a field switched off never appears in the scan page response; messaging works both ways; unread counts correct.
+
+**Done notes (2026-11-24):**
+- Migration `20261124073352_lost_pet_messaging_and_public_settings` (applied to Neon `stage` only, **not yet to production**): `PetPublicSettings` (one boolean per switch plus a short public note; a pet with no row uses the defaults), `MessageThread` (one per pet and finder, with each side's last-read time and a block flag), `Message`, `ThreadReport`, and `User.city`.
+- **Defaults** (a pet that never saved its settings): pet name, species, age, gender, owner first name and "Message in app" on; city, SMS/call, allergies, vaccine status, medication and notes off. The pet photo is not a switch: it is always shown on a lost pet's scan page so a finder can recognise it.
+- **Scan page** (`/r/[code]`, rebuilt as the Figma member card): while the pet is **not** in lost mode a stranger sees only "registered, nothing to show", with no pet data at all. In lost mode one function, `applySettings` (`app/lib/scan-view.ts`), decides every field, and the owner's live preview on the new ID and QR tag tab uses the same function, so the preview cannot differ from the page. The owner's number only appears inside the `sms:` and `tel:` links, and only when "Allow finders to SMS or call me" is on and a number exists. "Your city" comes from the new City field on My details; the address and the account-level show-phone and show-address switches are no longer used (columns kept).
+- **ID and QR tag tab** (`/pets/[id]/tag`): QR with download, lost-mode switch, the pill switches grouped as in Figma, a note box, and the preview. Saving goes through the owner check.
+- **Messaging:** a thread starts only from the scan page, by a signed-in non-owner, while the pet is lost, not archived and "Message in app" is on (5 new threads per user per hour). Inbox at `/messages` (the Messages sidebar item is live with an unread badge), chat at `/messages/[threadId]` polling `/api/messages/[threadId]` every 4 seconds while the tab is visible (30 messages per 10 minutes, 1000 characters). The bell gets one "New message about <pet>" per burst of unread messages (the dedupe key follows the reader's last-read time). Names shown are only what each side allows: the owner sees the finder's first name, the finder sees the owner's first name only if that switch is on.
+- **Unavailable means closed, not deleted:** when the pet is not lost, is archived or has messaging switched off, the thread returns 404 to both sides and drops out of the inbox and the unread count; switching lost mode back on resumes it. The owner side is always `pet.ownerId`, so people a pet is later shared with (Phase 7) never see threads.
+- **Abuse controls:** either side can block (the blocker can unblock; nobody can send while blocked) and report (the thread is blocked and an admin reads the transcript at `/admin/messages`, then marks it resolved or dismisses it; banning is on the existing Users page).
+- Smoke test (browser, local dev against the stage DB; owner, finder, bystander and admin test users, all deleted afterwards): the non-lost scan page showed nothing; the lost-mode scan showed only the default fields; a switched-off allergy never appeared in the page; the owner's number was absent from the page until SMS/call was switched on, then appeared only in the `sms:` and `tel:` links; the finder started a thread, the owner saw unread 1 in the sidebar and inbox and one bell notification, replied, the finder's open chat received it by polling and the owner's unread cleared; a third user got 404 on the thread page and API and saw an empty inbox; turning lost mode off made the thread 404 for both sides and it returned when switched back on; a too-short report was refused, a valid one blocked the thread (the owner saw no send form and no unblock) and the admin saw the transcript. Type-check, lint and build pass.
+- Known limits: conversation reports have no unblock or audit entry for the admin (resolve and dismiss only, not written to `AuditEntry`). Message history is kept while the pet is not lost but is unreachable. The server-side refusal to send in a blocked thread was not exercised live (the UI hides the form). A finder who is not signed in can only text or call, or sign in to message.
 
 ### Phase 7: Shared access
 **Prerequisites:** Phases 0 (access helper), 4 (vet QR) and 6 (so message privacy can be verified) done.
@@ -228,6 +239,7 @@ Deploys do not run migrations, and `stage` uses its own Neon branch, so producti
 5. `20261123160000_vet_record_requests`
 6. `20261124065856_admin_void_and_audit`
 7. `20261124071149_record_edit_history_and_notes`
+8. `20261124073352_lost_pet_messaging_and_public_settings`
 
 Apply them before the new code goes live: the old code does not know the new enum values or columns.
 
@@ -285,4 +297,4 @@ Apply them before the new code goes live: the old code does not know the new enu
 - No Figma screens yet for: vet QR generate/list/revoke, the public vet form, admin void and audit, caretaker invite flow. Decided 2026-11-23: build these directly in the existing style (existing components and the Figma style guide); they do not block their phases. Add Figma frames afterward if wanted.
 
 ## Still open
-Nothing. Phases 0 to 5 are done; the next step is Phase 6 (lost-pet messaging).
+Nothing. Phases 0 to 6 are done; the next step is Phase 7 (shared access).

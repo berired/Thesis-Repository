@@ -11,7 +11,7 @@ import LostModeToggle from "./lost-mode-toggle";
 import VetQrDialog from "./vet-qr-dialog";
 
 type Pet = Awaited<ReturnType<typeof getOwnedPet>>;
-export type PetTab = "overview" | "records" | "reminders" | "appointments";
+export type PetTab = "overview" | "records" | "reminders" | "appointments" | "tag";
 
 const LOCKED_TITLE = "Coming soon";
 
@@ -54,7 +54,7 @@ export default function PetShell({
     { key: "records", label: "Health records", href: `${base}/records`, count: pet._count.records },
     { key: "reminders", label: "Reminders", href: `${base}/reminders`, count: pet._count.reminders },
     { key: "appointments", label: "Appointments", href: `${base}/appointments` },
-    { key: "id", label: "ID and QR tag" },
+    { key: "tag", label: "ID and QR tag", href: `${base}/tag` },
   ];
 
   const big = active === "overview";

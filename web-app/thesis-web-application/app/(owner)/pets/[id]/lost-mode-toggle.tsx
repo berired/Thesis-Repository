@@ -27,10 +27,10 @@ export default function LostModeToggle({
       </form>
       <p className="text-xs text-white/80">
         {lost
-          ? `Anyone scanning ${petName}'s tag sees that they're lost, plus the contact details you allow in `
-          : "Turn on if they go missing. Scanners then see the contact details you allow in "}
-        <Link href="/account" className="font-semibold underline">
-          My details
+          ? `Anyone scanning ${petName}'s tag sees that they're lost, plus what you allow in the `
+          : "Turn on if they go missing. Scanners then see only what you allow in the "}
+        <Link href={`/pets/${petId}/tag`} className="font-semibold underline">
+          ID and QR tag tab
         </Link>
         .
       </p>

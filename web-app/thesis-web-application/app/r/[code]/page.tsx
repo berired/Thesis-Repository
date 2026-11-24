@@ -1,50 +1,43 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import Icon from "@/app/components/app-icon";
+import ScanCard, { CALL_BUTTON, MESSAGE_BUTTON, SMS_BUTTON } from "@/app/components/scan-card";
+import { startThread } from "@/app/(owner)/messages/actions";
 import { prisma } from "@/app/lib/prisma";
+import { getPublicSettings, loadScanSource } from "@/app/lib/scan-data";
+import { applySettings } from "@/app/lib/scan-view";
 import { getSession } from "@/app/lib/session";
 import { getPetPhotoUrl } from "@/app/lib/storage";
-import { PetAvatar } from "@/app/components/pet-avatar";
-import { fmtFull, shortAge } from "@/app/lib/care";
 
 // Scan pages are for whoever holds the tag, not for search engines.
 export const metadata = { robots: { index: false, follow: false } };
 
+const PLAIN = "rounded-[20px] border-2 border-ink bg-cream p-6 text-left shadow-[8px_8px_0_var(--color-butter)]";
+
 export default async function ScanPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ code: string }>;
+  searchParams: Promise<{ limit?: string }>;
 }) {
   const { code: raw } = await params;
+  const { limit } = await searchParams;
   const code = raw.toLowerCase();
 
   const qr = await prisma.qrCode.findUnique({
     where: { code },
-    include: {
+    select: {
+      status: true,
       pet: {
         select: {
           id: true,
           ownerId: true,
-          name: true,
           species: true,
-          breed: true,
-          sex: true,
-          color: true,
-          birthDate: true,
-          birthDateApproximate: true,
-          allergies: true,
-          microchip: true,
           photoKey: true,
           archivedAt: true,
           lostMode: true,
-          owner: {
-            select: { name: true, phone: true, address: true, showPhone: true, showAddress: true },
-          },
-          records: {
-            where: { type: "VACCINATION", voidedAt: null },
-            orderBy: { recordDate: "desc" },
-            take: 1,
-            select: { title: true, recordDate: true },
-          },
+          owner: { select: { phone: true } },
         },
       },
     },
@@ -54,134 +47,119 @@ export default async function ScanPage({
   let body: React.ReactNode;
 
   if (!qr || qr.status === "REVOKED") {
-    body = <p>This QR code isn&apos;t valid.</p>;
+    body = <p className={PLAIN}>This QR code isn&apos;t valid.</p>;
   } else if (qr.status === "UNUSED") {
     const target = `/pets/new?code=${encodeURIComponent(code)}`;
     if (session) redirect(target);
     const next = encodeURIComponent(target);
     body = (
-      <>
+      <div className={`${PLAIN} flex flex-col gap-4`}>
         <p>This tag isn&apos;t registered yet. Sign in to register your pet.</p>
         <div className="flex gap-3">
-          <Link
-            href={`/sign-in?next=${next}`}
-            className="rounded bg-black px-4 py-2 text-white"
-          >
+          <Link href={`/sign-in?next=${next}`} className="rounded bg-black px-4 py-2 text-white">
             Sign in
           </Link>
           <Link href={`/sign-up?next=${next}`} className="rounded border px-4 py-2">
             Sign up
           </Link>
         </div>
-      </>
+      </div>
     );
   } else {
-    if (qr.pet && session?.user.id === qr.pet.ownerId) {
-      redirect(`/pets/${qr.pet.id}`);
-    }
     const pet = qr.pet;
+    if (pet && session?.user.id === pet.ownerId) redirect(`/pets/${pet.id}`);
+
     if (!pet || pet.archivedAt) {
-      body = <p>This tag isn&apos;t active right now.</p>;
-    } else {
-      const photoUrl = pet.photoKey ? await getPetPhotoUrl(pet.photoKey, 300) : null;
-      const vaccine = pet.records[0];
-      const facts: [string, string | null][] = [
-        ["Colour", pet.color],
-        ["Allergies", pet.allergies],
-        [
-          "Last vaccine",
-          vaccine ? `${vaccine.title} · ${fmtFull(vaccine.recordDate)}` : "No vaccine records",
-        ],
-        ["Microchip", pet.microchip],
-      ];
-      // Contact details leave the server only while lost mode is on, and only the ones
-      // the owner switched on.
-      const phone = pet.lostMode && pet.owner.showPhone ? pet.owner.phone : null;
-      const address = pet.lostMode && pet.owner.showAddress ? pet.owner.address : null;
+      body = <p className={PLAIN}>This tag isn&apos;t active right now.</p>;
+    } else if (!pet.lostMode) {
+      // Nothing about a pet that isn't lost is shown to a stranger.
       body = (
-        <div className="flex w-full flex-col gap-4 rounded-[20px] border-2 border-ink bg-white p-6 text-left shadow-[8px_8px_0_var(--color-butter)]">
-          {pet.lostMode ? (
-            <div
-              role="alert"
-              className="flex flex-col gap-3 rounded-xl border-2 border-[#c2372e] bg-[#fdecea] p-4"
-            >
-              <p className="font-display text-[26px] leading-7 text-[#a42a22]">
-                This pet is lost
-              </p>
-              <p className="text-sm text-ink">
-                {pet.name} is missing. Please contact {pet.owner.name.split(/\s+/)[0]}.
-              </p>
-              {phone || address ? (
-                <div className="flex flex-col gap-2 text-sm">
-                  {phone ? (
-                    <a
-                      href={`tel:${phone.replace(/[^\d+]/g, "")}`}
-                      className="flex h-11 items-center justify-center rounded-xl bg-sky px-4 font-semibold text-white"
-                    >
-                      Call {phone}
-                    </a>
-                  ) : null}
-                  {address ? (
-                    <p>
-                      <span className="text-muted">Address: </span>
-                      <span className="font-medium">{address}</span>
-                    </p>
-                  ) : null}
-                </div>
-              ) : (
-                <p className="text-[13px] text-muted">
-                  The owner hasn&apos;t shared contact details.
-                </p>
-              )}
-            </div>
-          ) : null}
-          <div className="flex items-center gap-4">
-            {photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={photoUrl}
-                alt={`${pet.name}'s photo`}
-                className="size-16 shrink-0 rounded-full object-cover"
-              />
-            ) : (
-              <PetAvatar name={pet.name} species={pet.species} size={64} />
-            )}
-            <div className="min-w-0">
-              <h1 className="truncate font-display text-[32px] leading-9 text-forest">
-                {pet.name}
-              </h1>
-              <p className="text-sm text-muted">
-                {[
-                  pet.species,
-                  pet.breed,
-                  pet.sex === "MALE" ? "Male" : "Female",
-                  shortAge(pet.birthDate, pet.birthDateApproximate),
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-            </div>
-          </div>
-          <dl className="flex flex-col gap-2 text-sm">
-            {facts.map(([label, value]) => (
-              <div key={label} className="flex gap-3">
-                <dt className="w-[100px] shrink-0 text-muted">{label}</dt>
-                <dd className="min-w-0 font-medium">{value ?? "—"}</dd>
-              </div>
-            ))}
-          </dl>
-          <p className="rounded-lg bg-cream px-3 py-2 text-[13px] text-muted">
-            Registered by {pet.owner.name.split(/\s+/)[0]}. Found {pet.name}? Please let
-            the owner know.
-          </p>
-        </div>
+        <p className={PLAIN}>
+          This tag is registered with Pawket Book. Its owner hasn&apos;t marked the pet as lost, so
+          there&apos;s nothing to show here.
+        </p>
       );
+    } else {
+      const [settings, source] = await Promise.all([getPublicSettings(pet.id), loadScanSource(pet.id)]);
+      const view = source ? applySettings(source, settings) : null;
+      if (!view || !source) {
+        body = <p className={PLAIN}>This tag isn&apos;t active right now.</p>;
+      } else {
+        const photoUrl = pet.photoKey ? await getPetPhotoUrl(pet.photoKey, 300) : null;
+        const phone = view.canCall ? (pet.owner.phone ?? "").replace(/[^\d+]/g, "") : "";
+        const next = encodeURIComponent(`/r/${code}`);
+        const nobody = !phone && !view.canMessage;
+
+        body = (
+          <ScanCard
+            view={view}
+            species={pet.species}
+            memberNo={code}
+            photoUrl={photoUrl}
+            actions={
+              <>
+                {phone ? (
+                  <>
+                    <a href={`sms:${phone}`} className={SMS_BUTTON}>
+                      <Icon name="message-square" size={18} />
+                      Text my owner
+                    </a>
+                    <a href={`tel:${phone}`} className={CALL_BUTTON}>
+                      <Icon name="phone" size={18} />
+                      Call my owner
+                    </a>
+                  </>
+                ) : null}
+                {view.canMessage ? (
+                  session ? (
+                    <form action={startThread.bind(null, code)}>
+                      <button type="submit" className={MESSAGE_BUTTON}>
+                        <Icon name="message-circle" size={18} />
+                        Message in app
+                      </button>
+                    </form>
+                  ) : (
+                    <Link href={`/sign-in?next=${next}`} className={MESSAGE_BUTTON}>
+                      <Icon name="message-circle" size={18} />
+                      Sign in to message in app
+                    </Link>
+                  )
+                ) : null}
+                {limit ? (
+                  <p role="alert" className="text-center text-xs text-[#a42a22]">
+                    You&apos;ve started several conversations recently. Please try again later.
+                  </p>
+                ) : null}
+                {nobody ? (
+                  <p className="text-center text-[13px] text-muted">
+                    The owner hasn&apos;t turned on any way to contact them here.
+                  </p>
+                ) : (
+                  <p className="text-center text-xs text-muted">
+                    In-app messages need a Pawket Book account. Texting works for everyone.
+                  </p>
+                )}
+              </>
+            }
+          />
+        );
+      }
     }
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
-      {body}
+    <main className="min-h-screen bg-forest px-4 py-8">
+      <div className="mx-auto flex max-w-md flex-col items-center gap-5 text-center">
+        <p className="font-display text-[26px] leading-[26px] text-butter">Pawket Book</p>
+        {body}
+        <p className="text-sm text-white">
+          Shared by the owner through Pawket Book
+          <br />
+          <Link href="/" className="font-medium text-butter underline">
+            Get Pawket Book for your pets
+          </Link>
+        </p>
+      </div>
     </main>
   );
 }

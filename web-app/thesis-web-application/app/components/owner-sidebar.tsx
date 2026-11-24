@@ -20,7 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Health records", icon: "/icons/records.svg", href: "/records", section: "/records" },
   { label: "Reminders", icon: "/icons/bell-nav.svg", href: "/reminders", section: "/reminders" },
   { label: "Find a vet", icon: "/icons/map-pin-nav.svg" },
-  { label: "Messages", icon: "/icons/message.svg" },
+  { label: "Messages", icon: "/icons/message.svg", href: "/messages", section: "/messages" },
 ];
 
 // The bottom bar has room for five, so the account link stands in for the rest.
@@ -44,9 +44,11 @@ function initials(name: string) {
 export default function OwnerSidebar({
   userName,
   reminderCount = 0,
+  messageCount = 0,
 }: {
   userName: string;
   reminderCount?: number;
+  messageCount?: number;
 }) {
   const pathname = usePathname();
 
@@ -82,7 +84,8 @@ export default function OwnerSidebar({
         />
         {NAV_ITEMS.map((item) => {
           const active = isActive(item);
-          const badge = item.label === "Reminders" ? reminderCount : item.badge;
+          const badge =
+            item.label === "Reminders" ? reminderCount : item.label === "Messages" ? messageCount : item.badge;
           const base =
             "relative flex h-11 items-center gap-3 rounded-[10px] px-3 text-sm transition-colors duration-300 motion-reduce:transition-none";
           const state = active ? "font-semibold text-ink" : "font-medium text-white";

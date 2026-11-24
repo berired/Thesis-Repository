@@ -19,6 +19,7 @@ export default async function AdminLayout({
           <Link href="/admin/users">Users</Link>
           <Link href="/admin/pets">Pets</Link>
           <Link href="/admin/records">Vet records</Link>
+          <Link href="/admin/messages">Messages</Link>
           <Link href="/admin/qr-codes">QR codes</Link>
         </nav>
         <div className="flex items-center gap-3 text-sm">

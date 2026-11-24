@@ -12,9 +12,7 @@ export default async function AccountPage() {
       name: true,
       email: true,
       phone: true,
-      address: true,
-      showPhone: true,
-      showAddress: true,
+      city: true,
     },
   });
 
@@ -25,9 +23,7 @@ export default async function AccountPage() {
         name={user.name}
         email={user.email}
         phone={user.phone ?? ""}
-        address={user.address ?? ""}
-        showPhone={user.showPhone}
-        showAddress={user.showAddress}
+        city={user.city ?? ""}
       />
       {/* The top bar hides sign out on small screens, so it lives here too. */}
       <SignOutButton className="h-10 w-fit rounded-xl border border-line bg-white px-4 text-sm font-medium text-ink hover:bg-[#f6f8fa] sm:hidden" />

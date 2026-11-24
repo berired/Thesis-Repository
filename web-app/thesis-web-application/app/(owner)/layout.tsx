@@ -3,6 +3,7 @@ import { requireUser } from "@/app/lib/session";
 import { endOfToday } from "@/app/lib/care";
 import OwnerSidebar from "@/app/components/owner-sidebar";
 import { accessiblePets } from "@/app/lib/pet-access";
+import { unreadMessageCount } from "@/app/lib/messaging";
 
 export default async function OwnerLayout({
   children,
@@ -21,9 +22,15 @@ export default async function OwnerLayout({
     },
   });
 
+  const messageCount = await unreadMessageCount(session.user.id);
+
   return (
     <div className="flex min-h-screen bg-cream pb-[72px] text-ink lg:pb-0">
-      <OwnerSidebar userName={session.user.name} reminderCount={reminderCount} />
+      <OwnerSidebar
+        userName={session.user.name}
+        reminderCount={reminderCount}
+        messageCount={messageCount}
+      />
       {children}
     </div>
   );

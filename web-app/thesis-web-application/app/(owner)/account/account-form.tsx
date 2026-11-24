@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState } from "react";
-import Switch from "@/app/components/switch";
 import { FormError, INPUT_CLASS } from "@/app/components/ui";
 import { updateAccount, type AccountState } from "./actions";
 
@@ -12,16 +11,12 @@ export default function AccountForm({
   name,
   email,
   phone,
-  address,
-  showPhone,
-  showAddress,
+  city,
 }: {
   name: string;
   email: string;
   phone: string;
-  address: string;
-  showPhone: boolean;
-  showAddress: boolean;
+  city: string;
 }) {
   const [state, formAction, pending] = useActionState(updateAccount, initialState);
 
@@ -44,49 +39,34 @@ export default function AccountForm({
         <div>
           <h2 className="text-base font-semibold leading-6">Contact details</h2>
           <p className="text-xs leading-[18px] text-muted">
-            Only shown to people who scan a tag while one of your animals is in lost mode, and
-            only if you switch it on.
+            Never shown by default. You choose per animal, in its ID and QR tag tab, whether your
+            first name, city, or text and call buttons appear when someone scans a lost animal&apos;s tag.
           </p>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-ink">Contact number</span>
-            <input
-              name="phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              defaultValue={phone}
-              placeholder="e.g. 0917 555 0123"
-              className={INPUT_CLASS}
-            />
-          </label>
-          <Switch
-            name="showPhone"
-            label="Show my number to the public"
-            defaultChecked={showPhone}
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-ink">Contact number</span>
+          <input
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            defaultValue={phone}
+            placeholder="e.g. 0917 555 0123"
+            className={INPUT_CLASS}
           />
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-ink">Address</span>
-            <textarea
-              name="address"
-              rows={3}
-              maxLength={200}
-              defaultValue={address}
-              placeholder="Street, barangay, city"
-              className={`${INPUT_CLASS} !h-auto py-2.5`}
-            />
-          </label>
-          <Switch
-            name="showAddress"
-            label="Show my address to the public"
-            defaultChecked={showAddress}
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-ink">City</span>
+          <input
+            name="city"
+            maxLength={80}
+            autoComplete="address-level2"
+            defaultValue={city}
+            placeholder="e.g. Quezon City"
+            className={INPUT_CLASS}
           />
-        </div>
+        </label>
       </section>
 
       <FormError message={state.error ?? null} />
