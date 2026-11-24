@@ -216,7 +216,7 @@ Reverses part of the Phase 2 rules. Decided with the developer:
 ### Final phase gate
 End-to-end walkthrough of owner, vet, admin, finder and invitee flows, with no open items left in this file.
 
-## Production deploy checklist (as of Phase 4, 2026-11-23)
+## Production deploy checklist (as of 2026-11-24)
 
 Deploys do not run migrations, and `stage` uses its own Neon branch, so production needs these by hand before or at the deploy.
 
@@ -226,6 +226,8 @@ Deploys do not run migrations, and `stage` uses its own Neon branch, so producti
 3. `20261123141000_drop_record_start_date`
 4. `20261123150000_reminders_and_notifications` (remaps existing reminder categories: Care to Other, Walk to Exercise, Check-up to Appointment)
 5. `20261123160000_vet_record_requests`
+6. `20261124065856_admin_void_and_audit`
+7. `20261124071149_record_edit_history_and_notes`
 
 Apply them before the new code goes live: the old code does not know the new enum values or columns.
 

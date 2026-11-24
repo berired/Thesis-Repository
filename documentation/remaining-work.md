@@ -1,10 +1,10 @@
 # Pawket Book: what's left to build
 
-Last updated 2026-11-23, after Phase 4 (branch `stage` at `1b2c81a`). Before starting new work, pull the latest from `stage`.
+Last updated 2026-11-24, after Phase 5 and the tracked-edits change (branch `stage` at `798b8ed`). Before starting new work, pull the latest from `stage`.
 
 The backend is planned phase by phase in `backend-plan.md`, which is the source of truth for decisions and records what each finished phase did. This file tracks the frontend and loose ends. Where the two disagree, `backend-plan.md` wins.
 
-**Where the plan stands:** Phases 0 to 4 are done (foundations, private storage and uploads, owner records, reminders and notifications, vet QR flow), plus the time zone fix. Phases 5 to 8 and the final gate remain. Production still needs the migrations and settings in the "Production deploy checklist" in `backend-plan.md`.
+**Where the plan stands:** Phases 0 to 5 are done (foundations, private storage and uploads, owner records, reminders and notifications, vet QR flow, admin void and audit), plus the time zone fix and the tracked-edits change (record history, add-only notes, locked files). Phases 6 to 8 and the final gate remain. Production still needs the migrations (now seven, through `20261124071149_record_edit_history_and_notes`) and settings in the "Production deploy checklist" in `backend-plan.md`.
 
 ## 1. Figma status
 
@@ -44,7 +44,7 @@ Figma frames still to edit to match the decisions (the code already follows the 
 
 - Notifications (9:1425): remove the clinic items and the "Too many pings?" block.
 - Owner dashboard Vet visits card (9:880 and variants): replace "Awaiting clinic" and "Confirmed" with Upcoming / Done / Cancelled.
-- Edit record (131:1283): for vet-submitted records, remove "Delete record" and the copy-on-edit text.
+- Edit record (131:1283): for vet-submitted records, remove "Delete record" and the copy-on-edit text. Also add the "Edited on" stamp, the History and Notes sections on the record page, and drop the remove button on saved files.
 - Reminders create form (142:2203): remove Email and Phone, and the Email notify option.
 - Sidebar: remove "Appointments" from the frames that show it. Decided: no Appointments sidebar link.
 - Header search placeholder: change to "Search animals and records".
@@ -52,7 +52,7 @@ Figma frames still to edit to match the decisions (the code already follows the 
 - Find a vet (190:3963, 190:4427): leave locked.
 - ID and QR tag (203:5464): the public-info controls must be pill toggles per field.
 
-Figma screens that do not exist: owner generate, list and cancel vet QR; the public vet page and form (built in the existing style, see `backend-plan.md` Phase 4); admin void and audit; the caretaker invite flow beyond the "Invite someone" button. Decided: build these in the existing style without new frames.
+Figma screens that do not exist: owner generate, list and cancel vet QR; the public vet page and form (built in the existing style, see `backend-plan.md` Phase 4); the admin Vet records pages (reports, audit trail) and the owner's report form; the caretaker invite flow beyond the "Invite someone" button. Decided: build these in the existing style without new frames.
 
 ## 2. Locked or placeholder items in the UI
 
@@ -71,11 +71,10 @@ Stays locked on purpose: **Find a vet** ("Coming soon" until clinics exist).
 - Caretakers (shared access): no sharing model. Role is view, generate vet QRs, be assigned and complete reminders; no editing animal info, adding animals, or editing records; no owner contact details or lost-pet messages. Phase 7. This also unlocks "whoever gets to it first", the "Only mine" reminder filter and caretaker bell triggers.
 - Lost-mode public info: needs a per-pet setting for which fields (vaccines, allergies, medication, notes, contact options) are public, shown as pill toggles. The server must only return fields that are switched on. Only the owner's `showPhone` and `showAddress` exist today.
 - Messages: lost-pet messaging only (thread model needed). Phase 6.
-- Admin void and audit of vet records, and owner reports. Phase 5.
 - Pet photos: no upload. Avatars use species icons. Phase 8.
 - Pet species icons: only Dog, Cat and Reptile have icons; other species show an initial. Figma lists Dog, Cat, Bird, Poultry, Reptile, Fish, Rabbit, Other.
 
-Done since the last version of this file: private `pet-files` bucket and uploads (Phase 1), record types and provenance, owner records with attachments and the Edit animal page with allergies (Phase 2), reminders with a completion log, the `Notification` model and bell (Phase 3), vet QR tokens, sessions and the vet form (Phase 4).
+Done since the last version of this file: admin void and audit with owner reports (Phase 5); record edit history, add-only notes and locked files (2026-11-24); private `pet-files` bucket and uploads (Phase 1), record types and provenance, owner records with attachments and the Edit animal page with allergies (Phase 2), reminders with a completion log, the `Notification` model and bell (Phase 3), vet QR tokens, sessions and the vet form (Phase 4).
 
 ## 4. Dropped for now
 
@@ -91,6 +90,7 @@ Done since the last version of this file: private `pet-files` bucket and uploads
 - A monthly reminder that starts on the 29th to 31st drifts to the clamped day after a short month, because only the current due date is stored.
 - Due notifications are created when a signed-in user loads a page (there is no scheduler), so a reminder that falls due while nobody is signed in notifies on the next visit.
 - The owner-side `deleteRecord` refusal for vet records has no UI path and was never exercised live; a vet-QR cancel during a live session was not either.
+- Owners are not told when their report on a vet record is resolved. The admin record page does not show edit history or notes. Deleting an owner-made record removes its history and files. Voiding the only vet weight record leaves the pet's weight at the voided value. Dose-reminder time changes are not written to a record's history.
 - A vet upload that is presigned but never confirmed can leave an orphan object in `vet-uploads/`. There is no cleanup sweep.
 - Deleting a pet resets its QR tag to UNUSED so the tag can be registered again.
 - Archived pets stay reachable by direct URL and show a restore banner.
@@ -101,6 +101,6 @@ Done since the last version of this file: private `pet-files` bucket and uploads
 
 ## 6. Not started at all
 
-- Backend phases 5 to 8 (see `backend-plan.md`): admin void and audit, lost-pet messaging, shared access, photos and PDF export.
+- Backend phases 6 to 8 (see `backend-plan.md`): lost-pet messaging, shared access, photos and PDF export.
 - Tests (none in the repo; deliberately deferred, see `backend-plan.md`).
 - Final end-to-end walkthrough.
