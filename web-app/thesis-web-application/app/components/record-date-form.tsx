@@ -40,8 +40,8 @@ export default function RecordDateForm({
       className="flex max-w-[420px] flex-col gap-4 rounded-xl border border-line bg-white p-5"
     >
       <p className="text-[13px] text-muted">
-        This record was added by a vet, so only the visit date can be changed. To fix anything
-        else, contact the admin.
+        This record was added by a vet, so only the visit date can be changed. You can add a note
+        on the record page, or report the record if something is wrong.
       </p>
       <Field label="Visit date">
         <input name="recordDate" type="date" required max={today} defaultValue={date} className={INPUT_CLASS} />

@@ -74,5 +74,15 @@ export async function POST(
     },
     select: { id: true, title: true, fileName: true, contentType: true, sizeBytes: true },
   });
+  // Adding a file to an existing record is part of its history.
+  if (recordId && body?.logAdded === true) {
+    await prisma.recordEdit.create({
+      data: {
+        recordId,
+        editorId: session.user.id,
+        changes: [{ field: "File added", from: null, to: fileName }],
+      },
+    });
+  }
   return NextResponse.json(doc, { status: 201 });
 }

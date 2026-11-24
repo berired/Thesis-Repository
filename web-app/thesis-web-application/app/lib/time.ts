@@ -97,6 +97,10 @@ const fmt = (options: Intl.DateTimeFormatOptions, locale = "en-GB") =>
 const dayFmt = fmt({ day: "numeric", month: "short" });
 const fullFmt = fmt({ day: "numeric", month: "short", year: "numeric" });
 const timeFmt = fmt({ hour: "numeric", minute: "2-digit" }, "en-US");
+const editedFmt = fmt(
+  { month: "2-digit", day: "2-digit", year: "numeric", hour: "numeric", minute: "2-digit" },
+  "en-US",
+);
 const monthFmt = fmt({ month: "short" });
 const weekdayFmt = fmt({ weekday: "short" });
 const headingFmt = fmt({ weekday: "short", day: "numeric", month: "short" });
@@ -104,6 +108,8 @@ const headingFmt = fmt({ weekday: "short", day: "numeric", month: "short" });
 export const fmtDay = (d: Date) => dayFmt.format(d);
 export const fmtFull = (d: Date) => fullFmt.format(d);
 export const fmtTime = (d: Date) => timeFmt.format(d);
+/** "11/24/2026, 3:04 PM": the stamp on an edited record. */
+export const fmtEdited = (d: Date) => editedFmt.format(d);
 export const monthShort = (d: Date) => monthFmt.format(d);
 export const weekdayShort = (d: Date) => weekdayFmt.format(d);
 export const fmtHeading = (d: Date) => headingFmt.format(d);

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { getPetAccess } from "@/app/lib/pet-access";
 import { getSession } from "@/app/lib/session";
-import { deleteFile, presignFileDownload } from "@/app/lib/storage";
+import { presignFileDownload } from "@/app/lib/storage";
 
 async function load(id: string, docId: string) {
   const session = await getSession();
@@ -33,7 +33,8 @@ export async function GET(
   });
 }
 
-// Owner only.
+// Saved files can't be removed or replaced, so a record's attachments stay as they were
+// uploaded. (They are only deleted along with their record or animal.)
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string; docId: string }> },
@@ -41,11 +42,5 @@ export async function DELETE(
   const { id, docId } = await params;
   const found = await load(id, docId);
   if ("status" in found) return new NextResponse(null, { status: found.status });
-  if (found.role !== "owner") return new NextResponse(null, { status: 403 });
-  // Files on a vet-submitted record are part of what the vet submitted.
-  if (found.doc.record?.source === "VET") return new NextResponse(null, { status: 403 });
-
-  await prisma.petDocument.delete({ where: { id: found.doc.id } });
-  await deleteFile(found.doc.fileKey).catch((e) => console.error("File delete failed", e));
-  return new NextResponse(null, { status: 204 });
+  return new NextResponse(null, { status: 403 });
 }

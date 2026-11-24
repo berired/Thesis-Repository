@@ -7,6 +7,9 @@ import { formatBytes } from "@/app/lib/upload-client";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
 import ReportRecord from "./report-record";
+import AddNote from "./add-note";
+import { readChanges } from "@/app/lib/record-history";
+import { fmtEdited } from "@/app/lib/time";
 
 export default async function RecordDetailPage({
   params,
@@ -19,7 +22,11 @@ export default async function RecordDetailPage({
   const session = await requireUser();
   const alreadyReported = fromVet
     ? (await prisma.recordReport.count({
-        where: { recordId: record.id, reporterId: session.user.id, status: "OPEN" },
+        where: {
+          recordId: record.id,
+          reporterId: session.user.id,
+          status: "OPEN",
+        },
       })) > 0
     : false;
 
@@ -51,6 +58,11 @@ export default async function RecordDetailPage({
             {record.title}
           </h1>
           <p className="text-sm text-muted">For {pet.name}</p>
+          {record.edits[0] ? (
+            <p className="text-[13px] text-muted">
+              Edited on {fmtEdited(record.edits[0].createdAt)}
+            </p>
+          ) : null}
           {fromVet ? (
             <p className="flex w-fit items-center gap-1.5 rounded-md bg-[#e6eefb] px-2.5 py-1 text-xs font-semibold text-[#2a559e]">
               <Icon name="stethoscope" size={13} />
@@ -88,41 +100,112 @@ export default async function RecordDetailPage({
           {fromVet ? (
             <>
               <p className="text-[13px] text-muted">
-                Added by a vet through a one-time link, so it can&apos;t be edited or deleted. Only
-                the visit date can be corrected. If something is wrong, report it and the admin will
+                Added by a vet through a one-time link, so it can&apos;t be
+                deleted. Only the visit date can be changed, and you can add
+                notes below. If something is wrong, report it and the admin will
                 review it.
               </p>
-              <ReportRecord recordId={record.id} alreadyReported={alreadyReported} />
+              <ReportRecord
+                recordId={record.id}
+                alreadyReported={alreadyReported}
+              />
             </>
           ) : null}
         </section>
 
-        <section className="rounded-xl border border-line bg-white p-5">
-          <h2 className="mb-3 text-lg font-semibold leading-6">Attachments</h2>
-          {record.files.length === 0 ? (
-            <p className="text-sm text-muted">No files attached.</p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {record.files.map((f) => (
-                <li key={f.id} className="flex items-center gap-3">
-                  <Icon name="file-text" size={18} className="shrink-0 text-sky" />
-                  <div className="min-w-0 flex-1">
-                    <a
-                      href={`/api/pets/${pet.id}/documents/${f.id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="block truncate text-sm font-semibold text-ink hover:underline"
-                    >
-                      {f.fileName}
-                    </a>
-                    <p className="text-xs text-muted">{formatBytes(f.sizeBytes)}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <div className="flex flex-col gap-6">
+          <section className="rounded-xl border border-line bg-white p-5">
+            <h2 className="mb-3 text-lg font-semibold leading-6">
+              Attachments
+            </h2>
+            {record.files.length === 0 ? (
+              <p className="text-sm text-muted">No files attached.</p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {record.files.map((f) => (
+                  <li key={f.id} className="flex items-center gap-3">
+                    <Icon
+                      name="file-text"
+                      size={18}
+                      className="shrink-0 text-sky"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <a
+                        href={`/api/pets/${pet.id}/documents/${f.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block truncate text-sm font-semibold text-ink hover:underline"
+                      >
+                        {f.fileName}
+                      </a>
+                      <p className="text-xs text-muted">
+                        {formatBytes(f.sizeBytes)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-3 text-xs text-muted">
+              Saved files can&apos;t be edited or removed. New files can still
+              be added from Edit.
+            </p>
+          </section>
+        </div>
       </div>
+
+      <section className="flex max-w-[700px] flex-col gap-4 rounded-xl border border-line bg-white p-5">
+        <h2 className="text-lg font-semibold leading-6">Notes</h2>
+        {record.addedNotes.length === 0 ? (
+          <p className="text-sm text-muted">No notes added yet.</p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {record.addedNotes.map((n) => (
+              <li key={n.id} className="rounded-lg bg-cream px-3 py-2">
+                <p className="whitespace-pre-line text-[13px] leading-[19.5px]">
+                  {n.body}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  {n.author?.name ?? "Someone"} · {fmtEdited(n.createdAt)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+        <AddNote recordId={record.id} />
+      </section>
+
+      <section className="flex max-w-[700px] flex-col gap-3 rounded-xl border border-line bg-white p-5">
+        <h2 className="text-lg font-semibold leading-6">History</h2>
+        {record.edits.length === 0 ? (
+          <p className="text-sm text-muted">
+            This record hasn&apos;t been edited.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {record.edits.map((e) => (
+              <li key={e.id} className="text-[13px] leading-[19.5px]">
+                <p className="font-semibold">
+                  Edited on {fmtEdited(e.createdAt)}
+                  <span className="font-normal text-muted">
+                    {" "}
+                    · {e.editor?.name ?? "Someone"}
+                  </span>
+                </p>
+                <ul className="mt-1 flex flex-col gap-0.5 text-muted">
+                  {readChanges(e.changes).map((c, i) => (
+                    <li key={i}>
+                      {c.field === "File added"
+                        ? `File added: ${c.to}`
+                        : `${c.field}: ${c.from ?? "empty"} → ${c.to ?? "empty"}`}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </OwnerPage>
   );
 }

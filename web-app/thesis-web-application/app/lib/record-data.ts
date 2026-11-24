@@ -9,6 +9,14 @@ export async function getOwnedRecord(petId: string, recordId: string) {
     where: { id: recordId, petId: pet.id, voidedAt: null },
     include: {
       reminders: { select: { dueAt: true }, orderBy: { dueAt: "asc" } },
+      edits: {
+        orderBy: { createdAt: "desc" },
+        select: { id: true, createdAt: true, changes: true, editor: { select: { name: true } } },
+      },
+      addedNotes: {
+        orderBy: { createdAt: "asc" },
+        select: { id: true, createdAt: true, body: true, author: { select: { name: true } } },
+      },
       files: {
         orderBy: { uploadedAt: "asc" },
         select: { id: true, fileName: true, sizeBytes: true, contentType: true },

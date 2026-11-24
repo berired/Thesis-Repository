@@ -31,6 +31,8 @@ export async function uploadRecordFile(
   file: File,
   documentType: string,
   onProgress: (percent: number) => void,
+  /** True when the record already existed, so the new file is written into its history. */
+  logAdded = false,
 ): Promise<UploadResult> {
   const early = checkUpload("document", file.type, file.size);
   if (!early.ok) return early;
@@ -56,6 +58,7 @@ export async function uploadRecordFile(
         title: file.name,
         type: documentType,
         recordId,
+        logAdded,
       }),
     });
     const doc = await confirm.json().catch(() => null);

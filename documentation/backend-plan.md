@@ -175,6 +175,15 @@ Before writing code in any phase, read the relevant guide in `node_modules/next/
 - Smoke test (browser, local dev against the stage DB, owner and admin test users, test data deleted afterwards): owner reported a vet record (too-short reason refused); owner was redirected away from `/admin`; admin saw the report; a 3-character void reason was refused; void succeeded, the report became resolved and the audit tab showed who, when and why; the owner then got 404 on the record and no longer saw it in the list. Type-check, lint and build pass.
 - Known limits: the owner is not notified when a report is resolved. Voiding the only vet weight record leaves the pet's weight at the voided value, because there is no earlier weight to fall back to. A voided record's files stay in the bucket.
 
+### Change after Phase 5: tracked edits and locked files (2026-11-24, built directly on `stage`)
+Reverses part of the Phase 2 rules. Decided with the developer:
+- **Owner-made records stay fully editable, but every saved change is tracked.** A `RecordEdit` row records who, when and each field's old and new value. The record page shows "Edited on mm/dd/yyyy, h:mm AM" (app time zone) and a History section. Adding a file to an existing record is also logged.
+- **Vet-submitted records stay locked** except the visit date (now also logged), and the owner can add notes.
+- **Notes can be added to any saved record** (`RecordNote`, add-only, each with who and when; never edited or removed). This is separate from the record's own notes field, which owners can still edit on their own records.
+- **Saved files are locked on every record.** No file can be removed or replaced (the delete route now always returns 403, the remove button is gone); new files can still be added to an owner-made record. Files are only deleted along with their record or animal.
+- Migration `20261124071149_record_edit_history_and_notes` (applied to Neon `stage` only, **not yet to production**).
+- Known limits: deleting an owner-made record still removes it, its history and its files; the admin record page does not show history or notes; dose-reminder time changes are not written to the history.
+
 ### Phase 6: Lost-pet messaging
 **Prerequisites:** Phase 3 done (bell). Lost mode and owner contact details already exist.
 **Deliverables:**

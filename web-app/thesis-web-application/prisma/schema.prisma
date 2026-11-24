@@ -33,6 +33,8 @@ model User {
   notifications       Notification[]
   recordRequests      RecordRequest[]
   recordReports       RecordReport[]
+  recordEdits         RecordEdit[]
+  recordNotes         RecordNote[]
 
   @@map("user")
 }
@@ -217,6 +219,8 @@ model HealthRecord {
   updatedAt     DateTime       @default(now()) @updatedAt
   recordRequest RecordRequest?
   reports       RecordReport[]
+  edits         RecordEdit[]
+  addedNotes    RecordNote[]
 
   @@index([petId, recordDate])
   @@map("health_record")
@@ -436,4 +440,33 @@ model AuditEntry {
   @@index([createdAt])
   @@index([recordId])
   @@map("audit_entry")
+}
+
+/// One saved change to a record: who, when, and each field's old and new value.
+/// `changes` is a list of { field, from, to }. Add-only; shown as the record's history.
+model RecordEdit {
+  id        String       @id @default(cuid())
+  recordId  String
+  record    HealthRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  editorId  String?
+  editor    User?        @relation(fields: [editorId], references: [id], onDelete: SetNull)
+  changes   Json
+  createdAt DateTime     @default(now())
+
+  @@index([recordId, createdAt])
+  @@map("record_edit")
+}
+
+/// A note added to a record after it was saved. Notes are only ever added, never edited.
+model RecordNote {
+  id        String       @id @default(cuid())
+  recordId  String
+  record    HealthRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  body      String
+  createdAt DateTime     @default(now())
+
+  @@index([recordId, createdAt])
+  @@map("record_note")
 }

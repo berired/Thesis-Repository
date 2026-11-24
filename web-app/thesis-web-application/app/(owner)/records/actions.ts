@@ -5,6 +5,7 @@ import { prisma } from "@/app/lib/prisma";
 import { getPetAccess } from "@/app/lib/pet-access";
 import { parseRecordDate, parseRecordFields, syncPetWeight } from "@/app/lib/records";
 import { parseDoseTimes, syncDoseReminders } from "@/app/lib/reminders";
+import { diffRecord } from "@/app/lib/record-history";
 import { requireUser } from "@/app/lib/session";
 import { deleteFile } from "@/app/lib/storage";
 
@@ -33,7 +34,21 @@ async function ownedRecord(recordId: string) {
   const session = await requireUser();
   const record = await prisma.healthRecord.findFirst({
     where: { id: recordId, voidedAt: null },
-    select: { id: true, petId: true, source: true, type: true },
+    select: {
+      id: true,
+      petId: true,
+      source: true,
+      type: true,
+      title: true,
+      recordDate: true,
+      weightKg: true,
+      clinic: true,
+      notes: true,
+      dose: true,
+      batchNumber: true,
+      endDate: true,
+      nextDueDate: true,
+    },
   });
   if (!record) return null;
   if ((await getPetAccess(session.user.id, record.petId)) !== "owner") return null;
@@ -74,8 +89,10 @@ export async function createRecord(fd: FormData): Promise<RecordResult> {
 }
 
 /**
- * Owner-made records are fully editable. A vet-submitted record only lets the
- * owner change its visit date; everything else is ignored, whatever the form sent.
+ * Owner-made records are fully editable, and every saved change is written to the record's
+ * history (who, when, old and new value). A vet-submitted record only lets the owner change
+ * its visit date (also logged); everything else is ignored, whatever the form sent. Saved
+ * files are never changed here.
  */
 export async function updateRecord(recordId: string, fd: FormData): Promise<RecordResult> {
   const record = await ownedRecord(recordId);
@@ -84,7 +101,16 @@ export async function updateRecord(recordId: string, fd: FormData): Promise<Reco
   if (record.source === "VET") {
     const date = parseRecordDate(fd);
     if (!date.ok) return { error: date.error };
-    await prisma.healthRecord.update({ where: { id: record.id }, data: { recordDate: date.date } });
+    const changes = diffRecord(record, { ...record, recordDate: date.date });
+    const session = await requireUser();
+    await prisma.$transaction(async (tx) => {
+      await tx.healthRecord.update({ where: { id: record.id }, data: { recordDate: date.date } });
+      if (changes.length > 0) {
+        await tx.recordEdit.create({
+          data: { recordId: record.id, editorId: session.user.id, changes },
+        });
+      }
+    });
     refresh(record.petId);
     return { ok: true, petId: record.petId, recordId: record.id };
   }
@@ -98,6 +124,12 @@ export async function updateRecord(recordId: string, fd: FormData): Promise<Reco
   const session = await requireUser();
   await prisma.$transaction(async (tx) => {
     await tx.healthRecord.update({ where: { id: record.id }, data: parsed.data });
+    const changes = diffRecord(record, parsed.data);
+    if (changes.length > 0) {
+      await tx.recordEdit.create({
+        data: { recordId: record.id, editorId: session.user.id, changes },
+      });
+    }
     if (parsed.data.type === "WEIGHT" || record.type === "WEIGHT") {
       await syncPetWeight(tx, record.petId);
     }
@@ -166,5 +198,28 @@ export async function reportRecord(recordId: string, reason: string): Promise<{ 
   });
   revalidatePath(`/pets/${record.petId}/records/${record.id}`);
   revalidatePath("/admin/records");
+  return { ok: true };
+}
+
+/**
+ * Adds a note to a saved record, owner-made or vet-submitted. Notes are only ever added:
+ * they carry the time they were written and can't be edited or removed afterwards.
+ */
+export async function addRecordNote(
+  recordId: string,
+  body: string,
+): Promise<{ error: string } | { ok: true }> {
+  const record = await ownedRecord(recordId);
+  if (!record) return { error: "We couldn't find that record." };
+
+  const text = body.trim();
+  if (!text) return { error: "Write a note first." };
+  if (text.length > 1000) return { error: "Keep the note under 1000 characters." };
+
+  const session = await requireUser();
+  await prisma.recordNote.create({
+    data: { recordId: record.id, authorId: session.user.id, body: text },
+  });
+  revalidatePath(`/pets/${record.petId}/records/${record.id}`);
   return { ok: true };
 }

@@ -97,7 +97,7 @@ export default function RecordForm({
   );
   const [petId, setPetId] = useState(defaultPetId);
   const [items, setItems] = useState<Item[]>([]);
-  const [saved, setSaved] = useState(existingFiles);
+  const saved = existingFiles;
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   // After the record itself is saved, a retry must only upload the files that failed.
@@ -140,12 +140,6 @@ export default function RecordForm({
 
   const patch = (key: number, change: Partial<Item>) =>
     setItems((current) => current.map((i) => (i.key === key ? { ...i, ...change } : i)));
-
-  async function removeSaved(docId: string) {
-    const res = await fetch(`/api/pets/${petId}/documents/${docId}`, { method: "DELETE" });
-    if (res.ok) setSaved((current) => current.filter((f) => f.id !== docId));
-    else setError("Couldn't remove that file.");
-  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -192,6 +186,7 @@ export default function RecordForm({
             item.file,
             documentTypeFor(type),
             (percent) => patch(item.key, { percent }),
+            Boolean(recordId),
           );
       if (res.ok) patch(item.key, { status: "done", percent: 100 });
       else {
@@ -539,17 +534,10 @@ export default function RecordForm({
                     >
                       {f.fileName}
                     </a>
-                    <p className="text-xs text-muted">{formatBytes(f.sizeBytes)} · uploaded</p>
+                    <p className="text-xs text-muted">
+                      {formatBytes(f.sizeBytes)} · saved, can&apos;t be changed
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    aria-label={`Remove ${f.fileName}`}
-                    onClick={() => removeSaved(f.id)}
-                    disabled={busy}
-                    className="text-muted hover:text-[#b42318]"
-                  >
-                    <Icon name="trash-2" size={16} />
-                  </button>
                 </li>
               ))}
               {items.map((item) => (
