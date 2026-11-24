@@ -4,7 +4,7 @@ Last updated 2026-11-24, after Phase 5 and the tracked-edits change (branch `sta
 
 The backend is planned phase by phase in `backend-plan.md`, which is the source of truth for decisions and records what each finished phase did. This file tracks the frontend and loose ends. Where the two disagree, `backend-plan.md` wins.
 
-**Where the plan stands:** Phases 0 to 6 are done (foundations, private storage and uploads, owner records, reminders and notifications, vet QR flow, admin void and audit, lost-pet messaging with the per-field scan page settings), plus the time zone fix and the tracked-edits change (record history, add-only notes, locked files). Phases 7 and 8 and the final gate remain. Production still needs the migrations (now eight, through `20261124073352_lost_pet_messaging_and_public_settings`) and settings in the "Production deploy checklist" in `backend-plan.md`.
+**Where the plan stands:** Phases 0 to 6 are done (foundations, private storage and uploads, owner records, reminders and notifications, vet QR flow, admin void and audit, lost-pet messaging with the per-field scan page settings, shared access for caretakers), plus the time zone fix and the tracked-edits change (record history, add-only notes, locked files). Phase 8 and the final gate remain. Production still needs the migrations (now nine, through `20261124075412_caretaker_shares`) and settings in the "Production deploy checklist" in `backend-plan.md`.
 
 ## 1. Figma status
 
@@ -48,7 +48,7 @@ Figma frames still to edit to match the decisions (the code already follows the 
 - Reminders create form (142:2203): remove Email and Phone, and the Email notify option.
 - Sidebar: remove "Appointments" from the frames that show it. Decided: no Appointments sidebar link.
 - Header search placeholder: change to "Search animals and records".
-- Medication record form (131:1018): hide "Also notify <caretaker>" until caretakers exist (Phase 7).
+- Medication record form (131:1018): the dose reminders now have a "Who gives the doses" choice (me, a caretaker, or whoever first) when the animal has caretakers.
 - Find a vet (190:3963, 190:4427): leave locked.
 - ID and QR tag (203:5464): the public-info controls must be pill toggles per field.
 
@@ -67,7 +67,6 @@ Stays locked on purpose: **Find a vet** ("Coming soon" until clinics exist).
 
 ## 3. Data and features the designs imply but the database lacks
 
-- Caretakers (shared access): no sharing model. Role is view, generate vet QRs, be assigned and complete reminders; no editing animal info, adding animals, or editing records; no owner contact details or lost-pet messages. Phase 7. This also unlocks "whoever gets to it first", the "Only mine" reminder filter and caretaker bell triggers.
 - Pet photos: no upload. Avatars use species icons. Phase 8.
 - Pet species icons: only Dog, Cat and Reptile have icons; other species show an initial. Figma lists Dog, Cat, Bird, Poultry, Reptile, Fish, Rabbit, Other.
 
@@ -82,6 +81,8 @@ Done since the last version of this file: admin void and audit with owner report
 - A notification settings page. Revisit only if email returns.
 
 ## 5. Known issues and decisions to revisit
+
+- The owner is not told when a caretaker invitation is accepted or declined, and there is no Figma frame for the invite flow, the invitations banner or the caretaker list (built in the existing style).
 
 - Conversation reports have no unblock or audit entry for the admin (resolve and dismiss only). The old account-level show-phone and show-address columns and the free-text address are unused now and can be dropped later.
 
@@ -100,6 +101,6 @@ Done since the last version of this file: admin void and audit with owner report
 
 ## 6. Not started at all
 
-- Backend phases 7 and 8 (see `backend-plan.md`): shared access, photos and PDF export.
+- Backend phase 8 (see `backend-plan.md`): photos, PDF export and the header search.
 - Tests (none in the repo; deliberately deferred, see `backend-plan.md`).
 - Final end-to-end walkthrough.

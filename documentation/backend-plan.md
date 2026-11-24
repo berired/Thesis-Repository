@@ -206,7 +206,7 @@ Reverses part of the Phase 2 rules. Decided with the developer:
 - Smoke test (browser, local dev against the stage DB; owner, finder, bystander and admin test users, all deleted afterwards): the non-lost scan page showed nothing; the lost-mode scan showed only the default fields; a switched-off allergy never appeared in the page; the owner's number was absent from the page until SMS/call was switched on, then appeared only in the `sms:` and `tel:` links; the finder started a thread, the owner saw unread 1 in the sidebar and inbox and one bell notification, replied, the finder's open chat received it by polling and the owner's unread cleared; a third user got 404 on the thread page and API and saw an empty inbox; turning lost mode off made the thread 404 for both sides and it returned when switched back on; a too-short report was refused, a valid one blocked the thread (the owner saw no send form and no unblock) and the admin saw the transcript. Type-check, lint and build pass.
 - Known limits: conversation reports have no unblock or audit entry for the admin (resolve and dismiss only, not written to `AuditEntry`). Message history is kept while the pet is not lost but is unreachable. The server-side refusal to send in a blocked thread was not exercised live (the UI hides the form). A finder who is not signed in can only text or call, or sign in to message.
 
-### Phase 7: Shared access
+### Phase 7: Shared access (DONE 2026-11-24)
 **Prerequisites:** Phases 0 (access helper), 4 (vet QR) and 6 (so message privacy can be verified) done.
 **Deliverables:**
 - Invite a registered user to a pet; accept or decline; revoke.
@@ -215,6 +215,17 @@ Reverses part of the Phase 2 rules. Decided with the developer:
 - Reminders: owner can assign to a caretaker or "whoever gets to it first"; caretakers see their assigned reminders and complete them; completion is logged by user.
 - Bell triggers: shared access invite, caretaker completed a reminder.
 **Exit checks:** every pet route and server action is verified against the viewer role; invitees cannot write animal info or records, cannot see contact details or messages, can complete only reminders on pets shared with them, and lose access immediately on revoke.
+
+**Done notes (2026-11-24):**
+- Migration `20261124075412_caretaker_shares` (applied to Neon `stage` only, **not yet to production**): `PetShare` (pet, caretaker, who invited, `PENDING` / `ACCEPTED` / `DECLINED`, unique per pet and person). Only an `ACCEPTED` row gives access, as the `viewer` role in `app/lib/pet-access.ts`; removing a caretaker deletes the row, so access ends on their next request.
+- **One access helper.** `getPetAccess` returns `owner`, `viewer` or null; `accessiblePets` includes accepted shares; `ownedPets` stays owner-only; the new `visibleReminders` gives an owner every reminder on their animals and a caretaker only the ones assigned to them or open to "whoever gets to it first". `getAccessiblePet` (any role) and `getOwnedPet` (owner only, 404 for a caretaker) are the two page loaders; `getViewableRecord` and `getOwnedRecord` do the same for records.
+- **Caretaker role, as built:** can see the animal, its health records (read only, with history and notes), appointments (read only), the reminders given to them, and generate vet QR codes (and cancel their own). Cannot edit the animal, archive, delete, toggle lost mode, change the scan page settings, add or edit records or notes, report a record, add reminders or appointments, delete reminders, or see the ID and QR tag tab, the owner's contact details or lost-pet messages. Every owner-only page returns 404 and every owner-only action refuses.
+- **Invitations:** the owner invites by email from the Edit animal page (the Caretakers card lists everyone with their status and a Remove button) or from "Invite caretaker" on My animals (pick the animal). The person needs an account; up to 10 caretakers per animal, 10 invitations per hour. The invitee gets a bell notification and a banner on My animals with Accept and Decline. Declined invitations can be sent again. A caretaker can leave from the animal's page ("Stop helping with ..."). Shared animals show "Shared by <owner>" on My animals and the animal's page.
+- **Ending access** (remove or leave): their share is deleted, reminders assigned to them go back to the owner, and any vet QR they made that is not yet used is cancelled.
+- **Reminders:** the new-reminder form has "Who does it": me, a caretaker, or whoever gets to it first (shown only when the animal has caretakers). Medication dose reminders have the same choice ("Who gives the doses"), which replaces the plan's "Also notify <caretaker>" option. Cards show "You", the caretaker's name or "Anyone". A caretaker can complete only their own or open reminders; completing logs who did it and puts "<name> completed <reminder>" in the owner's bell.
+- **Scan page and messaging:** an owner or caretaker who scans the animal's tag is sent to the animal instead of seeing the finder view, and neither can start a lost-pet thread.
+- Smoke test (browser, local dev against the stage DB; owner, caretaker and stranger test users, all deleted afterwards): unknown and own email refused, duplicate invitation refused, invitation shown and the animal still 404 until accepted; as an accepted caretaker the overview showed only Stop helping and Generate vet QR, the tab bar had no ID and QR tag, edit, tag, new record, new reminder, new appointment and edit record all returned 404, the record page had no Edit or note box, the reminders tab showed only the assigned and the open reminder (the owner's own task was hidden) with no delete, completing one logged the caretaker and notified the owner, and a vet QR was generated and listed with Cancel; the stranger got 404 on every page and API; removing the caretaker deleted the share, handed their reminder back to the owner, cancelled their QR and gave them 404 at once; a declined invitation gave no access and could be re-sent. Type-check, lint and build pass. The smoke test found one real bug (a constant exported from a server-actions file), now fixed.
+- Known limits: the owner is not told when an invitation is accepted or declined (it shows on the Edit page). A caretaker's appointment notifications are the same ones the owner gets. A reminder with "also add to health records" still writes the record when a caretaker completes it, because the owner chose that setting. Direct calls to the owner-only server actions were checked in code (every one filters by the owner or by `visibleReminders`) but only the pages and buttons were exercised live for a caretaker.
 
 ### Phase 8: Pet photos and PDF export
 **Prerequisites:** Phase 7 done (so export respects roles).
@@ -240,6 +251,7 @@ Deploys do not run migrations, and `stage` uses its own Neon branch, so producti
 6. `20261124065856_admin_void_and_audit`
 7. `20261124071149_record_edit_history_and_notes`
 8. `20261124073352_lost_pet_messaging_and_public_settings`
+9. `20261124075412_caretaker_shares`
 
 Apply them before the new code goes live: the old code does not know the new enum values or columns.
 
@@ -297,4 +309,4 @@ Apply them before the new code goes live: the old code does not know the new enu
 - No Figma screens yet for: vet QR generate/list/revoke, the public vet form, admin void and audit, caretaker invite flow. Decided 2026-11-23: build these directly in the existing style (existing components and the Figma style guide); they do not block their phases. Add Figma frames afterward if wanted.
 
 ## Still open
-Nothing. Phases 0 to 6 are done; the next step is Phase 7 (shared access).
+Nothing. Phases 0 to 7 are done; the next step is Phase 8 (photos, PDF export and search).

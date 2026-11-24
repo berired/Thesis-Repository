@@ -20,10 +20,19 @@ function statusOf(
 }
 
 /** Recent vet QR codes for a pet, with a cancel button on the ones that are still live. */
-export default async function VetQrList({ petId }: { petId: string }) {
+export default async function VetQrList({
+  petId,
+  viewerId,
+  isOwner,
+}: {
+  petId: string;
+  viewerId: string;
+  /** The owner sees every QR for the animal; a caretaker only the ones they made. */
+  isOwner: boolean;
+}) {
   const now = new Date();
   const requests = await prisma.recordRequest.findMany({
-    where: { petId },
+    where: { petId, ...(isOwner ? {} : { createdById: viewerId }) },
     orderBy: { createdAt: "desc" },
     take: 8,
     select: {

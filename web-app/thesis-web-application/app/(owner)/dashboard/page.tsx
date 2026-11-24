@@ -17,7 +17,7 @@ import {
   whenPhrase,
 } from "@/app/lib/care";
 import { restorePet } from "@/app/(owner)/actions";
-import { accessiblePets } from "@/app/lib/pet-access";
+import { accessiblePets, ownedPets, visibleReminders } from "@/app/lib/pet-access";
 
 function greeting(hour: number) {
   if (hour < 12) return "Good morning";
@@ -71,7 +71,11 @@ export default async function DashboardPage() {
       where: activePets,
       orderBy: { createdAt: "desc" },
       include: {
-        reminders: { where: { completedAt: null }, orderBy: { dueAt: "asc" }, take: 1 },
+        reminders: {
+          where: { completedAt: null, AND: [visibleReminders(session.user.id)] },
+          orderBy: { dueAt: "asc" },
+          take: 1,
+        },
         appointments: {
           where: { status: "UPCOMING", scheduledAt: { gte: now } },
           orderBy: { scheduledAt: "asc" },
@@ -80,18 +84,32 @@ export default async function DashboardPage() {
       },
     }),
     prisma.pet.findMany({
-      where: { ...accessiblePets(session.user.id), archivedAt: { not: null } },
+      // Only an owner can restore an archived animal, so only their own are listed here.
+      where: { ...ownedPets(session.user.id), archivedAt: { not: null } },
       orderBy: { archivedAt: "desc" },
       select: { id: true, name: true, species: true, photoKey: true, updatedAt: true },
     }),
     prisma.reminder.findMany({
-      where: { completedAt: null, dueAt: { lt: endOfToday(now) }, pet: activePets },
+      where: {
+        completedAt: null,
+        dueAt: { lt: endOfToday(now) },
+        pet: activePets,
+        AND: [visibleReminders(session.user.id)],
+      },
       orderBy: { dueAt: "asc" },
       take: 5,
-      include: { pet: { select: { name: true } } },
+      include: {
+        pet: { select: { name: true, ownerId: true } },
+        assignee: { select: { name: true } },
+      },
     }),
     prisma.reminder.count({
-      where: { completedAt: null, dueAt: { lt: endOfToday(now) }, pet: activePets },
+      where: {
+        completedAt: null,
+        dueAt: { lt: endOfToday(now) },
+        pet: activePets,
+        AND: [visibleReminders(session.user.id)],
+      },
     }),
     prisma.appointment.findMany({
       where: {
@@ -182,7 +200,12 @@ export default async function DashboardPage() {
   }).format(now);
 
   const overdueTotal = await prisma.reminder.count({
-    where: { completedAt: null, dueAt: { lt: startOfToday(now) }, pet: activePets },
+    where: {
+      completedAt: null,
+      dueAt: { lt: startOfToday(now) },
+      pet: activePets,
+      AND: [visibleReminders(session.user.id)],
+    },
   });
 
   // The banner's last clause: the soonest visit, if there is one.
@@ -238,7 +261,13 @@ export default async function DashboardPage() {
           ) : (
             <ul className="flex flex-col gap-3">
               {care.map((r) => (
-                <ReminderCard key={r.id} reminder={r} petName={r.pet.name} />
+                <ReminderCard
+                  key={r.id}
+                  reminder={r}
+                  petName={r.pet.name}
+                  canDelete={r.pet.ownerId === session.user.id}
+                  viewerId={session.user.id}
+                />
               ))}
             </ul>
           )}

@@ -2,7 +2,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
 import { endOfToday } from "@/app/lib/care";
 import OwnerSidebar from "@/app/components/owner-sidebar";
-import { accessiblePets } from "@/app/lib/pet-access";
+import { accessiblePets, visibleReminders } from "@/app/lib/pet-access";
 import { unreadMessageCount } from "@/app/lib/messaging";
 
 export default async function OwnerLayout({
@@ -19,6 +19,7 @@ export default async function OwnerLayout({
       completedAt: null,
       dueAt: { lt: endOfToday() },
       pet: { ...accessiblePets(session.user.id), archivedAt: null },
+      AND: [visibleReminders(session.user.id)],
     },
   });
 

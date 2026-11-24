@@ -2,7 +2,9 @@ import PetShell from "../pet-shell";
 import AppointmentTile from "@/app/components/appointment-tile";
 import ReminderCard from "@/app/components/reminder-card";
 import { startOfToday } from "@/app/lib/care";
-import { getOwnedPet } from "@/app/lib/pet-data";
+import { getAccessiblePet } from "@/app/lib/pet-data";
+import { visibleReminders } from "@/app/lib/pet-access";
+import { requireUser } from "@/app/lib/session";
 import { prisma } from "@/app/lib/prisma";
 
 export default async function PetRemindersPage({
@@ -11,14 +13,18 @@ export default async function PetRemindersPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const pet = await getOwnedPet(id);
+  const pet = await getAccessiblePet(id);
+  const session = await requireUser();
+  const isOwner = pet.role === "owner";
+  const mine = visibleReminders(session.user.id);
   const now = new Date();
   const weekAgo = new Date(startOfToday(now).getTime() - 6 * 86_400_000);
 
   const [open, appointments, done, doneThisWeek] = await Promise.all([
     prisma.reminder.findMany({
-      where: { petId: pet.id, completedAt: null },
+      where: { petId: pet.id, completedAt: null, AND: [mine] },
       orderBy: { dueAt: "asc" },
+      include: { assignee: { select: { name: true } } },
     }),
     prisma.appointment.findMany({
       where: { petId: pet.id, status: "UPCOMING", scheduledAt: { gte: now } },
@@ -26,13 +32,13 @@ export default async function PetRemindersPage({
       take: 5,
     }),
     prisma.reminderCompletion.findMany({
-      where: { reminder: { petId: pet.id } },
+      where: { reminder: { petId: pet.id, AND: [mine] } },
       orderBy: { completedAt: "desc" },
       take: 5,
       include: { reminder: { select: { title: true } }, completedBy: { select: { name: true } } },
     }),
     prisma.reminderCompletion.count({
-      where: { reminder: { petId: pet.id }, completedAt: { gte: weekAgo } },
+      where: { reminder: { petId: pet.id, AND: [mine] }, completedAt: { gte: weekAgo } },
     }),
   ]);
 
@@ -47,7 +53,9 @@ export default async function PetRemindersPage({
         <div className="flex flex-col gap-5">
           {open.length === 0 && appointments.length === 0 ? (
             <p className="rounded-xl border border-dashed border-[#c3c9d1] p-5 text-sm text-muted">
-              Nothing scheduled for {pet.name}. Add a reminder for feeding, meds or vaccines.
+              {isOwner
+                ? `Nothing scheduled for ${pet.name}. Add a reminder for feeding, meds or vaccines.`
+                : `Nothing is assigned to you for ${pet.name} right now.`}
             </p>
           ) : null}
           {attention.length > 0 ? (
@@ -55,7 +63,13 @@ export default async function PetRemindersPage({
               <h2 className="text-sm font-semibold text-muted">Needs attention</h2>
               <ul className="flex flex-col gap-3">
                 {attention.map((r) => (
-                  <ReminderCard key={r.id} reminder={r} petName={pet.name} />
+                  <ReminderCard
+                    key={r.id}
+                    reminder={r}
+                    petName={pet.name}
+                    canDelete={isOwner}
+                    viewerId={session.user.id}
+                  />
                 ))}
               </ul>
             </section>
@@ -68,7 +82,13 @@ export default async function PetRemindersPage({
                   <AppointmentTile key={a.id} appointment={a} petName={pet.name} />
                 ))}
                 {later.map((r) => (
-                  <ReminderCard key={r.id} reminder={r} petName={pet.name} />
+                  <ReminderCard
+                    key={r.id}
+                    reminder={r}
+                    petName={pet.name}
+                    canDelete={isOwner}
+                    viewerId={session.user.id}
+                  />
                 ))}
               </ul>
             </section>

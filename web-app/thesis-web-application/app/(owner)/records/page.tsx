@@ -32,8 +32,9 @@ export default async function AllRecordsPage({
   const pets = await prisma.pet.findMany({
     where: { ...accessiblePets(session.user.id), archivedAt: null },
     orderBy: { name: "asc" },
-    select: { id: true, name: true },
+    select: { id: true, name: true, ownerId: true },
   });
+  const ownsAny = pets.some((p) => p.ownerId === session.user.id);
   const activePet = pets.find((p) => p.id === petParam);
   const activeType = FILTERS.find((f) => f.type && f.type === type)?.type;
   const yearNumber = /^\d{4}$/.test(year ?? "") ? Number(year) : undefined;
@@ -97,7 +98,7 @@ export default async function AllRecordsPage({
             {pets.length === 1 ? "animal" : "animals"}
           </p>
         </div>
-        {pets.length > 0 ? (
+        {ownsAny ? (
           <StickerLink href={`/records/new${activePet ? `?pet=${activePet.id}` : ""}`} rotate={-3}>
             <Icon name="plus" size={18} />
             Add record

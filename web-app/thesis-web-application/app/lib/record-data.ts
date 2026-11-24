@@ -1,10 +1,14 @@
 import { notFound } from "next/navigation";
 import { prisma } from "./prisma";
-import { getOwnedPet } from "./pet-data";
+import { getAccessiblePet } from "./pet-data";
 
-/** One visible (not voided) record of a pet the signed-in user owns, with its files, or 404. */
-export async function getOwnedRecord(petId: string, recordId: string) {
-  const pet = await getOwnedPet(petId);
+/**
+ * One visible (not voided) record of a pet the signed-in user may read (as owner or caretaker),
+ * with its files and the pet's `role` for them, or 404. Pages that change the record use
+ * `getOwnedRecord` below, which refuses caretakers.
+ */
+export async function getViewableRecord(petId: string, recordId: string) {
+  const pet = await getAccessiblePet(petId);
   const record = await prisma.healthRecord.findFirst({
     where: { id: recordId, petId: pet.id, voidedAt: null },
     include: {
@@ -25,6 +29,13 @@ export async function getOwnedRecord(petId: string, recordId: string) {
   });
   if (!record) notFound();
   return { pet, record };
+}
+
+/** The same record, but only for the pet's owner: 404s for a caretaker. */
+export async function getOwnedRecord(petId: string, recordId: string) {
+  const found = await getViewableRecord(petId, recordId);
+  if (found.pet.role !== "owner") notFound();
+  return found;
 }
 
 /** yyyy-mm-dd for a date input. */

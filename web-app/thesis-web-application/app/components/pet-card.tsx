@@ -50,7 +50,16 @@ export function nextThing(pet: PetCardData, now = new Date()): Next | null {
   return null;
 }
 
-export default function PetCard({ pet, now = new Date() }: { pet: PetCardData; now?: Date }) {
+export default function PetCard({
+  pet,
+  now = new Date(),
+  sharedBy,
+}: {
+  pet: PetCardData;
+  now?: Date;
+  /** Set for an animal someone else owns: the owner's name. */
+  sharedBy?: string | null;
+}) {
   const next = nextThing(pet, now);
   return (
     <Link
@@ -68,6 +77,11 @@ export default function PetCard({ pet, now = new Date() }: { pet: PetCardData; n
         </span>
         <SpeciesBadge species={pet.species} />
       </span>
+      {sharedBy ? (
+        <span className="w-fit rounded-md bg-[#e6eefb] px-2 py-0.5 text-xs font-semibold text-[#2a559e]">
+          Shared by {sharedBy}
+        </span>
+      ) : null}
       <span className="flex items-center gap-2 rounded-lg bg-[#f6f8fa] px-3 py-2.5 text-[13px]">
         {next ? (
           <>

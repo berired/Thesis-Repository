@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/app/lib/prisma";
+import { getPetAccess } from "@/app/lib/pet-access";
 import { rateLimit } from "@/app/lib/rate-limit";
 import { requireUser } from "@/app/lib/session";
 import {
@@ -36,7 +37,8 @@ export async function startThread(code: string) {
   });
   const pet = qr?.pet;
   // The owner is never "a finder", and a closed pet has no conversation to start.
-  if (!pet || pet.ownerId === session.user.id || !messagingOpen(pet)) {
+  // The owner and caretakers are never "finders".
+  if (!pet || (await getPetAccess(session.user.id, pet.id)) || !messagingOpen(pet)) {
     redirect(`/r/${encodeURIComponent(code)}`);
   }
 

@@ -18,6 +18,12 @@ export default async function NewReminderPage({
     orderBy: { name: "asc" },
     select: { id: true, name: true },
   });
+  const shares = await prisma.petShare.findMany({
+    where: { status: "ACCEPTED", petId: { in: pets.map((p) => p.id) } },
+    select: { petId: true, userId: true, user: { select: { name: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+  const caretakers = shares.map((s) => ({ petId: s.petId, userId: s.userId, name: s.user.name }));
   const defaultPetId = pets.find((p) => p.id === pet)?.id ?? pets[0]?.id ?? "";
   const back = next && /^\/(?!\/)/.test(next) ? next : "/reminders";
 
@@ -37,6 +43,7 @@ export default async function NewReminderPage({
           defaultPetId={defaultPetId}
           today={todayInput()}
           next={back}
+          caretakers={caretakers}
         />
       )}
     </OwnerPage>

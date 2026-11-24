@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import Icon, { type IconName } from "@/app/components/app-icon";
-import { getOwnedPet } from "@/app/lib/pet-data";
+import { getAccessiblePet } from "@/app/lib/pet-data";
+import { requireUser } from "@/app/lib/session";
 import { RECORD_LABEL, fmtFull } from "@/app/lib/care";
 import type { RecordType } from "@/app/generated/prisma/client";
 import PetShell from "../pet-shell";
@@ -27,7 +28,8 @@ export default async function RecordsPage({
 }) {
   const { id } = await params;
   const { type, year } = await searchParams;
-  const pet = await getOwnedPet(id);
+  const pet = await getAccessiblePet(id);
+  const session = await requireUser();
 
   const activeType = FILTERS.find((f) => f.type && f.type === type)?.type;
   const yearNumber = /^\d{4}$/.test(year ?? "") ? Number(year) : undefined;
@@ -113,12 +115,14 @@ export default async function RecordsPage({
               ? `No health records for ${pet.name} yet.`
               : "No records match these filters."}
           </p>
-          <Link
-            href={`/pets/${pet.id}/records/new`}
-            className="text-sm font-semibold text-sky"
-          >
-            + Add a record
-          </Link>
+          {pet.role === "owner" ? (
+            <Link
+              href={`/pets/${pet.id}/records/new`}
+              className="text-sm font-semibold text-sky"
+            >
+              + Add a record
+            </Link>
+          ) : null}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-line bg-white">
@@ -162,7 +166,7 @@ export default async function RecordsPage({
           </table>
         </div>
       )}
-      <VetQrList petId={pet.id} />
+      <VetQrList petId={pet.id} viewerId={session.user.id} isOwner={pet.role === "owner"} />
     </PetShell>
   );
 }

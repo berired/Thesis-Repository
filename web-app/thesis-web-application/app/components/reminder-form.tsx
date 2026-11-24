@@ -37,11 +37,14 @@ export default function ReminderForm({
   defaultPetId,
   today,
   next,
+  caretakers = [],
 }: {
   pets: { id: string; name: string }[];
   defaultPetId: string;
   today: string;
   next: string;
+  /** Accepted caretakers of the owner's animals, so a reminder can be given to one of them. */
+  caretakers?: { petId: string; userId: string; name: string }[];
 }) {
   const [state, action, pending] = useActionState(createReminder, undefined);
   const [category, setCategory] = useState<ReminderCategory>("OTHER");
@@ -54,6 +57,7 @@ export default function ReminderForm({
   const [endsAt, setEndsAt] = useState("");
 
   const petName = pets.find((p) => p.id === petId)?.name ?? "";
+  const helpers = caretakers.filter((c) => c.petId === petId);
   const validStart = parseZoned(startDate, startTime || "09:00");
   const end = endsAt ? parseZoned(endsAt, "23:59") : null;
   const following = validStart
@@ -107,6 +111,19 @@ export default function ReminderForm({
                 ))}
               </select>
             </Field>
+            {helpers.length > 0 ? (
+              <Field label="Who does it" hint="They get it in their reminders and notifications.">
+                <select key={petId} name="assignee" defaultValue="me" className={INPUT_CLASS}>
+                  <option value="me">Me</option>
+                  {helpers.map((c) => (
+                    <option key={c.userId} value={c.userId}>
+                      {c.name}
+                    </option>
+                  ))}
+                  <option value="anyone">Whoever gets to it first</option>
+                </select>
+              </Field>
+            ) : null}
             <Field label="Title" hint="e.g. Deworming tablet, Change tank water">
               <input
                 name="title"

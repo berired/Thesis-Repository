@@ -6,6 +6,7 @@ import { startThread } from "@/app/(owner)/messages/actions";
 import { prisma } from "@/app/lib/prisma";
 import { getPublicSettings, loadScanSource } from "@/app/lib/scan-data";
 import { applySettings } from "@/app/lib/scan-view";
+import { getPetAccess } from "@/app/lib/pet-access";
 import { getSession } from "@/app/lib/session";
 import { getPetPhotoUrl } from "@/app/lib/storage";
 
@@ -67,7 +68,8 @@ export default async function ScanPage({
     );
   } else {
     const pet = qr.pet;
-    if (pet && session?.user.id === pet.ownerId) redirect(`/pets/${pet.id}`);
+    // The owner and the animal's caretakers go to the animal, not the finder view.
+    if (pet && session && (await getPetAccess(session.user.id, pet.id))) redirect(`/pets/${pet.id}`);
 
     if (!pet || pet.archivedAt) {
       body = <p className={PLAIN}>This tag isn&apos;t active right now.</p>;

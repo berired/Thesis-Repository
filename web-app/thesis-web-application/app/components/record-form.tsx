@@ -31,6 +31,8 @@ export type RecordFormValues = {
   nextDueDate: string;
   /** "HH:mm" dose times of the reminders linked to this medication record. */
   doseTimes: string[];
+  /** Who the dose reminders are for: "me", "anyone" or a caretaker's user id. */
+  doseAssignee: string;
 };
 
 const EMPTY: RecordFormValues = {
@@ -45,6 +47,7 @@ const EMPTY: RecordFormValues = {
   endDate: "",
   nextDueDate: "",
   doseTimes: [],
+  doseAssignee: "me",
 };
 
 type Item = {
@@ -76,7 +79,9 @@ export default function RecordForm({
   initial,
   existingFiles = [],
   vet,
+  caretakers = [],
 }: {
+  caretakers?: { petId: string; userId: string; name: string }[];
   pets: RecordFormPet[];
   defaultPetId: string;
   today: string;
@@ -363,6 +368,26 @@ export default function RecordForm({
                     <p className="text-[13px] text-muted">
                       Daily reminders at these times, until the end date.
                     </p>
+                    {caretakers.some((c) => c.petId === petId) ? (
+                      <Field label="Who gives the doses">
+                        <select
+                          key={petId}
+                          name="doseAssignee"
+                          defaultValue={values.doseAssignee}
+                          className={INPUT_CLASS}
+                        >
+                          <option value="me">Me</option>
+                          {caretakers
+                            .filter((c) => c.petId === petId)
+                            .map((c) => (
+                              <option key={c.userId} value={c.userId}>
+                                {c.name}
+                              </option>
+                            ))}
+                          <option value="anyone">Whoever gets to it first</option>
+                        </select>
+                      </Field>
+                    ) : null}
                     <div className="flex flex-wrap items-center gap-2">
                       {doseTimes.map((time, index) => (
                         <span key={index} className="flex items-center gap-1">

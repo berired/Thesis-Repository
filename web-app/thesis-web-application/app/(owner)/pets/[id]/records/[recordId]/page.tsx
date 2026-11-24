@@ -2,7 +2,7 @@ import Link from "next/link";
 import OwnerPage from "@/app/components/owner-page";
 import Icon from "@/app/components/app-icon";
 import { RECORD_ICON, RECORD_LABEL, fmtFull } from "@/app/lib/care";
-import { getOwnedRecord } from "@/app/lib/record-data";
+import { getViewableRecord } from "@/app/lib/record-data";
 import { formatBytes } from "@/app/lib/upload-client";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
@@ -17,10 +17,11 @@ export default async function RecordDetailPage({
   params: Promise<{ id: string; recordId: string }>;
 }) {
   const { id, recordId } = await params;
-  const { pet, record } = await getOwnedRecord(id, recordId);
+  const { pet, record } = await getViewableRecord(id, recordId);
+  const isOwner = pet.role === "owner";
   const fromVet = record.source === "VET";
   const session = await requireUser();
-  const alreadyReported = fromVet
+  const alreadyReported = fromVet && isOwner
     ? (await prisma.recordReport.count({
         where: {
           recordId: record.id,
@@ -71,6 +72,7 @@ export default async function RecordDetailPage({
             </p>
           ) : null}
         </div>
+        {isOwner ? (
         <Link
           href={`/pets/${pet.id}/records/${record.id}/edit`}
           className="flex h-10 items-center gap-2 rounded-lg border border-[#c3c9d1] bg-white px-4 text-sm font-semibold text-ink hover:bg-[#f6f8fa]"
@@ -78,6 +80,7 @@ export default async function RecordDetailPage({
           <Icon name="pencil" size={15} />
           {fromVet ? "Edit visit date" : "Edit"}
         </Link>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -147,8 +150,8 @@ export default async function RecordDetailPage({
               </ul>
             )}
             <p className="mt-3 text-xs text-muted">
-              Saved files can&apos;t be edited or removed. New files can still
-              be added from Edit.
+              Saved files can&apos;t be edited or removed.
+              {isOwner && !fromVet ? " New files can still be added from Edit." : ""}
             </p>
           </section>
         </div>
@@ -172,7 +175,7 @@ export default async function RecordDetailPage({
             ))}
           </ul>
         )}
-        <AddNote recordId={record.id} />
+        {isOwner ? <AddNote recordId={record.id} /> : null}
       </section>
 
       <section className="flex max-w-[700px] flex-col gap-3 rounded-xl border border-line bg-white p-5">

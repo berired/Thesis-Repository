@@ -1,8 +1,11 @@
+import { prisma } from "@/app/lib/prisma";
 import { todayInput } from "@/app/lib/time";
 import OwnerPage from "@/app/components/owner-page";
 import RecordForm from "@/app/components/record-form";
 import RecordDateForm from "@/app/components/record-date-form";
 import { dateInput, getOwnedRecord, timeInput } from "@/app/lib/record-data";
+import { caretakersOf, choiceFor } from "@/app/lib/caretakers";
+import { requireUser } from "@/app/lib/session";
 
 export default async function EditRecordPage({
   params,
@@ -12,6 +15,12 @@ export default async function EditRecordPage({
   const { id, recordId } = await params;
   const { pet, record } = await getOwnedRecord(id, recordId);
   const today = todayInput();
+  const session = await requireUser();
+  const caretakers = await caretakersOf([pet.id]);
+  const doseReminder = await prisma.reminder.findFirst({
+    where: { recordId: record.id },
+    select: { assigneeId: true },
+  });
 
   return (
     <OwnerPage
@@ -40,6 +49,7 @@ export default async function EditRecordPage({
           today={today}
           recordId={record.id}
           existingFiles={record.files}
+          caretakers={caretakers}
           initial={{
             type: record.type,
             title: record.type === "WEIGHT" ? "" : record.title,
@@ -52,6 +62,7 @@ export default async function EditRecordPage({
             endDate: dateInput(record.endDate),
             nextDueDate: dateInput(record.nextDueDate),
             doseTimes: [...new Set(record.reminders.map((r) => timeInput(r.dueAt)))].sort(),
+            doseAssignee: doseReminder ? choiceFor(doseReminder.assigneeId, session.user.id) : "me",
           }}
         />
       )}

@@ -67,9 +67,12 @@ function Label({ children }: { children: React.ReactNode }) {
 export default function EditPetForm({
   pet,
   ownerName,
+  caretakers,
 }: {
   pet: EditablePet;
   ownerName: string;
+  /** The caretaker list and invite box, rendered on the server. */
+  caretakers: React.ReactNode;
 }) {
   const [state, formAction, pending] = useActionState(updatePet.bind(null, pet.id), initialState);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -224,8 +227,8 @@ export default function EditPetForm({
               <div>
                 <h2 className={CARD_TITLE}>Caretakers</h2>
                 <p className="text-xs leading-[18px] text-muted">
-                  Caretakers can view records and complete reminders. Only you can edit or
-                  delete.
+                  Caretakers can view records and complete reminders you give them. Only you can
+                  edit or delete.
                 </p>
               </div>
               <div className="flex items-center gap-3 py-1">
@@ -242,9 +245,7 @@ export default function EditPetForm({
                   Owner
                 </span>
               </div>
-              <p className="border-t border-line pt-3 text-xs text-muted">
-                Inviting caretakers is coming soon.
-              </p>
+              <div className="flex flex-col gap-4 border-t border-line pt-3">{caretakers}</div>
             </section>
           </div>
 

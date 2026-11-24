@@ -39,6 +39,8 @@ model User {
   finderThreads       MessageThread[]      @relation("ThreadFinder")
   sentMessages        Message[]
   threadReports       ThreadReport[]
+  petShares           PetShare[]           @relation("ShareCaretaker")
+  sharesSent          PetShare[]           @relation("ShareInviter")
 
   @@map("user")
 }
@@ -156,6 +158,7 @@ model Pet {
   appointments         Appointment[]
   publicSettings       PetPublicSettings?
   threads              MessageThread[]
+  shares               PetShare[]
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
@@ -556,4 +559,29 @@ model ThreadReport {
 
   @@index([status, createdAt])
   @@map("thread_report")
+}
+
+enum ShareStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+/// A caretaker invited to help with a pet. Only an ACCEPTED row gives access (the "viewer"
+/// role in pet-access.ts). Removing a caretaker deletes the row, so access ends at once.
+model PetShare {
+  id          String      @id @default(cuid())
+  petId       String
+  pet         Pet         @relation(fields: [petId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User        @relation("ShareCaretaker", fields: [userId], references: [id], onDelete: Cascade)
+  invitedById String
+  invitedBy   User        @relation("ShareInviter", fields: [invitedById], references: [id], onDelete: Cascade)
+  status      ShareStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  respondedAt DateTime?
+
+  @@unique([petId, userId])
+  @@index([userId, status])
+  @@map("pet_share")
 }

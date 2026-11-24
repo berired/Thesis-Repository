@@ -21,6 +21,8 @@ type ReminderData = {
   dueAt: Date;
   repeat: ReminderRepeat;
   repeatEvery: number;
+  assignee?: { name: string } | null;
+  assigneeId?: string | null;
 };
 
 function dueLabel(dueAt: Date, state: ReturnType<typeof reminderState>) {
@@ -35,9 +37,15 @@ function dueLabel(dueAt: Date, state: ReturnType<typeof reminderState>) {
 export default function ReminderCard({
   reminder,
   petName,
+  canDelete = true,
+  viewerId,
 }: {
   reminder: ReminderData;
   petName: string;
+  /** Only an animal's owner can delete its reminders; caretakers can only complete theirs. */
+  canDelete?: boolean;
+  /** When given, the card says who the reminder is for ("You", a name, or "Anyone"). */
+  viewerId?: string;
 }) {
   const state = reminderState(reminder.dueAt);
   return (
@@ -53,6 +61,18 @@ export default function ReminderCard({
           <span>{petName}</span>
           <span aria-hidden="true">·</span>
           <span>{dueLabel(reminder.dueAt, state)}</span>
+          {viewerId ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>
+                {reminder.assigneeId === null || reminder.assigneeId === undefined
+                  ? "Anyone"
+                  : reminder.assigneeId === viewerId
+                    ? "You"
+                    : (reminder.assignee?.name ?? "A caretaker")}
+              </span>
+            </>
+          ) : null}
           {reminder.repeat !== "NONE" ? (
             <>
               <span aria-hidden="true">·</span>
@@ -80,16 +100,18 @@ export default function ReminderCard({
           <Icon name="check" size={14} />
         </button>
       </form>
-      <form action={deleteReminder.bind(null, reminder.id)}>
-        <button
-          type="submit"
-          aria-label={`Delete "${reminder.title}"`}
-          title="Delete"
-          className="flex size-8 items-center justify-center rounded-full text-muted hover:bg-[#fde8e6] hover:text-[#b42318]"
-        >
-          <Icon name="trash-2" size={14} />
-        </button>
-      </form>
+      {canDelete ? (
+        <form action={deleteReminder.bind(null, reminder.id)}>
+          <button
+            type="submit"
+            aria-label={`Delete "${reminder.title}"`}
+            title="Delete"
+            className="flex size-8 items-center justify-center rounded-full text-muted hover:bg-[#fde8e6] hover:text-[#b42318]"
+          >
+            <Icon name="trash-2" size={14} />
+          </button>
+        </form>
+      ) : null}
     </li>
   );
 }

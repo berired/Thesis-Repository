@@ -5,6 +5,7 @@ import { prisma } from "@/app/lib/prisma";
 import { getPetAccess } from "@/app/lib/pet-access";
 import { parseRecordDate, parseRecordFields, syncPetWeight } from "@/app/lib/records";
 import { parseDoseTimes, syncDoseReminders } from "@/app/lib/reminders";
+import { resolveAssignee } from "@/app/lib/caretakers";
 import { diffRecord } from "@/app/lib/record-history";
 import { requireUser } from "@/app/lib/session";
 import { deleteFile } from "@/app/lib/storage";
@@ -66,6 +67,8 @@ export async function createRecord(fd: FormData): Promise<RecordResult> {
   if (!parsed.ok) return { error: parsed.error };
   const doses = doseRemindersFor(parsed.data.type, parsed.data.endDate, fd);
   if (!doses.ok) return { error: doses.error };
+  const who = await resolveAssignee(petId, String(fd.get("doseAssignee") ?? "me"), session.user.id);
+  if (!who.ok) return { error: who.error };
 
   const record = await prisma.$transaction(async (tx) => {
     const created = await tx.healthRecord.create({
@@ -77,7 +80,7 @@ export async function createRecord(fd: FormData): Promise<RecordResult> {
       await syncDoseReminders(
         tx,
         { id: created.id, petId, title: parsed.data.title, endDate: parsed.data.endDate },
-        session.user.id,
+        who.assigneeId,
         doses.times,
       );
     }
@@ -122,6 +125,8 @@ export async function updateRecord(recordId: string, fd: FormData): Promise<Reco
   if (!doses.ok) return { error: doses.error };
 
   const session = await requireUser();
+  const who = await resolveAssignee(record.petId, String(fd.get("doseAssignee") ?? "me"), session.user.id);
+  if (!who.ok) return { error: who.error };
   await prisma.$transaction(async (tx) => {
     await tx.healthRecord.update({ where: { id: record.id }, data: parsed.data });
     const changes = diffRecord(record, parsed.data);
@@ -137,7 +142,7 @@ export async function updateRecord(recordId: string, fd: FormData): Promise<Reco
     await syncDoseReminders(
       tx,
       { id: record.id, petId: record.petId, title: parsed.data.title, endDate: parsed.data.endDate },
-      session.user.id,
+      who.assigneeId,
       doses.times,
     );
   });

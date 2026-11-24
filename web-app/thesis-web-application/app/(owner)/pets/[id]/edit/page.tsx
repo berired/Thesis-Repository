@@ -1,6 +1,7 @@
 import { requireUser } from "@/app/lib/session";
 import { getOwnedPet } from "@/app/lib/pet-data";
 import EditPetForm from "./edit-form";
+import CaretakerList from "../../../sharing/caretaker-list";
 
 export default async function EditPetPage({
   params,
@@ -28,6 +29,7 @@ export default async function EditPetPage({
         recordCount: pet._count.records,
       }}
       ownerName={session.user.name}
+      caretakers={<CaretakerList petId={pet.id} petName={pet.name} />}
     />
   );
 }

@@ -2,7 +2,7 @@ import { dayOfMonth, monthShort, weekdayShort } from "@/app/lib/time";
 import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import Icon from "@/app/components/app-icon";
-import { getOwnedPet } from "@/app/lib/pet-data";
+import { getAccessiblePet } from "@/app/lib/pet-data";
 import {
   APPOINTMENT_CHIP,
   APPOINTMENT_ICON,
@@ -46,7 +46,7 @@ function CalendarTile({ date, muted }: { date: Date; muted?: boolean }) {
   );
 }
 
-function ApptCard({ appt, now }: { appt: Appt; now: Date }) {
+function ApptCard({ appt, now, canEdit }: { appt: Appt; now: Date; canEdit: boolean }) {
   const cancelled = appt.status === "CANCELLED";
   const open = appt.status === "UPCOMING";
   const passed = open && appt.scheduledAt < now;
@@ -80,7 +80,7 @@ function ApptCard({ appt, now }: { appt: Appt; now: Date }) {
             {appt.clinicName}
           </p>
         ) : null}
-        {open ? (
+        {open && canEdit ? (
           <div className="mt-1 flex flex-wrap items-center gap-4">
             {passed ? (
               <form action={completeAppointment.bind(null, appt.id)}>
@@ -110,7 +110,7 @@ export default async function AppointmentsPage({
 }) {
   const { id } = await params;
   const { status: statusParam } = await searchParams;
-  const pet = await getOwnedPet(id);
+  const pet = await getAccessiblePet(id);
   const now = new Date();
   const tab = TABS.find((t) => t.param === statusParam) ?? TABS[0];
 
@@ -161,7 +161,7 @@ export default async function AppointmentsPage({
       ) : (
         <ul className="flex max-w-[560px] flex-col gap-3">
           {list.map((a) => (
-            <ApptCard key={a.id} appt={a} now={now} />
+            <ApptCard key={a.id} appt={a} now={now} canEdit={pet.role === "owner"} />
           ))}
         </ul>
       )}

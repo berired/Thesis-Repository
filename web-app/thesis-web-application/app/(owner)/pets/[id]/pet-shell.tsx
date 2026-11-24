@@ -5,12 +5,13 @@ import { PetAvatar, petPhotoSrc, styleFor } from "@/app/components/pet-avatar";
 import { StickerLink } from "@/app/components/ui";
 import { shortAge } from "@/app/lib/care";
 import { restorePet } from "@/app/(owner)/actions";
-import type { getOwnedPet } from "@/app/lib/pet-data";
+import type { getAccessiblePet } from "@/app/lib/pet-data";
+import { LeavePet } from "../../sharing/share-buttons";
 import QrTag from "./qr-tag";
 import LostModeToggle from "./lost-mode-toggle";
 import VetQrDialog from "./vet-qr-dialog";
 
-type Pet = Awaited<ReturnType<typeof getOwnedPet>>;
+type Pet = Awaited<ReturnType<typeof getAccessiblePet>>;
 export type PetTab = "overview" | "records" | "reminders" | "appointments" | "tag";
 
 const LOCKED_TITLE = "Coming soon";
@@ -43,19 +44,23 @@ export default function PetShell({
 }) {
   const style = styleFor(pet.species);
   const base = `/pets/${pet.id}`;
+  // Caretakers see the pet but can't change it: the owner-only controls below are hidden.
+  const isOwner = pet.role === "owner";
   const crumbs = [
     { label: "My animals", href: "/pets" },
     crumb ? { label: pet.name, href: base } : { label: pet.name },
     ...(crumb ? [{ label: crumb }] : []),
   ];
 
-  const tabs: { key: string; label: string; href?: string; count?: number }[] = [
+  const allTabs: { key: string; label: string; href?: string; count?: number }[] = [
     { key: "overview", label: "Overview", href: base },
     { key: "records", label: "Health records", href: `${base}/records`, count: pet._count.records },
     { key: "reminders", label: "Reminders", href: `${base}/reminders`, count: pet._count.reminders },
     { key: "appointments", label: "Appointments", href: `${base}/appointments` },
     { key: "tag", label: "ID and QR tag", href: `${base}/tag` },
   ];
+
+  const tabs = allTabs.filter((t) => isOwner || t.key !== "tag");
 
   const big = active === "overview";
 
@@ -67,11 +72,13 @@ export default function PetShell({
           <span className="flex-1">
             {pet.name} is archived: hidden from your lists, with reminders paused.
           </span>
-          <form action={restorePet.bind(null, pet.id)}>
-            <button type="submit" className="font-semibold text-sky underline">
-              Restore {pet.name}
-            </button>
-          </form>
+          {isOwner ? (
+            <form action={restorePet.bind(null, pet.id)}>
+              <button type="submit" className="font-semibold text-sky underline">
+                Restore {pet.name}
+              </button>
+            </form>
+          ) : null}
         </div>
       ) : null}
 
@@ -110,7 +117,15 @@ export default function PetShell({
               </Chip>
             </div>
           ) : null}
-          {big ? (
+          {big && !isOwner ? (
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              <span className="rounded-md bg-[#e6eefb] px-2 py-0.5 text-xs font-semibold text-[#2a559e]">
+                Shared by {pet.owner.name}
+              </span>
+              <LeavePet petId={pet.id} petName={pet.name} />
+            </div>
+          ) : null}
+          {big && isOwner ? (
             <div className="mt-1">
               <LostModeToggle petId={pet.id} petName={pet.name} lost={pet.lostMode} />
             </div>
@@ -118,7 +133,7 @@ export default function PetShell({
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-[9px]">
-          {big ? (
+          {big && isOwner ? (
             <>
               <Link href={`${base}/edit`} className={GHOST_BUTTON}>
                 <Icon name="pencil" size={16} />
@@ -134,7 +149,7 @@ export default function PetShell({
           {active === "overview" || active === "records" ? (
             <VetQrDialog petId={pet.id} petName={pet.name} />
           ) : null}
-          {active === "reminders" ? (
+          {!isOwner ? null : active === "reminders" ? (
             <StickerLink href={`${base}/reminders/new`} rotate={-3}>
               <Icon name="plus" size={18} />
               Add reminder

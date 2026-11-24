@@ -2,7 +2,9 @@ import Link from "next/link";
 import { prisma } from "@/app/lib/prisma";
 import Icon from "@/app/components/app-icon";
 import ReminderCard from "@/app/components/reminder-card";
-import { getOwnedPet } from "@/app/lib/pet-data";
+import { getAccessiblePet } from "@/app/lib/pet-data";
+import { requireUser } from "@/app/lib/session";
+import { visibleReminders } from "@/app/lib/pet-access";
 import { RECORD_ICON, fmtFull } from "@/app/lib/care";
 import PetShell from "./pet-shell";
 
@@ -12,13 +14,16 @@ export default async function PetOverviewPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const pet = await getOwnedPet(id);
+  const pet = await getAccessiblePet(id);
+  const session = await requireUser();
+  const isOwner = pet.role === "owner";
 
   const [reminders, records] = await Promise.all([
     prisma.reminder.findMany({
-      where: { petId: pet.id, completedAt: null },
+      where: { petId: pet.id, completedAt: null, AND: [visibleReminders(session.user.id)] },
       orderBy: { dueAt: "asc" },
       take: 3,
+      include: { assignee: { select: { name: true } } },
     }),
     prisma.healthRecord.findMany({
       where: { petId: pet.id, voidedAt: null },
@@ -62,22 +67,31 @@ export default async function PetOverviewPage({
         <section className="flex flex-col gap-3">
           <div className="flex items-end justify-between">
             <h2 className="font-display text-[26px] leading-7 text-forest">Next up</h2>
-            <Link
-              href={`/pets/${pet.id}/reminders/new`}
-              className="text-sm font-semibold text-sky"
-            >
-              + Add reminder
-            </Link>
+            {isOwner ? (
+              <Link
+                href={`/pets/${pet.id}/reminders/new`}
+                className="text-sm font-semibold text-sky"
+              >
+                + Add reminder
+              </Link>
+            ) : null}
           </div>
           {reminders.length === 0 ? (
             <p className="rounded-xl border border-dashed border-[#c3c9d1] p-5 text-sm text-muted">
-              Nothing scheduled for {pet.name}. Add a reminder for feeding, meds or
-              vaccines.
+              {isOwner
+                ? `Nothing scheduled for ${pet.name}. Add a reminder for feeding, meds or vaccines.`
+                : "Nothing is assigned to you for " + pet.name + " right now."}
             </p>
           ) : (
             <ul className="flex flex-col gap-3">
               {reminders.map((r) => (
-                <ReminderCard key={r.id} reminder={r} petName={pet.name} />
+                <ReminderCard
+                  key={r.id}
+                  reminder={r}
+                  petName={pet.name}
+                  canDelete={isOwner}
+                  viewerId={session.user.id}
+                />
               ))}
             </ul>
           )}

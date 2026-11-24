@@ -20,13 +20,14 @@ export type VetQrResult =
   | { error: string }
   | { ok: true; url: string; svg: string; expiresAt: string };
 
-/** Makes a one-time vet QR for a pet the signed-in user owns. The token is shown once, then only its hash exists. */
+/** Makes a one-time vet QR for a pet the signed-in user owns or is a caretaker for. The token is shown once, then only its hash exists. */
 export async function createRecordRequest(
   petId: string,
   sections: string[],
 ): Promise<VetQrResult> {
   const session = await requireUser();
-  if ((await getPetAccess(session.user.id, petId)) !== "owner") {
+  // Owners and caretakers can both make one; nobody else can.
+  if (!(await getPetAccess(session.user.id, petId))) {
     return { error: "We couldn't find that animal." };
   }
 
@@ -57,14 +58,19 @@ export async function createRecordRequest(
   return { ok: true, url, svg, expiresAt: expiresAt.toISOString() };
 }
 
-/** Cancels a QR that hasn't been used. Ends a vet session in progress too. */
+/**
+ * Cancels a QR that hasn't been used. Ends a vet session in progress too. The owner can cancel
+ * any QR for their animal; a caretaker only the ones they made.
+ */
 export async function revokeRecordRequest(requestId: string) {
   const session = await requireUser();
   const request = await prisma.recordRequest.findUnique({
     where: { id: requestId },
-    select: { id: true, petId: true },
+    select: { id: true, petId: true, createdById: true },
   });
-  if (!request || (await getPetAccess(session.user.id, request.petId)) !== "owner") return;
+  if (!request) return;
+  const role = await getPetAccess(session.user.id, request.petId);
+  if (role !== "owner" && !(role === "viewer" && request.createdById === session.user.id)) return;
 
   await prisma.recordRequest.updateMany({
     where: { id: request.id, usedAt: null, revokedAt: null },

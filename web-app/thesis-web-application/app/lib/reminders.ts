@@ -133,7 +133,7 @@ export function parseDoseTimes(fd: FormData) {
 export async function syncDoseReminders(
   tx: Prisma.TransactionClient,
   record: { id: string; petId: string; title: string; endDate: Date | null },
-  userId: string,
+  assigneeId: string | null,
   doseTimes: string[],
 ) {
   await tx.reminder.deleteMany({ where: { recordId: record.id } });
@@ -159,7 +159,7 @@ export async function syncDoseReminders(
         repeat: "DAILY",
         repeatEvery: 1,
         endsAt,
-        assigneeId: userId,
+        assigneeId,
       },
     });
   }

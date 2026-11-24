@@ -6,7 +6,9 @@ import OwnerPage from "@/app/components/owner-page";
 import Icon from "@/app/components/app-icon";
 import PetCard, { nextThing } from "@/app/components/pet-card";
 import SortSelect from "./sort-select";
-import { accessiblePets } from "@/app/lib/pet-access";
+import Invitations from "../sharing/invitations";
+import InviteDialog from "../sharing/invite-dialog";
+import { accessiblePets, visibleReminders } from "@/app/lib/pet-access";
 
 const CHIP_ICON: Record<string, string | null> = {
   Dog: "/icons/chip-dog.svg",
@@ -47,7 +49,12 @@ export default async function MyAnimalsPage({
     where: { ...accessiblePets(session.user.id), archivedAt: null },
     orderBy: { createdAt: "desc" },
     include: {
-      reminders: { where: { completedAt: null }, orderBy: { dueAt: "asc" }, take: 1 },
+      owner: { select: { name: true } },
+      reminders: {
+        where: { completedAt: null, AND: [visibleReminders(session.user.id)] },
+        orderBy: { dueAt: "asc" },
+        take: 1,
+      },
       appointments: {
         where: { status: "UPCOMING", scheduledAt: { gte: now } },
         orderBy: { scheduledAt: "asc" },
@@ -100,6 +107,8 @@ export default async function MyAnimalsPage({
           Add animal
         </Link>
       </div>
+
+      <Invitations userId={session.user.id} />
 
       {pets.length > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -169,7 +178,11 @@ export default async function MyAnimalsPage({
       >
         {shown.map((pet) => (
           <li key={pet.id}>
-            <PetCard pet={pet} now={now} />
+            <PetCard
+              pet={pet}
+              now={now}
+              sharedBy={pet.ownerId === session.user.id ? null : pet.owner.name}
+            />
           </li>
         ))}
         <li>
@@ -191,14 +204,9 @@ export default async function MyAnimalsPage({
             records.
           </p>
         </div>
-        <span
-          aria-disabled="true"
-          title="Coming soon"
-          className="flex h-9 shrink-0 cursor-default items-center gap-2 rounded-lg border border-[#c3c9d1] bg-white px-4 text-[13px] font-semibold text-ink"
-        >
-          <Icon name="users" size={14} />
-          Invite caretaker
-        </span>
+        <InviteDialog
+          pets={pets.filter((p) => p.ownerId === session.user.id).map((p) => ({ id: p.id, name: p.name }))}
+        />
       </section>
     </OwnerPage>
   );

@@ -2,6 +2,7 @@ import { todayInput } from "@/app/lib/time";
 import OwnerPage from "@/app/components/owner-page";
 import RecordForm from "@/app/components/record-form";
 import { getOwnedPet } from "@/app/lib/pet-data";
+import { caretakersOf } from "@/app/lib/caretakers";
 
 export default async function NewRecordPage({
   params,
@@ -22,7 +23,12 @@ export default async function NewRecordPage({
       ]}
     >
       <h1 className="font-display text-[34px] leading-[38px] text-forest">Add a health record</h1>
-      <RecordForm pets={[{ id: pet.id, name: pet.name }]} defaultPetId={pet.id} today={today} />
+      <RecordForm
+        pets={[{ id: pet.id, name: pet.name }]}
+        defaultPetId={pet.id}
+        today={today}
+        caretakers={await caretakersOf([pet.id])}
+      />
     </OwnerPage>
   );
 }

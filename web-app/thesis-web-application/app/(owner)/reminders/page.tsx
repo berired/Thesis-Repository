@@ -13,7 +13,7 @@ import {
   repeatLabel,
   startOfToday,
 } from "@/app/lib/care";
-import { accessiblePets } from "@/app/lib/pet-access";
+import { accessiblePets, visibleReminders } from "@/app/lib/pet-access";
 import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
 import { REMINDER_TYPES } from "@/app/lib/reminders";
@@ -59,6 +59,7 @@ export default async function RemindersPage({
 
   const reminderWhere: Prisma.ReminderWhereInput = {
     petId: { in: petIds },
+    AND: [visibleReminders(session.user.id)],
     ...(activeType ? { category: activeType } : {}),
   };
   const weekAgo = new Date(today.getTime() - 6 * 86_400_000);
@@ -68,7 +69,10 @@ export default async function RemindersPage({
     prisma.reminder.findMany({
       where: { ...reminderWhere, completedAt: null },
       orderBy: { dueAt: "asc" },
-      include: { pet: { select: { name: true } } },
+      include: {
+        pet: { select: { name: true, ownerId: true } },
+        assignee: { select: { name: true } },
+      },
     }),
     activeType && activeType !== "APPOINTMENT"
       ? Promise.resolve([])
@@ -90,10 +94,18 @@ export default async function RemindersPage({
       },
     }),
     prisma.reminderCompletion.count({
-      where: { reminder: { petId: { in: pets.map((p) => p.id) } }, completedAt: { gte: weekAgo } },
+      where: {
+        reminder: { petId: { in: pets.map((p) => p.id) }, AND: [visibleReminders(session.user.id)] },
+        completedAt: { gte: weekAgo },
+      },
     }),
     prisma.reminder.count({
-      where: { petId: { in: pets.map((p) => p.id) }, completedAt: null, dueAt: { lt: weekAhead } },
+      where: {
+        petId: { in: pets.map((p) => p.id) },
+        completedAt: null,
+        dueAt: { lt: weekAhead },
+        AND: [visibleReminders(session.user.id)],
+      },
     }),
   ]);
 
@@ -208,7 +220,13 @@ export default async function RemindersPage({
                     <ul className="flex flex-col gap-3">
                       {group.items.map((entry) =>
                         entry.kind === "reminder" ? (
-                          <ReminderCard key={entry.reminder.id} reminder={entry.reminder} petName={entry.reminder.pet.name} />
+                          <ReminderCard
+                            key={entry.reminder.id}
+                            reminder={entry.reminder}
+                            petName={entry.reminder.pet.name}
+                            canDelete={entry.reminder.pet.ownerId === session.user.id}
+                            viewerId={session.user.id}
+                          />
                         ) : (
                           <AppointmentTile
                             key={entry.appointment.id}
