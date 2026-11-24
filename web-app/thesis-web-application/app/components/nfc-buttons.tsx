@@ -1,16 +1,64 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Icon from "@/app/components/app-icon";
-import { SECONDARY_BUTTON_CLASS } from "@/app/components/ui";
+import { INPUT_CLASS, SECONDARY_BUTTON_CLASS } from "@/app/components/ui";
 import {
   NFC_UNSUPPORTED,
+  isIosWithoutNfc,
   nfcAvailable,
   nfcErrorMessage,
   readTag,
   writeTag,
   type TagRead,
 } from "@/app/lib/nfc";
+
+const subscribeNothing = () => () => {};
+
+/** True on an iPhone or iPad. The server renders false, so the first paint matches everywhere. */
+function useIosWithoutNfc() {
+  return useSyncExternalStore(subscribeNothing, isIosWithoutNfc, () => false);
+}
+
+/** The link on screen with a Copy button, to paste into an NFC writer app. */
+function CopyLink({ url, compact = false }: { url: string; compact?: boolean }) {
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setState("copied");
+    } catch {
+      setState("failed");
+    }
+  };
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-2">
+        {compact ? null : (
+          <input
+            readOnly
+            value={url}
+            aria-label="Tag link"
+            onFocus={(e) => e.currentTarget.select()}
+            className={`${INPUT_CLASS} !h-9 !rounded-lg !text-xs`}
+          />
+        )}
+        <button
+          type="button"
+          onClick={copy}
+          className="h-9 shrink-0 rounded-lg border border-[#c3c9d1] bg-white px-3 text-[13px] font-semibold text-ink hover:bg-[#f6f8fa]"
+        >
+          {state === "copied" ? "Copied" : "Copy link"}
+        </button>
+      </div>
+      {state === "failed" ? (
+        <p role="alert" className="text-xs text-[#c2372e]">
+          Couldn&apos;t copy. Select the link and copy it by hand.
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 /** Shared state for the two buttons: one NFC action at a time, cancellable, with a message. */
 function useNfcAction() {
@@ -92,6 +140,22 @@ export function NfcReadButton({
   label?: string;
 }) {
   const nfc = useNfcAction();
+  const ios = useIosWithoutNfc();
+
+  // An iPhone's browser can't read tags itself, but the phone can: tapping a tag with our link
+  // opens it, and an unclaimed tag opens the registration form with its code filled in.
+  if (ios) {
+    return (
+      <div className="flex items-start gap-2 rounded-lg bg-[#e6eefb] px-3 py-2.5 text-sm text-[#2a559e]">
+        <Icon name="nfc" size={16} className="mt-0.5 shrink-0" />
+        <p>
+          To use an NFC tag, hold the top of your iPhone against it. It opens this site by itself,
+          no button needed. Or scan the QR code instead.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <button
@@ -137,7 +201,22 @@ export function NfcWriteButton({
   label?: string;
 }) {
   const nfc = useNfcAction();
+  const ios = useIosWithoutNfc();
   const [lock, setLock] = useState(false);
+
+  // An iPhone's browser can't write tags. The link can still be copied into an NFC writer app.
+  if (ios) {
+    return (
+      <div className="flex flex-col gap-2 rounded-lg bg-[#e6eefb] px-3 py-2.5 text-sm text-[#2a559e]">
+        <p>
+          An iPhone&apos;s browser can&apos;t write NFC tags. Copy this link and paste it into an NFC
+          writer app on your iPhone, or write the tag from an Android phone in Chrome.
+        </p>
+        <CopyLink url={url} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
       {allowLock ? (
@@ -151,26 +230,30 @@ export function NfcWriteButton({
           Lock the tag for good (it can never be rewritten)
         </label>
       ) : null}
-      <button
-        type="button"
-        disabled={nfc.waiting}
-        onClick={() =>
-          nfc.run(async (signal) => {
-            const { serial, locked } = await writeTag(url, { lock, signal });
-            await onWritten?.(serial);
-            nfc.setMessage({
-              kind: "ok",
-              text: `Written${locked ? " and locked" : ""}. Tapping this tag now opens the page.${
-                lock && !locked ? " This browser couldn't lock it." : ""
-              }`,
-            });
-          })
-        }
-        className={`${SECONDARY_BUTTON_CLASS} !w-auto self-start`}
-      >
-        <Icon name="nfc" size={16} />
-        {label}
-      </button>
+      <div className="flex flex-wrap items-start gap-2">
+        <button
+          type="button"
+          disabled={nfc.waiting}
+          onClick={() =>
+            nfc.run(async (signal) => {
+              const { serial, locked } = await writeTag(url, { lock, signal });
+              await onWritten?.(serial);
+              nfc.setMessage({
+                kind: "ok",
+                text: `Written${locked ? " and locked" : ""}. Tapping this tag now opens the page.${
+                  lock && !locked ? " This browser couldn't lock it." : ""
+                }`,
+              });
+            })
+          }
+          className={`${SECONDARY_BUTTON_CLASS} !w-auto`}
+        >
+          <Icon name="nfc" size={16} />
+          {label}
+        </button>
+        {/* For writing the tag with another app, such as one on an iPhone. */}
+        <CopyLink url={url} compact />
+      </div>
       <Status
         waiting={nfc.waiting}
         message={nfc.message}

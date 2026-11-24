@@ -20,6 +20,20 @@ export function nfcAvailable() {
   return typeof window !== "undefined" && window.isSecureContext && "NDEFReader" in window;
 }
 
+/**
+ * True on an iPhone or iPad whose browser has no Web NFC (every iPhone browser today, Chrome
+ * included, because they all run Apple's engine). There the page can't read or write tags, but
+ * the phone's own reader opens a tag's link when it is tapped, so we say that instead.
+ */
+export function isIosWithoutNfc() {
+  if (typeof navigator === "undefined") return false;
+  const ios =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    // iPadOS reports itself as a Mac, but a Mac has no touch screen.
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return ios && !("NDEFReader" in window);
+}
+
 function decode(record: NDEFRecordLike): string | null {
   if (!record.data || !["url", "absolute-url", "text"].includes(record.recordType)) return null;
   try {
