@@ -56,8 +56,8 @@ A text note on the canvas (`47:2459`) says, in Tagalog, not to mind the landing 
 | Screen | Node | App route | Status | Link |
 |---|---|---|---|---|
 | QR Scan Page (mobile, finder) | 203:4866 | `/r/[code]` | Built (Phase 6, the member card; the pet photo is always shown, owner city is optional) | [open](https://www.figma.com/design/42BmxWxt8Hq6HaNtjPikX9/Pawket-Book--Final-Pages-?node-id=203-4866) |
-| Find a Vet | 190:3963 | sidebar item, locked until Phase 10 | Planned (Phase 10, Google Maps) | [open](https://www.figma.com/design/42BmxWxt8Hq6HaNtjPikX9/Pawket-Book--Final-Pages-?node-id=190-3963) |
-| Filters Dropdown (Find a Vet) | 190:4427 | none | Planned (Phase 10) | [open](https://www.figma.com/design/42BmxWxt8Hq6HaNtjPikX9/Pawket-Book--Final-Pages-?node-id=190-4427) |
+| Find a Vet | 190:3963 | sidebar item, locked until Phase 10 | Planned (Phase 10, OpenStreetMap; no Rating section) | [open](https://www.figma.com/design/42BmxWxt8Hq6HaNtjPikX9/Pawket-Book--Final-Pages-?node-id=190-3963) |
+| Filters Dropdown (Find a Vet) | 190:4427 | none | Planned (Phase 10; the Rating section is dropped) | [open](https://www.figma.com/design/42BmxWxt8Hq6HaNtjPikX9/Pawket-Book--Final-Pages-?node-id=190-4427) |
 
 There are no frames for the vet QR dialog, the vet's public page and form, the admin void and audit screens, the report-a-record form, the record history and notes sections, the Messages inbox and chat, or the admin reported-conversations page. They were built in the existing style (see `backend-plan.md`, Phases 4 to 6).
 

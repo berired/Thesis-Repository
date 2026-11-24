@@ -4,7 +4,7 @@ Last updated 2026-11-24, after Phase 5 and the tracked-edits change (branch `sta
 
 The backend is planned phase by phase in `backend-plan.md`, which is the source of truth for decisions and records what each finished phase did. This file tracks the frontend and loose ends. Where the two disagree, `backend-plan.md` wins.
 
-**Where the plan stands:** Phases 0 to 6 are done (foundations, private storage and uploads, owner records, reminders and notifications, vet QR flow, admin void and audit, lost-pet messaging with the per-field scan page settings, shared access for caretakers, pet photos, the PDF export, the header search and NFC tags), plus the time zone fix and the tracked-edits change (record history, add-only notes, locked files). Phase 10 (Find a vet with Google Maps, planned in `backend-plan.md`) and then the final gate (the end-to-end walkthrough) remain. Production still needs the migrations (now eleven, through `20261124083444_nfc_tags`), plus running `scripts/migrate-pet-photos.mjs` after the deploy and settings in the "Production deploy checklist" in `backend-plan.md`.
+**Where the plan stands:** Phases 0 to 6 are done (foundations, private storage and uploads, owner records, reminders and notifications, vet QR flow, admin void and audit, lost-pet messaging with the per-field scan page settings, shared access for caretakers, pet photos, the PDF export, the header search and NFC tags), plus the time zone fix and the tracked-edits change (record history, add-only notes, locked files). Phase 10 (Find a vet with OpenStreetMap, planned in `backend-plan.md`) and then the final gate (the end-to-end walkthrough) remain. Production still needs the migrations (now eleven, through `20261124083444_nfc_tags`), plus running `scripts/migrate-pet-photos.mjs` after the deploy and settings in the "Production deploy checklist" in `backend-plan.md`.
 
 ## 1. Figma status
 
@@ -49,7 +49,7 @@ Figma frames still to edit to match the decisions (the code already follows the 
 - Sidebar: remove "Appointments" from the frames that show it. Decided: no Appointments sidebar link.
 - Header search placeholder: change to "Search animals and records" (built that way).
 - Medication record form (131:1018): the dose reminders now have a "Who gives the doses" choice (me, a caretaker, or whoever first) when the animal has caretakers.
-- Find a vet (190:3963, 190:4427): to be built in Phase 10. The design's route line is replaced by a "Get directions" link, rating is "N stars and up", and animal-type and home-visit filters are keyword searches.
+- Find a vet (190:3963, 190:4427): to be built in Phase 10 with OpenStreetMap. Differences from the frames: no Rating section (OpenStreetMap has no ratings), no route line (a "Get directions" link instead), "Open now" only for clinics that list hours, and animal-type and home-visit filters are keyword guesses. Sort is Nearest or Name A to Z.
 - ID and QR tag (203:5464): the public-info controls must be pill toggles per field.
 
 Figma screens that do not exist: owner generate, list and cancel vet QR; the public vet page and form (built in the existing style, see `backend-plan.md` Phase 4); the admin Vet records pages (reports, audit trail) and the owner's report form; the caretaker invite flow beyond the "Invite someone" button. Decided: build these in the existing style without new frames.
@@ -61,7 +61,7 @@ Figma screens that do not exist: owner generate, list and cancel vet QR; the pub
 - Home: Find a vet button (locked).
 - Footer links on the landing page (everything except Features).
 
-Locked until Phase 10: **Find a vet** ("Coming soon"). Phase 10 builds it with Google Maps and no clinic accounts.
+Locked until Phase 10: **Find a vet** ("Coming soon"). Phase 10 builds it with OpenStreetMap and no clinic accounts.
 
 ## 3. Data and features the designs imply but the database lacks
 
