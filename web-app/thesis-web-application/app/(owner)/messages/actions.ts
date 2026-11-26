@@ -17,7 +17,7 @@ export type MessageResult = { error: string } | { ok: true };
 
 /**
  * Starts (or reopens) the conversation between the signed-in finder and the owner of the pet
- * on the scanned tag. Only works while the pet is in lost mode and allows in-app messages.
+ * on the scanned tag. Only works while the pet is active and allows in-app messages.
  */
 export async function startThread(code: string) {
   const session = await requireUser();

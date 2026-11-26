@@ -71,8 +71,8 @@ export default async function TagPage({ params }: { params: Promise<{ id: string
             </h2>
             <p className="text-[13px] text-muted">
               {pet.lostMode
-                ? `Anyone who scans ${pet.name}'s tag sees what you allow below, and can contact you the ways you switched on.`
-                : `Turn it on if ${pet.name} goes missing. Until then, scanning the tag shows nothing.`}
+                ? `Anyone who scans ${pet.name}'s tag sees what you allow below, marked as lost, and can contact you the ways you switched on.`
+                : `Scanning ${pet.name}'s tag already shows what you allow below. Turn this on if ${pet.name} goes missing and the scan page will say so.`}
             </p>
             <form action={setLostMode.bind(null, pet.id)}>
               {pet.lostMode ? null : <input type="hidden" name="lost" value="on" />}

@@ -9,12 +9,11 @@ export default async function MessagesPage() {
   const session = await requireUser();
   const userId = session.user.id;
 
-  // Only open conversations: the pet is in lost mode, not archived, and allows messages.
+  // Only open conversations: the pet is not archived and allows messages.
   const threads = await prisma.messageThread.findMany({
     where: {
       OR: [{ finderId: userId }, { pet: { ownerId: userId } }],
       pet: {
-        lostMode: true,
         archivedAt: null,
         OR: [{ publicSettings: null }, { publicSettings: { allowMessage: true } }],
       },
@@ -43,7 +42,7 @@ export default async function MessagesPage() {
         Messages
       </h1>
       <p className="max-w-[560px] text-sm text-muted">
-        Conversations about lost pets. They are only open while the pet is marked as lost.
+        Conversations started by people who scanned your pets&apos; tags.
       </p>
 
       {threads.length === 0 ? (

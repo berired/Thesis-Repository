@@ -85,7 +85,7 @@ export default function Chat({
   if (gone) {
     return (
       <p className="max-w-[560px] rounded-xl border border-line bg-white p-6 text-sm text-muted">
-        This conversation is no longer available. It is only open while the pet is marked as lost.
+        This conversation is no longer available. The pet may have been archived or messaging turned off.
       </p>
     );
   }

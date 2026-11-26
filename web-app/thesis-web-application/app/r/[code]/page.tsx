@@ -13,7 +13,7 @@ import { petPhotoUrl } from "@/app/lib/pet-photo";
 // Scan pages are for whoever holds the tag, not for search engines.
 export const metadata = { robots: { index: false, follow: false } };
 
-const PLAIN = "rounded-[20px] border-2 border-ink bg-cream p-6 text-left shadow-[8px_8px_0_var(--color-butter)]";
+const PLAIN = "rounded-[20px] border-2 border-ink bg-cream p-6 text-left text-ink shadow-[8px_8px_0_var(--color-butter)]";
 
 export default async function ScanPage({
   params,
@@ -73,14 +73,6 @@ export default async function ScanPage({
 
     if (!pet || pet.archivedAt) {
       body = <p className={PLAIN}>This tag isn&apos;t active right now.</p>;
-    } else if (!pet.lostMode) {
-      // Nothing about a pet that isn't lost is shown to a stranger.
-      body = (
-        <p className={PLAIN}>
-          This tag is registered with Pawket Book. Its owner hasn&apos;t marked the pet as lost, so
-          there&apos;s nothing to show here.
-        </p>
-      );
     } else {
       const [settings, source] = await Promise.all([getPublicSettings(pet.id), loadScanSource(pet.id)]);
       const view = source ? applySettings(source, settings) : null;
@@ -95,6 +87,7 @@ export default async function ScanPage({
         body = (
           <ScanCard
             view={view}
+            lost={pet.lostMode}
             species={pet.species}
             memberNo={code}
             photoUrl={photoUrl}

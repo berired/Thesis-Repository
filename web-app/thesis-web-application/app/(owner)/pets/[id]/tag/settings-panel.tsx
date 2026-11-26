@@ -50,7 +50,7 @@ export default function SettingsPanel({
         <div>
           <h2 className="text-lg font-semibold leading-6">When someone scans it</h2>
           <p className="text-[13px] text-muted">
-            You choose what they see. Change it any time. Nothing is shown unless{" "}
+            You choose what they see. Change it any time. It shows whether or not{" "}
             {source.petName} is in lost mode.
           </p>
         </div>
@@ -107,14 +107,9 @@ export default function SettingsPanel({
 
       <div className="flex flex-col gap-3">
         <p className="text-[13px] font-medium text-muted">Scan page preview</p>
-        {!lost ? (
-          <p className="rounded-lg bg-[#fff6d1] px-3 py-2 text-xs text-[#7a5a00]">
-            Lost mode is off, so right now a stranger sees nothing. This is what they would see once
-            you turn it on.
-          </p>
-        ) : null}
         <ScanCard
           view={view}
+          lost={lost}
           species={species}
           memberNo={memberNo}
           photoUrl={photoUrl}

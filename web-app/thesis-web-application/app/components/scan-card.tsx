@@ -10,12 +10,15 @@ import type { ScanView } from "@/app/lib/scan-view";
  */
 export default function ScanCard({
   view,
+  lost,
   species,
   memberNo,
   photoUrl,
   actions,
 }: {
   view: ScanView;
+  /** Lost mode only adds the red badge and the "found me" wording; the card is otherwise the same. */
+  lost: boolean;
   /** Only picks the avatar picture, and only while the species switch is on. */
   species: string;
   memberNo: string;
@@ -37,23 +40,25 @@ export default function ScanCard({
   const shownHealth = health.filter(([, value]) => value);
 
   return (
-    <div className="flex w-full flex-col gap-4 rounded-[20px] border-2 border-ink bg-cream p-5 text-left shadow-[8px_8px_0_var(--color-butter)]">
+    <div className="flex w-full flex-col gap-4 rounded-[20px] border-2 border-ink bg-cream p-5 text-left text-ink shadow-[8px_8px_0_var(--color-butter)]">
       <div className="flex items-center justify-between border-b-2 border-ink pb-2 text-[13px] font-semibold">
         <span>Member card</span>
         <span className="font-mono uppercase">No. {memberNo}</span>
       </div>
 
-      <p className="mx-auto flex w-fit items-center gap-1.5 rounded-full border-2 border-ink bg-[#c2372e] px-3 py-1 text-[13px] font-semibold text-white">
-        <Icon name="circle-alert" size={14} />
-        Marked as lost
-      </p>
+      {lost ? (
+        <p className="mx-auto flex w-fit items-center gap-1.5 rounded-full border-2 border-ink bg-[#c2372e] px-3 py-1 text-[13px] font-semibold text-white">
+          <Icon name="circle-alert" size={14} />
+          Marked as lost
+        </p>
+      ) : null}
 
       <div className="flex items-start gap-4">
         {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={photoUrl}
-            alt="The lost pet"
+            alt="The pet"
             className="size-[104px] shrink-0 -rotate-3 rounded-sm border-2 border-ink bg-white object-cover p-1"
           />
         ) : (
@@ -90,7 +95,7 @@ export default function ScanCard({
 
       <div className="flex flex-col gap-2.5 rounded-xl border-2 border-ink bg-white p-4">
         <h2 className="text-[15px] font-semibold">
-          Found me? Please tell {view.ownerFirstName ?? "my owner"}
+          {lost ? "Found me? Please tell" : "Need to reach"} {view.ownerFirstName ?? "my owner"}
         </h2>
         {actions}
       </div>

@@ -5,9 +5,9 @@ import { notify } from "./notifications";
  * Lost-pet messaging rules, in one place.
  *
  * A thread joins a pet's owner and one signed-in finder who scanned its tag. It only
- * works while the pet is in lost mode, is not archived and has "Message me through
- * Pawket Book" switched on; otherwise it is unavailable to both sides (the rows are kept,
- * so switching lost mode back on picks the conversation up again).
+ * works while the pet is not archived and has "Message me through Pawket Book" switched
+ * on; otherwise it is unavailable to both sides (the rows are kept). Lost mode does not
+ * matter: a scan shows the same card either way, lost mode only adds the "lost" badge.
  *
  * The owner side is always `pet.ownerId`, never someone the pet is shared with: people a
  * pet is shared with (Phase 7) never see these threads.
@@ -25,7 +25,7 @@ type PetState = {
 
 /** A pet with no saved settings uses the default, which allows in-app messages. */
 export function messagingOpen(pet: PetState) {
-  return pet.lostMode && !pet.archivedAt && (pet.publicSettings?.allowMessage ?? true);
+  return !pet.archivedAt && (pet.publicSettings?.allowMessage ?? true);
 }
 
 /**
@@ -88,7 +88,7 @@ export async function unreadByThread(userId: string) {
     LEFT JOIN pet_public_settings s ON s."petId" = p."id"
     JOIN message m ON m."threadId" = t."id" AND m."senderId" <> ${userId}
     WHERE (p."ownerId" = ${userId} OR t."finderId" = ${userId})
-      AND p."lostMode" AND p."archivedAt" IS NULL
+      AND p."archivedAt" IS NULL
       AND COALESCE(s."allowMessage", true)
       AND t."blockedAt" IS NULL
       AND m."createdAt" > COALESCE(
