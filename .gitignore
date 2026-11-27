@@ -1,2 +1,6 @@
 # Markdown files
 *.md
+
+# The care-tips knowledge base is content the app ships with
+!web-app/thesis-web-application/knowledge/
+!web-app/thesis-web-application/knowledge/*.md
