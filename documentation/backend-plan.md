@@ -305,7 +305,17 @@ Reverses part of the Phase 2 rules. Decided with the developer:
 
 **Option kept for later: Google Places.** The provider is isolated, so Google can replace OpenStreetMap if richer data (ratings, hours, phone) is wanted. It needs a Google Cloud billing account with a card, Maps JavaScript API and Places API (New), a server key and a browser key, and hard daily quota caps below Google's free monthly allowance (the tier with ratings and hours is the smallest, about 1,000 requests a month at the time of checking) to stay free. Google's terms also forbid storing place details and require Google attribution. Decide before switching.
 
-### Phase 11: Care tips with RAG and an event-triggered flow (PLANNED, not started; decided 2026-11-27, branch `RAG-ETF-feature` off `stage`)
+### Phase 11: Care tips with RAG and an event-triggered flow (BUILT 2026-11-27 on branch `RAG-ETF-feature`, applied to stage only; decided 2026-11-27)
+**What was built, and where it differs from the plan below (2026-11-27):**
+- Migration `20261127162050_care_tips_rag` (pgvector extension, `care_tip`, `knowledge_chunk`, `CareTipStatus`, notification type `CARE_TIPS`), applied to the stage Neon branch only. **No vector index:** with 66 chunks an exact scan is fast and exact, and an HNSW index would only make sense in the thousands of chunks.
+- `app/lib/care-tips/`: `ai.ts` (Workers AI calls), `retrieve.ts`, `prompt.ts` (prompt, output checks, allergy match), `run.ts` (the job, `generateCareTips`, plus `retryStaleCareTips`). `scripts/ingest-knowledge.mjs` loads `knowledge/*.md` (15 entries, 66 chunks, ingested on stage; a second run embeds nothing). `scripts/eval-care-tips.ts` is the evaluation.
+- Trigger: `submitVetRecord` calls `after()` for medication and vaccination records; `app/v/[token]/page.tsx` sets `maxDuration = 60` so the job has time. The sweep for unfinished jobs runs from the notification bell (also in `after()`, so it never blocks a page).
+- UI: a care tips card on the record page (`care-tips-card.tsx`, shown when status is READY and not dismissed; read-only for caretakers), a "Hide these tips" button, and a bell icon for `CARE_TIPS`. The tip prompt carries only the medicine, species and age (no weight, other medicines, allergy text, names or ids). The allergy note is a plain string match on our side.
+- **Retrieval changed after measuring it (this is a thesis result).** The plan had name match then vector search. The first evaluation showed the vector step alone is unsafe: a bare drug name gives the embedding model almost nothing, so unknown drugs (prednisolone, gabapentin, metronidazole...) landed at cosine distance 0.23 to 0.28, overlapping with correct typos (0.12 to 0.26), and "FeLV vaccine" matched the cat core vaccine at 0.158. At a cutoff of 0.30 none of 14 unknown medicines was correctly rejected. Retrieval is now a hybrid: (1) exact whole-word match on name or alias, (2) fuzzy match (one or two typos, Damerau-Levenshtein) on one-word names, (3) vector search as a last resort, **medicines only** (never vaccines) and only within distance 0.20.
+- **Evaluation results (stage, 2026-11-27, `scripts/eval-care-tips.ts`, 53 labelled titles):** exact or brand name 26/26 (name 26); misspelled 7/7 (fuzzy 7); described but not named 5/6 (vector); no entry exists 14/14 correctly rejected; wrong species 6/6 correctly rejected. Cutoff sweep for described-not-named versus unknown: 0.15 gives 0/6 and 14/14; 0.20 gives 5/6 and 14/14; 0.25 gives 6/6 and 11/14; 0.30 gives 6/6 and 4/14, so 0.20 is the largest cutoff with no false match. Generation (26 known records): the model wrote 141 tips and 121 (86%) passed every check; 19 were dropped as not grounded in the cited passage and 1 for changing a dose; no record fell under 2 tips.
+- **End-to-end checks (22, all passed, on stage with a temporary user deleted afterwards):** known medicine READY with 2 to 6 cited tips, one notification, source recorded; second run does nothing; unknown medicine, dog-only drug for a cat, and a bird give NO_SOURCE with no tips; owner-entered, check-up and voided records are skipped; allergy match adds the note; vaccine READY; provider unavailable gives FAILED without throwing and with no secret in the stored detail; fresh PENDING left alone and stale PENDING completed; deleting a record removes its tips.
+- **Still to do:** run the migration and `scripts/ingest-knowledge.mjs` against production at deploy time, set the two Cloudflare variables on Vercel (stage and production), and walk through a real vet QR submission on stage.
+
 **Prerequisites:** Phase 9 done (Phase 10 is independent). Developer creates a free Cloudflare account (no card) and a Workers AI API token, and sets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` locally, on Vercel stage and on Vercel production.
 **Goal:** when a vet saves a **medication or vaccination** record, the owner gets short, owner-friendly care tips for that medicine or vaccine, written by an LLM **only from a curated knowledge base**, saved with the record and announced in the bell. Dose reminders stay plain date logic (`syncDoseReminders`), never AI.
 
@@ -362,12 +372,16 @@ Deploys do not run migrations, and `stage` uses its own Neon branch, so producti
 9. `20261124075412_caretaker_shares`
 10. `20261124081237_pet_photo_thumbnails`
 11. `20261124083444_nfc_tags`
+12. `20261127162050_care_tips_rag` (needs the `vector` extension, which Neon allows with `CREATE EXTENSION`; the migration does it)
 
 Apply them before the new code goes live: the old code does not know the new enum values or columns.
 
 **1b. After the deploy, move the old pet photos:** run `DATABASE_URL=<production url> node scripts/migrate-pet-photos.mjs` once (it needs the same storage variables as the app). Photos not yet moved keep working, so this is not urgent.
 
+**1c. After the migration (care tips):** run `DATABASE_URL=<production url> node scripts/ingest-knowledge.mjs` once to load the knowledge base (needs the two Cloudflare variables), and again whenever `knowledge/*.md` changes.
+
 **2. Vercel environment variables (production):**
+- `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` (a Workers AI token). Without them the vet's save still works and records simply get no care tips.
 - `APP_URL` must be the public address (`https://pawketbook.vercel.app` in production, `https://pawketbook-stage.vercel.app` on stage). Vet QR links and pet tag QR codes are built from it; the local `.env` value was a stale tunnel address.
 - `STORAGE_BUCKET_FILES=pet-files` (set during Phase 1; redeploy picks it up). `STORAGE_BUCKET_QR`, the `AWS_*` storage credentials and the auth settings already exist.
 - There is no time zone variable: `Asia/Manila` is a constant in `app/lib/time.ts`.

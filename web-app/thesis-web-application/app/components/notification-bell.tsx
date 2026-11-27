@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { after } from "next/server";
 import PopBadge from "@/app/components/pop-badge";
+import { retryStaleCareTips } from "@/app/lib/care-tips/run";
 import { syncDueNotifications, unreadCount } from "@/app/lib/notifications";
 import { getSession } from "@/app/lib/session";
 
@@ -9,6 +11,11 @@ export default async function NotificationBell() {
   // No scheduler yet: due reminders become notifications whenever a page with the bell renders.
   // Layouts render in parallel with pages, so this has to happen here to be counted.
   if (session) await syncDueNotifications(session.user.id);
+  // Safety net for care tips whose job never finished. Runs after the page is sent, never blocks it.
+  if (session) {
+    const userId = session.user.id;
+    after(() => retryStaleCareTips(userId).catch((e) => console.error("Care tips retry failed", e)));
+  }
   const unread = session ? await unreadCount(session.user.id) : 0;
   return (
     <Link

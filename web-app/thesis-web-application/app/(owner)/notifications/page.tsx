@@ -27,6 +27,7 @@ const ICON: Record<NotificationType, IconName> = {
   LOST_MESSAGE: "info",
   SHARE_INVITE: "users",
   CARETAKER_COMPLETED: "circle-check",
+  CARE_TIPS: "pill",
 };
 
 function whenLabel(d: Date, now: Date) {

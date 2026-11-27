@@ -2,7 +2,9 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { prisma } from "@/app/lib/prisma";
+import { generateCareTips } from "@/app/lib/care-tips/run";
 import { notify } from "@/app/lib/notifications";
 import { clientKey, rateLimit } from "@/app/lib/rate-limit";
 import { parseRecordFields, syncPetWeight } from "@/app/lib/records";
@@ -102,6 +104,12 @@ export async function submitVetRecord(token: string, fd: FormData): Promise<VetS
     href: `/pets/${request.petId}/records/${record.id}`,
     dedupeKey: `vet-record:${request.id}`,
   }).catch((e) => console.error("Vet record notification failed", e));
+
+  // Owner-friendly tips for a medicine or vaccine, from the curated knowledge base. Runs after the
+  // response so the vet never waits on it, and never fails the save.
+  if (parsed.data.type === "MEDICATION" || parsed.data.type === "VACCINATION") {
+    after(() => generateCareTips(record.id));
+  }
 
   return { ok: true, petId: request.petId, recordId: record.id };
 }

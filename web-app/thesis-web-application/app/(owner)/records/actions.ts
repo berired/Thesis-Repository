@@ -228,3 +228,15 @@ export async function addRecordNote(
   revalidatePath(`/pets/${record.petId}/records/${record.id}`);
   return { ok: true };
 }
+
+/** The owner hides the care tips card for a record. The tips stay stored; only the card goes. */
+export async function dismissCareTips(recordId: string): Promise<{ error: string } | { ok: true }> {
+  const record = await ownedRecord(recordId);
+  if (!record) return { error: "We couldn't find that record." };
+  await prisma.careTip.updateMany({
+    where: { recordId: record.id, dismissedAt: null },
+    data: { dismissedAt: new Date() },
+  });
+  revalidatePath(`/pets/${record.petId}/records/${record.id}`);
+  return { ok: true };
+}

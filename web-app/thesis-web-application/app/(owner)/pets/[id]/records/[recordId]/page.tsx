@@ -8,6 +8,7 @@ import { prisma } from "@/app/lib/prisma";
 import { requireUser } from "@/app/lib/session";
 import ReportRecord from "./report-record";
 import AddNote from "./add-note";
+import CareTipsCard from "./care-tips-card";
 import { readChanges } from "@/app/lib/record-history";
 import { fmtEdited } from "@/app/lib/time";
 
@@ -156,6 +157,19 @@ export default async function RecordDetailPage({
           </section>
         </div>
       </div>
+
+      {record.careTip?.status === "READY" && !record.careTip.dismissedAt ? (
+        <CareTipsCard
+          recordId={record.id}
+          petName={pet.name}
+          title={record.title}
+          tips={record.careTip.tips}
+          sources={record.careTip.sources}
+          allergyNote={Boolean(record.careTip.allergyNote)}
+          nextDose={record.reminders.find((r) => r.dueAt > new Date())?.dueAt ?? null}
+          canDismiss={isOwner}
+        />
+      ) : null}
 
       <section className="flex max-w-[700px] flex-col gap-4 rounded-xl border border-line bg-white p-5">
         <h2 className="text-lg font-semibold leading-6">Notes</h2>

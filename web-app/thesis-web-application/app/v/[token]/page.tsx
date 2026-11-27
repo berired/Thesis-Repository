@@ -8,6 +8,9 @@ import { todayInput } from "@/app/lib/time";
 import { SECTION_LABEL, SESSION_MINUTES, currentVetState, type VetState } from "@/app/lib/vet-access";
 import { startVetSession } from "./actions";
 
+// The care-tips job runs after the response (see actions.ts) and needs a little time.
+export const maxDuration = 60;
+
 // Never indexed, and the token must not leak through the Referer header.
 export const metadata: Metadata = {
   title: "Add a health record | Pawket Book",

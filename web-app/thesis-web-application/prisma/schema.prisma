@@ -237,9 +237,65 @@ model HealthRecord {
   reports       RecordReport[]
   edits         RecordEdit[]
   addedNotes    RecordNote[]
+  careTip       CareTip?
 
   @@index([petId, recordDate])
   @@map("health_record")
+}
+
+enum CareTipStatus {
+  PENDING
+  READY
+  /// Nothing in the knowledge base matched, so no tips were written (never invented).
+  NO_SOURCE
+  FAILED
+}
+
+/// Owner-friendly care tips for a vet-saved medication or vaccination record. One per record.
+model CareTip {
+  id          String        @id @default(cuid())
+  recordId    String        @unique
+  record      HealthRecord  @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  status      CareTipStatus @default(PENDING)
+  /// [{ text, sourceKeys }] in display order.
+  tips        Json?
+  /// The knowledge entries the tips came from: [{ key, name, source, url, reviewed }].
+  sources     Json?
+  /// Set when the pet's allergy text matches the drug (plain string match, not the model).
+  allergyNote String?
+  /// Why there are no tips (NO_SOURCE or FAILED), for the developer.
+  detail      String?
+  model       String?
+  generatedAt DateTime?
+  dismissedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now()) @updatedAt
+
+  @@index([status, createdAt])
+  @@map("care_tip")
+}
+
+/// One searchable piece of a curated knowledge entry (knowledge/*.md). The embedding is a
+/// pgvector column, so it is read and written with raw SQL.
+model KnowledgeChunk {
+  id            String                      @id @default(cuid())
+  entryKey      String
+  chunkIndex    Int
+  name          String
+  kind          String
+  species       String[]
+  aliases       String[]
+  content       String
+  sourceName    String
+  sourceUrl     String
+  sourceVersion String
+  reviewed      Boolean                     @default(false)
+  contentHash   String
+  embedding     Unsupported("vector(768)")?
+  updatedAt     DateTime                    @default(now()) @updatedAt
+
+  @@unique([entryKey, chunkIndex])
+  @@map("knowledge_chunk")
 }
 
 enum ReminderCategory {
@@ -316,6 +372,7 @@ enum NotificationType {
   LOST_MESSAGE
   SHARE_INVITE
   CARETAKER_COMPLETED
+  CARE_TIPS
 }
 
 model Notification {

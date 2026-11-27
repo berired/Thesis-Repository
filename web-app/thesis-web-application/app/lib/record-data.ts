@@ -12,6 +12,9 @@ export async function getViewableRecord(petId: string, recordId: string) {
   const record = await prisma.healthRecord.findFirst({
     where: { id: recordId, petId: pet.id, voidedAt: null },
     include: {
+      careTip: {
+        select: { status: true, tips: true, sources: true, allergyNote: true, dismissedAt: true },
+      },
       reminders: { select: { dueAt: true }, orderBy: { dueAt: "asc" } },
       edits: {
         orderBy: { createdAt: "desc" },
