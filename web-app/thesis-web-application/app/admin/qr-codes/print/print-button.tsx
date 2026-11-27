@@ -1,12 +1,10 @@
 "use client";
 
+import { BTN_PRIMARY } from "../../ui";
+
 export default function PrintButton() {
   return (
-    <button
-      type="button"
-      onClick={() => window.print()}
-      className="rounded border bg-black px-3 py-1.5 text-sm text-white"
-    >
+    <button type="button" onClick={() => window.print()} className={BTN_PRIMARY}>
       Print
     </button>
   );

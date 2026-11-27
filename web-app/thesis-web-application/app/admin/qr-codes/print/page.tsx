@@ -3,6 +3,7 @@ import QRCode from "qrcode";
 import { prisma } from "@/app/lib/prisma";
 import { requireAdmin } from "@/app/lib/session";
 import { qrUrlForCode } from "@/app/lib/qr";
+import { PageHeader } from "../../ui";
 import PrintButton from "./print-button";
 
 type Search = { label?: string; status?: string };
@@ -40,37 +41,34 @@ export default async function QrPrintPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-4 print:hidden">
-        <Link href="/admin/qr-codes" className="text-sm underline">
-          Back to QR codes
-        </Link>
-        <h1 className="text-2xl font-semibold">Print layout</h1>
-        <span className="text-sm text-gray-600">
-          {tags.length} {tags.length === 1 ? "tag" : "tags"}
-          {label ? ` labelled "${label}"` : ""} · {all ? "all codes" : "unused codes only"}
-        </span>
-        <Link
-          href={{
-            pathname: "/admin/qr-codes/print",
-            query: { ...(label ? { label } : {}), ...(all ? {} : { status: "all" }) },
-          }}
-          className="text-sm underline"
-        >
-          {all ? "Show unused only" : "Include claimed"}
-        </Link>
-        <div className="ml-auto">
-          <PrintButton />
-        </div>
-      </div>
+      <PageHeader
+        title="Print layout"
+        back={{ href: "/admin/qr-codes", label: "Back to QR codes" }}
+        description={`${tags.length} ${tags.length === 1 ? "tag" : "tags"}${label ? ` labelled "${label}"` : ""} · ${all ? "all codes" : "unused codes only"}`}
+        actions={
+          <>
+            <Link
+              href={{
+                pathname: "/admin/qr-codes/print",
+                query: { ...(label ? { label } : {}), ...(all ? {} : { status: "all" }) },
+              }}
+              className="inline-flex h-8 items-center rounded-lg border border-[#c3c9d1] bg-white px-3 text-[13px] font-semibold text-ink hover:bg-[#f6f8fa]"
+            >
+              {all ? "Show unused only" : "Include claimed"}
+            </Link>
+            <PrintButton />
+          </>
+        }
+      />
 
       {tags.length === 0 ? (
-        <p className="text-gray-600 print:hidden">No QR codes to print.</p>
+        <p className="text-muted print:hidden">No QR codes to print.</p>
       ) : (
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(45mm,1fr))] gap-3 print:gap-0">
           {tags.map((tag) => (
             <li
               key={tag.id}
-              className="flex break-inside-avoid flex-col items-center gap-2 border border-dashed border-gray-400 p-3"
+              className="flex break-inside-avoid flex-col items-center gap-2 border border-dashed border-gray-400 bg-white p-3"
             >
               <div
                 aria-label={`QR code ${tag.code}`}

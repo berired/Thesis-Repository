@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { BTN_DANGER_SOLID, BTN_OUTLINE, TEXTAREA } from "../ui";
 import type { ModerationState } from "./actions";
 
 /** A reason box and one button, for voiding a record or dismissing a report. */
@@ -22,7 +23,7 @@ export default function ModerationForm({
   confirm?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
-  if (state?.done) return <p className="text-sm text-green-700">{state.done}</p>;
+  if (state?.done) return <p className="animate-rise text-sm text-[#1f7a3d]">{state.done}</p>;
   return (
     <form
       action={formAction}
@@ -38,19 +39,17 @@ export default function ModerationForm({
         required={required}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="rounded border px-3 py-2 text-sm"
+        className={TEXTAREA}
       />
       {state?.error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="animate-shake text-sm text-[#c2372e]">
           {state.error}
         </p>
       ) : null}
       <button
         type="submit"
         disabled={pending}
-        className={`w-fit rounded px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60 ${
-          danger ? "bg-red-700" : "bg-gray-800"
-        }`}
+        className={`w-fit ${danger ? BTN_DANGER_SOLID : BTN_OUTLINE}`}
       >
         {pending ? pendingLabel : label}
       </button>

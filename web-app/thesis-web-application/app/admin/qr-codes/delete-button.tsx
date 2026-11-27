@@ -1,5 +1,6 @@
 "use client";
 
+import { BTN_DANGER } from "../ui";
 import { deleteQrCode } from "./actions";
 
 export default function DeleteButton({ id, code }: { id: string; code: string }) {
@@ -13,7 +14,7 @@ export default function DeleteButton({ id, code }: { id: string; code: string })
       }}
     >
       <input type="hidden" name="id" value={id} />
-      <button className="rounded border px-2 py-1 text-red-700">Delete</button>
+      <button className={BTN_DANGER}>Delete</button>
     </form>
   );
 }

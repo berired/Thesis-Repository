@@ -1,6 +1,7 @@
 import { fmtFull } from "@/app/lib/time";
 import { prisma } from "@/app/lib/prisma";
 import { requireAdmin } from "@/app/lib/session";
+import { EmptyRow, MONO, PageHeader, ROW, TD, TH, THead, TableCard } from "../ui";
 
 export default async function PetsPage() {
   await requireAdmin();
@@ -13,39 +14,32 @@ export default async function PetsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Pets</h1>
+      <PageHeader title="Pets" description="Every registered animal and the tag it is linked to." />
 
-      <div className="overflow-x-auto"><table className="w-full min-w-[40rem] text-left text-sm">
-        <thead className="border-b">
-          <tr>
-            <th className="py-2">Name</th>
-            <th>Species</th>
-            <th>Owner</th>
-            <th>QR code</th>
-            <th>Registered</th>
-          </tr>
-        </thead>
+      <TableCard>
+        <THead>
+          <TH>Name</TH>
+          <TH>Species</TH>
+          <TH>Owner</TH>
+          <TH>QR code</TH>
+          <TH>Registered</TH>
+        </THead>
         <tbody>
           {pets.map((pet) => (
-            <tr key={pet.id} className="border-b">
-              <td className="py-2">{pet.name}</td>
-              <td>{pet.species}</td>
-              <td>
-                {pet.owner.name} ({pet.owner.email})
+            <tr key={pet.id} className={ROW}>
+              <td className={`${TD} font-medium`}>{pet.name}</td>
+              <td className={TD}>{pet.species}</td>
+              <td className={TD}>
+                {pet.owner.name}
+                <span className="block text-[13px] text-muted">{pet.owner.email}</span>
               </td>
-              <td className="font-mono">{pet.qrCode?.code ?? "-"}</td>
-              <td>{fmtFull(pet.createdAt)}</td>
+              <td className={`${TD} ${MONO}`}>{pet.qrCode?.code ?? "-"}</td>
+              <td className={`${TD} whitespace-nowrap text-muted`}>{fmtFull(pet.createdAt)}</td>
             </tr>
           ))}
-          {pets.length === 0 && (
-            <tr>
-              <td colSpan={5} className="py-4 text-gray-600">
-                No pets registered yet.
-              </td>
-            </tr>
-          )}
+          {pets.length === 0 && <EmptyRow cols={5}>No pets registered yet.</EmptyRow>}
         </tbody>
-      </table></div>
+      </TableCard>
     </div>
   );
 }
